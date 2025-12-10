@@ -619,3 +619,286 @@ input:checked + .slider:before { transform: translateX(20px); }
     .spin-button-circle { width: 70px; height: 70px; }
     .status-bar { display: none; } /* Скрываем статус, чтобы влезло */
 }
+/* =========================================
+   9. НОВЫЙ UI: НАВИГАЦИЯ И ЭКРАНЫ
+   ========================================= */
+
+/* Общий контейнер для экранов */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding-bottom: 20px;
+    overflow-y: auto; /* Разрешаем скролл в меню */
+    background: transparent; /* Фон берется из body */
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Скрытый экран */
+.screen.hidden {
+    display: none !important;
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+}
+
+/* Экран игры должен быть без скролла */
+#game-slots {
+    overflow: hidden;
+    justify-content: center; /* Центрируем слот */
+}
+
+/* =========================================
+   10. ГЛАВНОЕ МЕНЮ (DASHBOARD)
+   ========================================= */
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Юзер бейдж */
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.avatar-small {
+    width: 40px; height: 40px;
+    background: #222;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--neon-blue);
+    font-size: 1.2rem;
+    border: 1px solid var(--neon-blue);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+.user-details { display: flex; flex-direction: column; }
+.u-name { font-weight: 800; font-size: 0.9rem; }
+.u-id { font-size: 0.6rem; color: var(--text-muted); font-family: var(--font-digit); }
+
+/* Кошелек бейдж */
+.wallet-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    position: relative;
+}
+.w-label { font-size: 0.5rem; color: var(--gold); letter-spacing: 1px; font-weight: 700; }
+.w-amount { font-family: var(--font-digit); font-size: 1rem; color: white; }
+.btn-mini-add {
+    position: absolute;
+    right: -25px; top: 5px;
+    background: var(--neon-green, #0f0);
+    border: none;
+    width: 20px; height: 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 5px #0f0;
+}
+
+/* СЕТКА (GRID) */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 0 20px;
+    margin-top: 10px;
+}
+
+.dash-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 100px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    transition: transform 0.2s, background 0.2s;
+}
+.dash-card:active { transform: scale(0.96); background: rgba(255,255,255,0.08); }
+
+.card-icon { font-size: 1.8rem; color: var(--text-muted); transition: color 0.3s; }
+.dash-card:hover .card-icon { color: white; text-shadow: 0 0 10px white; }
+
+/* Большая карточка ИГРАТЬ */
+.big-card {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #2b1055 0%, #7597de 100%);
+    border: none;
+    align-items: flex-start;
+    padding: 25px;
+    height: 140px;
+    box-shadow: 0 10px 30px rgba(43, 16, 85, 0.5);
+}
+.card-bg-icon {
+    position: absolute; right: -20px; bottom: -20px;
+    font-size: 7rem; opacity: 0.1; transform: rotate(-15deg);
+}
+.card-content h2 { margin: 0; font-family: var(--font-digit); font-size: 1.8rem; letter-spacing: 2px; }
+.card-content p { margin: 5px 0 0; font-size: 0.8rem; opacity: 0.8; }
+.card-action {
+    position: absolute; right: 20px; bottom: 20px;
+    width: 40px; height: 40px;
+    background: white; border-radius: 50%; color: #2b1055;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+}
+
+/* Баннер бонуса */
+.promo-banner {
+    margin: 20px;
+    background: linear-gradient(90deg, #ff0055, #ff5e00);
+    border-radius: 15px;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 5px 20px rgba(255, 0, 85, 0.3);
+}
+.promo-text h3 { margin: 0; font-size: 0.9rem; font-weight: 900; }
+.promo-text p { margin: 2px 0 0; font-size: 0.7rem; opacity: 0.9; }
+.btn-claim {
+    background: white; border: none;
+    padding: 8px 15px; border-radius: 20px;
+    font-weight: 900; color: #ff0055;
+    font-size: 0.75rem;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   11. ЛОББИ ИГР
+   ========================================= */
+.screen-header {
+    display: flex; align-items: center; padding: 20px;
+    gap: 15px;
+}
+.btn-back {
+    background: transparent; border: 1px solid rgba(255,255,255,0.2);
+    width: 35px; height: 35px; border-radius: 10px;
+    color: white; display: flex; align-items: center; justify-content: center;
+}
+.screen-header h2 { margin: 0; font-family: var(--font-digit); font-size: 1.2rem; }
+
+.games-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px;
+}
+
+.game-card {
+    background: #151520;
+    border-radius: 16px;
+    padding: 15px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.active-game { border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.1); }
+
+.game-img { font-size: 2.5rem; transition: transform 0.3s; }
+.active-game:hover .game-img { transform: scale(1.1) rotate(5deg); }
+
+.game-info { text-align: center; }
+.g-title { display: block; font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; }
+.g-status { font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+.g-status.online { background: rgba(0, 255, 0, 0.2); color: #0f0; }
+.g-status.soon { background: rgba(255, 255, 255, 0.1); color: #888; }
+.disabled { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+
+/* Кнопка выхода из слотов */
+.btn-exit-game {
+    position: absolute;
+    top: 15px; left: 15px;
+    z-index: 100;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    display: flex; align-items: center; gap: 5px;
+    font-weight: bold;
+}
+
+/* =========================================
+   12. СТИЛИ НОВЫХ МОДАЛОК (КОШЕЛЕК И ДР.)
+   ========================================= */
+
+.wallet-panel { width: 90%; max-width: 350px; padding: 20px; }
+.wallet-tabs {
+    display: flex;
+    background: #000;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+.w-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #666;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+.w-tab.active { background: #333; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+
+.crypto-list { display: flex; flex-direction: column; gap: 10px; }
+.crypto-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 12px;
+    color: white;
+    text-align: left;
+    font-size: 1rem;
+    display: flex; align-items: center; gap: 15px;
+}
+.crypto-btn i { font-size: 1.5rem; color: var(--gold); }
+.crypto-btn:active { background: var(--neon-blue); border-color: var(--neon-blue); color: black; }
+
+/* Поле реферальной ссылки */
+.ref-link-box {
+    display: flex;
+    gap: 5px;
+    background: #111;
+    padding: 5px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    margin-top: 15px;
+}
+#ref-link-input {
+    background: transparent;
+    border: none;
+    color: var(--neon-blue);
+    width: 100%;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    outline: none;
+}
+.ref-link-box button {
+    background: #333; border: none; color: white;
+    border-radius: 8px; padding: 0 15px; font-weight: bold;
+}
+.ref-link-box button:active { background: var(--neon-green); color: black; }
