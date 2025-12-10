@@ -1,0 +1,212 @@
+/* =========================================
+   FASTMONEY - GAMELIST STYLES
+   ========================================= */
+
+/* --- ФОН И ДЕКОР --- */
+.page-body {
+    background-color: var(--bg-dark);
+    padding-top: 70px; /* Отступ под фиксированный хедер */
+}
+
+/* Декоративная сетка на фоне (Cyberpunk Grid) */
+.bg-grid-decor {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: -1;
+    pointer-events: none;
+    mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+}
+
+/* --- HEADER (Фиксированный) --- */
+.page-header {
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    height: 60px;
+    background: rgba(9, 9, 11, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    z-index: 100;
+}
+
+.back-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-white);
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.back-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.9); }
+
+.page-title {
+    font-family: var(--font-num);
+    font-size: 1.1rem;
+    margin: 0;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.mini-balance {
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.05);
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: var(--accent-gold);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* --- КАТЕГОРИИ (Скролл) --- */
+.category-scroll {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+}
+.category-scroll::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
+.cat-btn {
+    white-space: nowrap;
+    background: #1a1a20;
+    border: 1px solid #333;
+    color: var(--text-gray);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.cat-btn.active {
+    background: var(--text-white);
+    color: black;
+    border-color: white;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+
+/* --- СЕТКА ИГР --- */
+.games-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Две колонки */
+    gap: 15px;
+    padding: 0 15px 30px 15px;
+    /* Анимация появления */
+    animation: fadeInGrid 0.5s ease-out;
+}
+
+@keyframes fadeInGrid {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* КАРТОЧКА ИГРЫ */
+.game-card {
+    position: relative;
+    background: #15151a;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-card:active {
+    transform: scale(0.96);
+}
+
+/* Бейджи (HOT, NEW) */
+.card-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.6rem;
+    font-weight: 900;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.card-badge.hot { background: #ff0055; color: white; }
+.card-badge.new { background: #00ff88; color: black; }
+
+/* Область изображения (Градиент + Иконка) */
+.card-image {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    position: relative;
+    /* Узор поверх градиента */
+    background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+.card-image i {
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.game-card:active .card-image i { transform: scale(1.2) rotate(-10deg); }
+
+/* Уникальные градиенты для игр */
+.crash-bg { background: linear-gradient(135deg, #4b6cb7, #182848); }
+.slots-bg { background: linear-gradient(135deg, #f12711, #f5af19); }
+.mines-bg { background: linear-gradient(135deg, #232526, #414345); color: #ff5e00; }
+.tower-bg { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.dice-bg  { background: linear-gradient(135deg, #833ab4, #fd1d1d); }
+.roulette-bg { background: linear-gradient(135deg, #000000, #434343); border-bottom: 2px solid #ff0000; }
+.knb-bg { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+.penalty-bg { background: linear-gradient(135deg, #56ab2f, #a8e063); }
+.hilo-bg { background: linear-gradient(135deg, #DA4453, #89216B); }
+.safe-bg { background: linear-gradient(135deg, #304352, #d7d2cc); color: #ffd700; }
+.rpg-bg { background: linear-gradient(135deg, #870000, #190a05); color: #ffaaaa; }
+.warship-bg { background: linear-gradient(135deg, #1A2980, #26D0CE); }
+.mafia-bg { background: linear-gradient(135deg, #200122, #6f0000); }
+.tictac-bg { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+.thimbles-bg { background: linear-gradient(135deg, #F09819, #EDDE5D); color: #5a3f00; }
+
+/* Информация о игре */
+.card-info {
+    padding: 12px;
+    background: #1b1b22;
+    flex-grow: 1;
+    position: relative;
+}
+.card-info h3 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-white);
+}
+.card-info p {
+    margin: 4px 0 0;
+    font-size: 0.65rem;
+    color: var(--text-gray);
+}
+
+/* Кнопка Play (спрятана, появляется при ховере или всегда видна как декор) */
+.card-play-btn {
+    position: absolute;
+    right: 10px; bottom: 10px;
+    width: 28px; height: 28px;
+    background: var(--text-white);
+    color: black;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
