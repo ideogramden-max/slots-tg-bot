@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Каталог Игр</title>
+    
+    <!-- Шрифты и Иконки (те же, что в index.html) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Глобальный стиль (обязательно) -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Стиль конкретно для списка игр (сделаем следующим шагом) -->
+    <link rel="stylesheet" href="gamelist.css">
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="page-body">
+
+    <!-- Фон -->
+    <div class="vignette"></div>
+    <div class="bg-grid-decor"></div> <!-- Доп. декор сетка -->
+
+    <!-- Шапка страницы -->
+    <header class="page-header">
+        <button class="back-btn" onclick="goBack()">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <h1 class="page-title">ВСЕ ИГРЫ</h1>
+        
+        <!-- Мини-баланс справа -->
+        <div class="mini-balance">
+            <span id="header-balance">Loading...</span>
+            <span class="currency-icon" id="header-currency">$</span>
+        </div>
+    </header>
+
+    <!-- Фильтры категорий -->
+    <div class="category-scroll">
+        <button class="cat-btn active" onclick="filterGames('all')">Все</button>
+        <button class="cat-btn" onclick="filterGames('popular')">🔥 Популярные</button>
+        <button class="cat-btn" onclick="filterGames('multiplayer')">👥 Онлайн</button>
+        <button class="cat-btn" onclick="filterGames('classic')">🎰 Классика</button>
+    </div>
+
+    <!-- Сетка игр -->
+    <main class="games-container" id="games-grid">
+        
+        <!-- 1. CRASH (AVIATOR) -->
+        <div class="game-card popular multiplayer" onclick="openGame('crashaviator.html')">
+            <div class="card-badge hot">HOT</div>
+            <div class="card-image crash-bg">
+                <i class="fa-solid fa-plane-departure"></i>
+            </div>
+            <div class="card-info">
+                <h3>Crash</h3>
+                <p>Успей забрать X</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 2. SLOTS -->
+        <div class="game-card popular classic" onclick="openGame('slot.html')">
+            <div class="card-image slots-bg">
+                <i class="fa-solid fa-gem"></i>
+            </div>
+            <div class="card-info">
+                <h3>Слоты 777</h3>
+                <p>Классика жанра</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 3. MINES -->
+        <div class="game-card classic" onclick="openGame('mines.html')">
+            <div class="card-image mines-bg">
+                <i class="fa-solid fa-bomb"></i>
+            </div>
+            <div class="card-info">
+                <h3>Mines</h3>
+                <p>Не подорвись</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 4. TOWER -->
+        <div class="game-card classic" onclick="openGame('tower.html')">
+            <div class="card-image tower-bg">
+                <i class="fa-solid fa-dungeon"></i>
+            </div>
+            <div class="card-info">
+                <h3>Tower</h3>
+                <p>Вверх к победе</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 5. DICE (КОСТИ) -->
+        <div class="game-card classic" onclick="openGame('dice.html')">
+            <div class="card-image dice-bg">
+                <i class="fa-solid fa-dice"></i>
+            </div>
+            <div class="card-info">
+                <h3>Кости</h3>
+                <p>Бросок удачи</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 6. РУССКАЯ РУЛЕТКА -->
+        <div class="game-card multiplayer" onclick="openGame('roulette.html')">
+            <div class="card-badge new">NEW</div>
+            <div class="card-image roulette-bg">
+                <i class="fa-solid fa-skull-crossbones"></i>
+            </div>
+            <div class="card-info">
+                <h3>Рулетка</h3>
+                <p>Выживет один</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 7. КАМЕНЬ НОЖНИЦЫ БУМАГА -->
+        <div class="game-card multiplayer" onclick="openGame('knb.html')">
+            <div class="card-image knb-bg">
+                <i class="fa-solid fa-hand-scissors"></i>
+            </div>
+            <div class="card-info">
+                <h3>К-Н-Б</h3>
+                <p>PvP Битва</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 8. PENALTY -->
+        <div class="game-card classic" onclick="openGame('penalty.html')">
+            <div class="card-image penalty-bg">
+                <i class="fa-solid fa-futbol"></i>
+            </div>
+            <div class="card-info">
+                <h3>Пенальти</h3>
+                <p>Забей гол</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 9. HI-LO -->
+        <div class="game-card classic" onclick="openGame('hilo.html')">
+            <div class="card-image hilo-bg">
+                <i class="fa-solid fa-arrow-down-up-across-line"></i>
+            </div>
+            <div class="card-info">
+                <h3>Hi-Lo</h3>
+                <p>Больше/Меньше</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 10. SAFE (СЕЙФ) -->
+        <div class="game-card classic" onclick="openGame('safegame.html')">
+            <div class="card-image safe-bg">
+                <i class="fa-solid fa-vault"></i>
+            </div>
+            <div class="card-info">
+                <h3>Сейф</h3>
+                <p>Взломай код</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 11. RPG BATTLE (Кровосос) -->
+        <div class="game-card multiplayer" onclick="openGame('rpg.html')">
+            <div class="card-badge new">RPG</div>
+            <div class="card-image rpg-bg">
+                <i class="fa-solid fa-dragon"></i>
+            </div>
+            <div class="card-info">
+                <h3>RPG Battle</h3>
+                <p>PvE Рейд</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 12. МОРСКОЙ БОЙ -->
+        <div class="game-card multiplayer" onclick="openGame('warships.html')">
+            <div class="card-image warship-bg">
+                <i class="fa-solid fa-ship"></i>
+            </div>
+            <div class="card-info">
+                <h3>Морской Бой</h3>
+                <p>Стратегия</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 13. MAFIA -->
+        <div class="game-card multiplayer" onclick="openGame('mafia.html')">
+            <div class="card-image mafia-bg">
+                <i class="fa-solid fa-user-secret"></i>
+            </div>
+            <div class="card-info">
+                <h3>Мафия</h3>
+                <p>Найди предателя</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- 14. КРЕСТИКИ НОЛИКИ -->
+        <div class="game-card multiplayer" onclick="openGame('tictactoe.html')">
+            <div class="card-image tictac-bg">
+                <i class="fa-solid fa-xmarks-lines"></i>
+            </div>
+            <div class="card-info">
+                <h3>XO</h3>
+                <p>Быстрая игра</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+         <!-- 15. НАПЕРСТКИ -->
+         <div class="game-card classic" onclick="openGame('thimbles.html')">
+            <div class="card-image thimbles-bg">
+                <i class="fa-solid fa-eye-slash"></i>
+            </div>
+            <div class="card-info">
+                <h3>Напёрстки</h3>
+                <p>Следи за шаром</p>
+            </div>
+            <div class="card-play-btn"><i class="fa-solid fa-play"></i></div>
+        </div>
+
+        <!-- Заглушка, чтобы футер не перекрывал -->
+        <div style="height: 50px; width: 100%; grid-column: span 2;"></div>
+    </main>
+
+    <!-- Подключаем скрипт списка игр -->
+    <script src="gamelist.js"></script>
+</body>
+</html>
