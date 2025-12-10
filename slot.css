@@ -1,0 +1,395 @@
+/* =========================================
+   FASTMONEY - SLOT MACHINE STYLES
+   ========================================= */
+
+/* --- ОСНОВНАЯ СТРУКТУРА --- */
+.game-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Занимаем весь экран */
+    overflow: hidden; /* Запрещаем скролл во время игры */
+    background: radial-gradient(circle at center, #1a1a24 0%, #000 100%);
+}
+
+/* Цветное свечение за автоматом */
+.slot-bg-glow {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(188, 19, 254, 0.2) 0%, transparent 70%);
+    z-index: -1;
+    pointer-events: none;
+    animation: glowPulse 5s infinite alternate;
+}
+
+@keyframes glowPulse {
+    0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    z-index: 10;
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
+
+/* Таблетка баланса */
+.balance-pill {
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 4px 15px;
+    text-align: center;
+    min-width: 120px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.balance-pill .label {
+    display: block;
+    font-size: 0.55rem;
+    color: #888;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.balance-pill .value-box {
+    font-family: var(--font-num);
+    font-size: 1.1rem;
+    color: var(--accent-gold);
+    font-weight: 900;
+}
+
+/* --- ИГРОВАЯ ЗОНА (Main) --- */
+.slot-machine-wrapper {
+    flex-grow: 1; /* Занимает все свободное место */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    perspective: 1000px;
+}
+
+/* Джекпот */
+.jackpot-board {
+    margin-bottom: 10px;
+    text-align: center;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.6), transparent);
+    width: 100%;
+}
+.jackpot-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #ff0055;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 0 0 5px #ff0055;
+}
+.jackpot-value {
+    font-family: var(--font-num);
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(180deg, #fff, #ffae00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 5px rgba(255, 174, 0, 0.5));
+}
+
+/* Рамка автомата */
+.machine-frame {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    height: 240px; /* Высота видимой области слотов */
+    background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 50%, #2b2b2b 100%);
+    border-radius: 12px;
+    border: 3px solid #444;
+    box-shadow: 
+        0 0 0 2px #000,
+        0 0 30px rgba(0, 240, 255, 0.15),
+        inset 0 0 20px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px;
+}
+
+/* Декоративные лампочки сверху и снизу */
+.lights-top, .lights-bottom {
+    position: absolute; left: 10px; right: 10px; height: 4px;
+    background: rgba(0,0,0,0.5); border-radius: 2px;
+}
+.lights-top { top: 5px; }
+.lights-bottom { bottom: 5px; }
+.lights-top::after, .lights-bottom::after {
+    content: ''; display: block; width: 100%; height: 100%;
+    background: repeating-linear-gradient(90deg, #333 0, #333 10px, var(--accent-blue) 12px, var(--accent-blue) 16px, #333 18px);
+    box-shadow: 0 0 5px var(--accent-blue);
+    opacity: 0.8;
+}
+
+/* Контейнер барабанов */
+.reels-container {
+    background: #050505;
+    height: 100%;
+    border-radius: 6px;
+    border: 1px solid #555;
+    overflow: hidden; /* СКРЫВАЕМ ВСЁ, ЧТО ЗА ПРЕДЕЛАМИ */
+    position: relative;
+    display: flex;
+}
+
+/* Линия выигрыша */
+.payline {
+    position: absolute;
+    top: 50%; left: 0; width: 100%; height: 4px;
+    background: #ff0055;
+    box-shadow: 0 0 10px #ff0055, 0 0 20px #ff0055;
+    z-index: 5;
+    transform: translateY(-50%) scaleX(0); /* Скрыта по умолчанию */
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.payline.visible { transform: translateY(-50%) scaleX(1); }
+
+/* Колонка барабана */
+.reel-col {
+    flex: 1;
+    position: relative;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    /* Градиент для эффекта цилиндра */
+    background: linear-gradient(90deg, #080808, #181818 50%, #080808);
+}
+.reel-col:last-child { border-right: none; }
+
+/* Тени (эффект объема) */
+.reel-shadow {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 25%, transparent 75%, rgba(0,0,0,0.9) 100%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Лента символов */
+.reel-strip {
+    display: flex;
+    flex-direction: column;
+    /* JS будет управлять transform: translateY(...) */
+    will-change: transform; 
+}
+
+/* Символ */
+.sym {
+    height: 80px; /* Высота одного символа. ВАЖНО для JS */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.8rem;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.game-controls {
+    background: rgba(20, 20, 30, 0.9);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px 20px 0 0;
+    padding: 15px 15px 25px 15px; /* Снизу отступ для iPhone Home Bar */
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    z-index: 20;
+}
+
+.status-message {
+    text-align: center;
+    font-family: var(--font-num);
+    color: var(--accent-blue);
+    margin-bottom: 15px;
+    height: 20px;
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+}
+.status-message.win { color: var(--accent-gold); text-shadow: 0 0 10px var(--accent-gold); }
+.status-message.error { color: #ff4444; }
+
+.controls-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 1fr; /* Лево, SPIN, Право */
+    gap: 10px;
+    align-items: center;
+}
+
+/* Ставки */
+.bet-control, .auto-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+.label-mini { font-size: 0.55rem; color: #888; font-weight: 700; }
+
+.stepper {
+    display: flex; align-items: center;
+    background: #111; border: 1px solid #333;
+    border-radius: 20px; padding: 2px;
+}
+.stepper button {
+    width: 26px; height: 26px;
+    background: #333; border: none;
+    border-radius: 50%; color: white;
+    font-size: 0.7rem; cursor: pointer;
+}
+.stepper button:active { background: var(--accent-blue); color: black; }
+.stepper span {
+    width: 45px; text-align: center;
+    font-family: var(--font-num); font-size: 0.8rem;
+}
+
+.max-bet {
+    background: transparent; border: 1px solid var(--accent-purple);
+    color: var(--accent-purple);
+    font-size: 0.6rem; padding: 2px 8px; border-radius: 8px;
+    font-weight: bold; cursor: pointer;
+}
+.max-bet:active { background: var(--accent-purple); color: white; }
+
+/* SPIN BUTTON */
+.spin-wrapper {
+    display: flex; justify-content: center;
+    position: relative; top: -5px;
+}
+.spin-button {
+    width: 80px; height: 80px;
+    border-radius: 50%; border: none;
+    background: conic-gradient(from 0deg, var(--accent-blue), var(--accent-purple), var(--accent-blue));
+    padding: 3px;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    outline: none;
+    transition: transform 0.1s;
+}
+.spin-button:active { transform: scale(0.95); }
+.spin-button:disabled { filter: grayscale(1); cursor: not-allowed; }
+
+.inner-spin {
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, #2a2a2a 0%, #000 100%);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 3px 5px rgba(255,255,255,0.3);
+}
+.inner-spin span {
+    font-family: var(--font-num);
+    font-weight: 900; font-size: 1.1rem;
+    background: linear-gradient(to right, #fff, #ccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.pulse-ring {
+    position: absolute; top: -5px; left: -5px; bottom: -5px; right: -5px;
+    border: 2px solid var(--accent-blue);
+    border-radius: 50%;
+    opacity: 0;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* Свитч (Auto) */
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #333; transition: .4s;
+    border-radius: 20px;
+}
+.slider:before {
+    position: absolute; content: "";
+    height: 16px; width: 16px;
+    left: 3px; bottom: 3px;
+    background-color: white; transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--accent-blue); }
+input:checked + .slider:before { transform: translateX(18px); }
+
+/* --- МОДАЛКИ --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+    z-index: 100;
+    display: flex; justify-content: center; align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+.modal-overlay.hidden { display: none; }
+
+.win-content {
+    text-align: center; position: relative;
+    animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.win-title {
+    font-family: var(--font-num); font-size: 3rem; margin: 0;
+    background: linear-gradient(to bottom, #fff, var(--accent-gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px var(--accent-gold));
+}
+.win-amount {
+    font-family: var(--font-num); font-size: 2.5rem; color: white;
+    margin: 10px 0;
+}
+.claim-btn {
+    background: linear-gradient(90deg, #ff8c00, #ffd700);
+    border: none; color: black; font-weight: 900;
+    padding: 12px 30px; border-radius: 30px;
+    font-size: 1.2rem; cursor: pointer;
+    box-shadow: 0 5px 20px rgba(255, 140, 0, 0.5);
+}
+
+.rays {
+    position: absolute; top: 50%; left: 50%;
+    width: 200vw; height: 200vw;
+    background: repeating-conic-gradient(from 0deg, rgba(255,215,0,0.1) 0deg 10deg, transparent 10deg 20deg);
+    transform: translate(-50%, -50%);
+    animation: rotate 10s linear infinite;
+    z-index: -1;
+    pointer-events: none;
+}
+@keyframes rotate { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zoomIn { from { transform: scale(0.8); } to { transform: scale(1); } }
+
+/* Инфо таблица */
+.info-content {
+    background: #1a1a20; width: 85%; max-width: 350px;
+    border-radius: 16px; border: 1px solid #444; padding: 20px;
+}
+.info-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.info-header h3 { margin: 0; font-size: 1rem; color: var(--accent-blue); }
+.info-header button { background: none; border: none; color: #fff; font-size: 1.2rem; }
+
+.paytable-list { margin-bottom: 15px; }
+.pay-row {
+    display: flex; justify-content: space-between;
+    border-bottom: 1px solid #333; padding: 6px 0;
+    font-size: 1.1rem;
+}
+.pay-row .x { color: var(--accent-gold); font-weight: bold; font-family: var(--font-num); }
+.info-footer p { font-size: 0.7rem; color: #888; text-align: center; margin: 0; }
