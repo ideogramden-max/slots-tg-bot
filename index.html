@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Slot Machine</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Подключаем SDK Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎰 DEMO SLOTS 🎰</h1>
+        
+        <div class="balance-container">
+            Баланс: <span id="balance">1000</span> 💰
+        </div>
+
+        <div class="slots-machine">
+            <div class="reel" id="reel1">🍒</div>
+            <div class="reel" id="reel2">🍒</div>
+            <div class="reel" id="reel3">🍒</div>
+        </div>
+
+        <div id="status">Нажми SPIN! (Ставка 10)</div>
+
+        <button id="spinBtn" onclick="spin()">SPIN (-10💰)</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
