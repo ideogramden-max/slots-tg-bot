@@ -301,6 +301,65 @@
         </footer>
     </main>
 
+    <!-- =========================================
+         [НОВОЕ] МОДАЛКИ (КОШЕЛЕК, РЕФЕРАЛЫ)
+         ========================================= -->
+    
+    <!-- Кошелек -->
+    <div id="modal-wallet" class="modal-overlay hidden">
+        <div class="modal-content wallet-panel">
+            <div class="modal-header">
+                <h3>КОШЕЛЕК</h3>
+                <button class="close-icon" onclick="closeModal('modal-wallet')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wallet-tabs">
+                <button class="w-tab active">Пополнить</button>
+                <button class="w-tab">Вывести</button>
+            </div>
+            <div class="wallet-body">
+                <p style="color:#aaa; font-size:0.9rem;">Выберите способ:</p>
+                <div class="crypto-list">
+                    <button class="crypto-btn"><i class="fa-brands fa-telegram"></i> Telegram Stars</button>
+                    <button class="crypto-btn"><i class="fa-brands fa-bitcoin"></i> Crypto (TON)</button>
+                    <button class="crypto-btn"><i class="fa-solid fa-credit-card"></i> Карта (РФ)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Рефералы -->
+    <div id="modal-refs" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ПРИГЛАСИ ДРУГА</h3>
+                <button class="close-icon" onclick="closeModal('modal-refs')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="margin: 20px 0;">
+                <i class="fa-solid fa-gift" style="font-size: 3rem; color: var(--gold);"></i>
+            </div>
+            <p>Получи <b>500 ₮</b> за каждого друга!</p>
+            <div class="ref-link-box">
+                <input type="text" value="Загрузка ссылки..." readonly id="ref-link-input">
+                <button onclick="copyRef()">COPY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика / Профиль -->
+    <div id="modal-stats" class="modal-overlay hidden">
+        <div class="modal-content info-panel">
+            <div class="modal-header">
+                <h3>ПРОФИЛЬ</h3>
+                <button class="close-icon" onclick="closeModal('modal-stats')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="paytable-grid">
+                <div class="pay-row"><span class="sym">Игр сыграно:</span> <span class="x-val" id="stat-games">0</span></div>
+                <div class="pay-row"><span class="sym">Побед:</span> <span class="x-val" id="stat-wins" style="color:var(--neon-green)">0</span></div>
+                <div class="pay-row"><span class="sym">Макс. выигрыш:</span> <span class="x-val" id="stat-max">0</span></div>
+            </div>
+        </div>
+    </div>
+
     <!-- 4. МОДАЛЬНЫЕ ОКНА (Попапы) -->
     
     <!-- Окно "BIG WIN" -->
