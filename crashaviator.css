@@ -1,0 +1,316 @@
+/* =========================================
+   FASTMONEY - CRASH/AVIATOR STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.crash-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0b0b10;
+    color: white;
+}
+
+/* Звездное небо на CSS (Градиенты) */
+.stars-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: 
+        radial-gradient(1px 1px at 10% 10%, #fff, transparent),
+        radial-gradient(1px 1px at 20% 20%, #fff, transparent),
+        radial-gradient(2px 2px at 30% 60%, #aaa, transparent),
+        radial-gradient(2px 2px at 40% 40%, #fff, transparent),
+        radial-gradient(1px 1px at 50% 90%, #fff, transparent);
+    background-size: 550px 550px;
+    opacity: 0.6;
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(11, 11, 16, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 10;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.08); border: none;
+    color: #ccc; width: 38px; height: 38px;
+    border-radius: 10px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active { background: white; color: black; }
+
+.balance-container {
+    display: flex; flex-direction: column; align-items: flex-end;
+}
+.balance-container .label { font-size: 0.55rem; color: #666; font-weight: 700; letter-spacing: 1px; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-gold); margin-left: 2px; }
+
+/* --- ИСТОРИЯ РАУНДОВ (Лента) --- */
+.history-bar-wrapper {
+    display: flex; align-items: center;
+    background: rgba(255,255,255,0.03);
+    height: 36px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.history-label {
+    width: 36px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: #555; font-size: 0.9rem;
+    background: rgba(0,0,0,0.2);
+}
+.history-scroll {
+    flex-grow: 1;
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    padding: 0 10px;
+    align-items: center;
+    scrollbar-width: none;
+    flex-direction: row-reverse; /* Новые слева */
+}
+.history-scroll::-webkit-scrollbar { display: none; }
+
+.badge {
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 0.7rem; font-weight: 700; font-family: var(--font-num);
+    white-space: nowrap;
+}
+.badge.blue { color: #3498db; background: rgba(52, 152, 219, 0.15); border: 1px solid rgba(52, 152, 219, 0.3); }
+.badge.green { color: #2ecc71; background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); }
+.badge.gold { color: #f1c40f; background: rgba(241, 196, 15, 0.15); border: 1px solid rgba(241, 196, 15, 0.3); box-shadow: 0 0 5px rgba(241,196,15,0.2); }
+.badge.red { color: #e74c3c; background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.3); }
+
+/* --- ИГРОВАЯ СЦЕНА (CANVAS) --- */
+.crash-stage {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+    /* Сетка координат на фоне */
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.graph-container {
+    width: 100%; height: 100%;
+    position: relative;
+}
+
+#crash-canvas {
+    width: 100%; height: 100%;
+    display: block;
+}
+
+/* Текст множителя в центре */
+.multiplier-overlay {
+    position: absolute;
+    top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none; /* Чтобы клики проходили сквозь */
+    z-index: 5;
+}
+
+.main-number {
+    font-family: var(--font-num);
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    transition: color 0.2s;
+}
+
+.info-msg {
+    font-size: 1rem; color: #888; letter-spacing: 2px; font-weight: 700;
+    animation: pulseText 1.5s infinite;
+}
+@keyframes pulseText { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+/* Надпись CRASHED */
+.crash-label {
+    font-family: var(--font-num);
+    font-size: 2.5rem;
+    color: #ff0055;
+    font-weight: 900;
+    text-shadow: 0 0 20px #ff0055;
+    animation: shake 0.5s;
+}
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Ракета */
+.rocket {
+    position: absolute;
+    width: 40px; height: 40px;
+    color: #ff3366; /* Красный корпус */
+    font-size: 2rem;
+    /* Начальная позиция (низ-лево) */
+    left: 10px; bottom: 10px; 
+    transform: rotate(45deg); /* Носом вверх-вправо */
+    filter: drop-shadow(0 0 10px #ff3366);
+    z-index: 10;
+    transition: transform 0.1s linear; /* Плавный поворот */
+}
+
+/* Хвост ракеты (огонь) */
+.rocket-trail {
+    position: absolute;
+    top: 50%; left: -20px;
+    width: 30px; height: 6px;
+    background: linear-gradient(90deg, transparent, #00f3ff);
+    filter: blur(4px);
+    transform: translateY(-50%);
+    opacity: 0; /* Появляется при полете */
+}
+.rocket.flying .rocket-trail { opacity: 1; }
+/* Тряска при полете */
+.rocket.flying i {
+    display: inline-block;
+    animation: turbulence 0.2s infinite;
+}
+@keyframes turbulence {
+    0% { transform: translate(0,0); }
+    50% { transform: translate(1px, -1px); }
+    100% { transform: translate(0,0); }
+}
+
+/* Эффект взрыва (скрыт по умолчанию) */
+.rocket.boom {
+    font-size: 3rem; color: orange;
+    transform: scale(1.5) rotate(0);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.crash-controls {
+    background: rgba(20, 20, 25, 0.95);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 15px 15px 25px 15px;
+    display: flex; flex-direction: column; gap: 15px;
+    z-index: 20;
+}
+
+.bet-settings {
+    display: flex; gap: 10px; align-items: flex-end;
+}
+
+.bet-input-group { flex-grow: 1; }
+.bet-input-group label { display: block; font-size: 0.6rem; color: #888; font-weight: 700; margin-bottom: 5px; }
+
+.stepper-box {
+    display: flex; align-items: center;
+    background: #111; border: 1px solid #333;
+    border-radius: 12px; overflow: hidden; height: 44px;
+}
+.step-btn {
+    width: 44px; height: 100%;
+    background: #222; border: none; color: white;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { background: #444; }
+#bet-amount {
+    flex-grow: 1; text-align: center;
+    font-family: var(--font-num); font-weight: 700;
+}
+
+.bet-shortcuts {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+    width: 120px;
+}
+.bet-shortcuts button {
+    background: rgba(255,255,255,0.05); border: none; color: #ccc;
+    border-radius: 8px; font-size: 0.7rem; font-weight: 700;
+    height: 30px; cursor: pointer;
+}
+.bet-shortcuts button:active { background: white; color: black; }
+
+/* ACTION BUTTON */
+.action-area { width: 100%; }
+.action-button {
+    width: 100%; height: 60px;
+    border-radius: 16px; border: none;
+    font-family: var(--font-main);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.1s;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.5);
+    position: relative; overflow: hidden;
+}
+.action-button:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.5); }
+
+/* Состояние: ПОСТАВИТЬ (Default) */
+.btn-bet {
+    background: linear-gradient(180deg, #2ecc71, #27ae60);
+    color: white;
+}
+.btn-title { font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; }
+.btn-sub { font-size: 0.7rem; opacity: 0.8; }
+
+/* Состояние: ОЖИДАНИЕ (Cancel) */
+.btn-cancel {
+    background: linear-gradient(180deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+/* Состояние: ЗАБРАТЬ (Cashout) */
+.btn-cashout {
+    background: linear-gradient(180deg, #f1c40f, #f39c12);
+    color: #000;
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
+    animation: btnPulse 0.5s infinite alternate;
+}
+@keyframes btnPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.02); }
+}
+
+/* --- MODALS / TOAST --- */
+.toast-overlay {
+    position: fixed; top: 80px; left: 0; width: 100%;
+    display: flex; justify-content: center;
+    pointer-events: none; z-index: 100;
+}
+.toast-box {
+    background: rgba(46, 204, 113, 0.95);
+    backdrop-filter: blur(5px);
+    padding: 10px 20px;
+    border-radius: 30px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    animation: slideDown 0.3s ease-out;
+}
+@keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.toast-icon { background: white; color: #2ecc71; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.toast-text { display: flex; flex-direction: column; }
+.t-title { font-size: 0.6rem; font-weight: 800; color: #004d26; }
+.t-amount { font-family: var(--font-num); font-weight: 900; color: white; font-size: 1rem; }
+
+/* Инфо модалка */
+.info-card {
+    background: #1a1a20; width: 85%; border-radius: 16px; padding: 20px;
+    border: 1px solid #444;
+}
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-header button { background: none; border: none; color: white; font-size: 1.2rem; }
+.card-body ol { margin: 0; padding-left: 20px; font-size: 0.85rem; color: #ccc; line-height: 1.6; }
+.fairness-badge {
+    margin-top: 15px; text-align: center;
+    background: rgba(0, 255, 136, 0.1); color: #00ff88;
+    padding: 8px; border-radius: 8px; font-size: 0.8rem; font-weight: bold;
+  }
