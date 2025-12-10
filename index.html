@@ -44,6 +44,133 @@
     <!-- Световые блики -->
     <div class="light-leak-top"></div>
 
+    <!-- =========================================
+         [НОВОЕ] ЭКРАН 1: ГЛАВНОЕ МЕНЮ
+         ========================================= -->
+    <section id="main-menu" class="screen hidden">
+        
+        <!-- Верхняя плашка: Профиль и Баланс -->
+        <div class="menu-header">
+            <div class="user-badge">
+                <div class="avatar-small"><i class="fa-solid fa-user-secret"></i></div>
+                <div class="user-details">
+                    <span id="menu-username" class="u-name">Guest</span>
+                    <span class="u-id">ID: <span id="menu-userid">---</span></span>
+                </div>
+            </div>
+            <div class="wallet-badge">
+                <span class="w-label">БАЛАНС</span>
+                <span class="w-amount"><span id="menu-balance">---</span> ₮</span>
+                <button class="btn-mini-add" onclick="openDepositModal()">+</button>
+            </div>
+        </div>
+
+        <!-- Сетка кнопок (Dashboard) -->
+        <div class="dashboard-grid">
+            
+            <!-- Кнопка ИГРАТЬ (Большая) -->
+            <div class="dash-card big-card" onclick="showScreen('games-lobby')">
+                <div class="card-bg-icon"><i class="fa-solid fa-gamepad"></i></div>
+                <div class="card-content">
+                    <h2>ИГРЫ</h2>
+                    <p>Slots, Mines, Crash...</p>
+                </div>
+                <div class="card-action"><i class="fa-solid fa-play"></i></div>
+            </div>
+
+            <!-- Профиль -->
+            <div class="dash-card" onclick="openProfileModal()">
+                <div class="card-icon"><i class="fa-regular fa-id-card"></i></div>
+                <span>Профиль</span>
+            </div>
+
+            <!-- Кошелек -->
+            <div class="dash-card" onclick="openWalletModal()">
+                <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
+                <span>Кошелек</span>
+            </div>
+
+            <!-- Друзья -->
+            <div class="dash-card" onclick="openReferralModal()">
+                <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+                <span>Друзья</span>
+            </div>
+
+            <!-- Статистика -->
+            <div class="dash-card" onclick="openStatsModal()">
+                <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <span>Инфо</span>
+            </div>
+        </div>
+
+        <!-- Баннер бонуса -->
+        <div class="promo-banner">
+            <div class="promo-text">
+                <h3>DAILY BONUS</h3>
+                <p>Получи +500 ₮ бесплатно</p>
+            </div>
+            <button class="btn-claim" onclick="claimDailyBonus()">ЗАБРАТЬ</button>
+        </div>
+    </section>
+
+    <!-- =========================================
+         [НОВОЕ] ЭКРАН 2: ЛОББИ ИГР
+         ========================================= -->
+    <section id="games-lobby" class="screen hidden">
+        <div class="screen-header">
+            <button class="btn-back" onclick="showScreen('main-menu')"><i class="fa-solid fa-chevron-left"></i></button>
+            <h2>GAMES LOBBY</h2>
+        </div>
+
+        <div class="games-grid">
+            <!-- Активная игра: СЛОТЫ -->
+            <div class="game-card active-game" onclick="showScreen('game-slots')">
+                <div class="game-img glow-gold">🎰</div>
+                <div class="game-info">
+                    <span class="g-title">SLOTS 777</span>
+                    <span class="g-status online">Live</span>
+                </div>
+            </div>
+
+            <!-- MINES (Заглушка) -->
+            <div class="game-card disabled">
+                <div class="game-img">💣</div>
+                <div class="game-info"><span class="g-title">Mines</span><span class="g-status soon">Скоро</span></div>
+            </div>
+            
+            <!-- CRASH (Заглушка) -->
+            <div class="game-card disabled">
+                <div class="game-img">🚀</div>
+                <div class="game-info"><span class="g-title">Crash</span><span class="g-status soon">Скоро</span></div>
+            </div>
+
+            <!-- TOWER (Заглушка) -->
+            <div class="game-card disabled">
+                <div class="game-img">🗼</div>
+                <div class="game-info"><span class="g-title">Tower</span><span class="g-status soon">Скоро</span></div>
+            </div>
+
+            <!-- КОСТИ (Заглушка) -->
+            <div class="game-card disabled">
+                <div class="game-img">🎲</div>
+                <div class="game-info"><span class="g-title">Dice</span><span class="g-status soon">Скоро</span></div>
+            </div>
+            
+            <!-- РУЛЕТКА (Заглушка) -->
+             <div class="game-card disabled">
+                <div class="game-img">🔫</div>
+                <div class="game-info"><span class="g-title">Roulette</span><span class="g-status soon">Скоро</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- [НОВОЕ] ОТКРЫВАЮЩИЙ ТЕГ ОБЕРТКИ СЛОТОВ -->
+    <div id="game-slots" class="screen hidden">
+        <!-- Кнопка выхода из игры обратно в меню -->
+        <button class="btn-exit-game" onclick="showScreen('games-lobby')">
+            <i class="fa-solid fa-arrow-left"></i> МЕНЮ
+        </button>
+
     <!-- 3. ОСНОВНОЙ ИНТЕРФЕЙС ИГРЫ -->
     <main id="game-app" class="game-wrapper hidden">
         
