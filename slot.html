@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Slots</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css"> <!-- Глобальный -->
+    <link rel="stylesheet" href="slot.css">   <!-- Уникальный для слота -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="game-body">
+
+    <!-- Фоновые эффекты -->
+    <div class="vignette"></div>
+    <div class="slot-bg-glow"></div> <!-- Цветное свечение за автоматом -->
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-pill">
+            <span class="label">БАЛАНС</span>
+            <div class="value-box">
+                <span id="balance-display">Loading...</span>
+                <span class="currency-icon" id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-info"></i>
+        </button>
+    </header>
+
+    <!-- Основная зона игры -->
+    <main class="slot-machine-wrapper">
+        
+        <!-- Джекпот табло -->
+        <div class="jackpot-board">
+            <span class="jackpot-label">MEGA JACKPOT</span>
+            <span class="jackpot-value odometer" id="jackpot-counter">777,777</span>
+        </div>
+
+        <!-- Корпус автомата -->
+        <div class="machine-frame">
+            <div class="lights-top"></div>
+            
+            <!-- Окно барабанов -->
+            <div class="reels-container">
+                <div class="payline"></div> <!-- Красная линия (появляется при победе) -->
+                
+                <!-- Барабан 1 -->
+                <div class="reel-col">
+                    <div class="reel-strip" id="reel-1">
+                        <div class="sym">🍒</div>
+                        <div class="sym">🍋</div>
+                        <div class="sym">🔔</div>
+                    </div>
+                    <div class="reel-shadow"></div>
+                </div>
+
+                <!-- Барабан 2 -->
+                <div class="reel-col">
+                    <div class="reel-strip" id="reel-2">
+                        <div class="sym">💎</div>
+                        <div class="sym">7️⃣</div>
+                        <div class="sym">🍇</div>
+                    </div>
+                    <div class="reel-shadow"></div>
+                </div>
+
+                <!-- Барабан 3 -->
+                <div class="reel-col">
+                    <div class="reel-strip" id="reel-3">
+                        <div class="sym">🍋</div>
+                        <div class="sym">🍒</div>
+                        <div class="sym">💎</div>
+                    </div>
+                    <div class="reel-shadow"></div>
+                </div>
+            </div>
+
+            <div class="lights-bottom"></div>
+        </div>
+    </main>
+
+    <!-- Нижняя панель управления -->
+    <footer class="game-controls">
+        
+        <!-- Статус строка -->
+        <div class="status-message" id="status-text">УДАЧИ! 🍀</div>
+
+        <div class="controls-row">
+            <!-- Управление ставкой -->
+            <div class="bet-control">
+                <span class="label-mini">СТАВКА</span>
+                <div class="stepper">
+                    <button id="btn-dec"><i class="fa-solid fa-minus"></i></button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <button class="max-bet" id="btn-max">MAX</button>
+            </div>
+
+            <!-- Большая кнопка СПИН -->
+            <div class="spin-wrapper">
+                <button id="spin-btn" class="spin-button">
+                    <div class="inner-spin">
+                        <span>SPIN</span>
+                    </div>
+                    <div class="pulse-ring"></div>
+                </button>
+            </div>
+
+            <!-- Авто игра -->
+            <div class="auto-control">
+                <span class="label-mini">АВТО</span>
+                <label class="switch">
+                    <input type="checkbox" id="auto-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа (Big Win) -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-content">
+            <div class="rays"></div>
+            <h2 class="win-title">BIG WIN!</h2>
+            <div class="win-amount">
+                <span id="win-val">0</span>
+                <span id="win-curr">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ЗАБРАТЬ</button>
+            <div id="confetti-canvas"></div>
+        </div>
+    </div>
+
+    <!-- Таблица выплат -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-content">
+            <div class="info-header">
+                <h3>ТАБЛИЦА ВЫПЛАТ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="paytable-list">
+                <div class="pay-row"><span class="s">7️⃣7️⃣7️⃣</span> <span class="x">x50</span></div>
+                <div class="pay-row"><span class="s">💎💎💎</span> <span class="x">x25</span></div>
+                <div class="pay-row"><span class="s">🔔🔔🔔</span> <span class="x">x10</span></div>
+                <div class="pay-row"><span class="s">🍇🍇🍇</span> <span class="x">x5</span></div>
+                <div class="pay-row"><span class="s">🍋🍋🍋</span> <span class="x">x3</span></div>
+                <div class="pay-row"><span class="s">🍒🍒🍒</span> <span class="x">x2</span></div>
+            </div>
+            <div class="info-footer">
+                <p>Совпадение любых 2-х символов возвращает часть ставки.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Звуки (Audio Tags) - Логика подключит их в JS -->
+    <div style="display:none;">
+        <audio id="snd-spin" src="assets/spin.mp3"></audio> <!-- Если есть -->
+    </div>
+
+    <!-- Скрипт игры -->
+    <script src="slot.js"></script>
+</body>
+                  </html>
