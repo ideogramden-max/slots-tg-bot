@@ -2,409 +2,121 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- Запрет зума на мобильных устройствах - критично для WebApp -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Main Hub</title>
     
-    <title>FastMoney 2.0 - Casino Slot</title>
-
-    <!-- Подключаем крутые шрифты: Orbitron для цифр и заголовков, Montserrat для текста -->
+    <!-- Шрифты и Иконки -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
-    
-    <!-- Иконки (для кнопок настроек, звука и т.д.) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Основной стиль -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Telegram WebApp SDK -->
+    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<body>
+<body class="hub-body">
 
-    <!-- 1. PRELOADER (Загрузочный экран) -->
-    <!-- Пользователь увидит это, пока подгружаются ресурсы -->
-    <div id="preloader" class="preloader-container">
-        <div class="logo-area">
-            <h1 class="neon-text flicker-slow">FAST<span class="color-accent">MONEY</span></h1>
-            <span class="version">v2.0</span>
-        </div>
-        <div class="loader-bar-shell">
-            <div class="loader-bar-fill" id="loader-progress"></div>
-        </div>
-        <div class="loading-text">CONNECTING TO SERVER...</div>
-    </div>
-
-    <!-- 2. ФОНОВЫЕ ЭФФЕКТЫ -->
-    <!-- Canvas для отрисовки летающих частиц/неона через JS -->
+    <!-- Фон: Живой Canvas -->
     <canvas id="bg-canvas"></canvas>
-    <!-- Виньетка для затемнения углов -->
-    <div class="vignette-overlay"></div>
-    <!-- Световые блики -->
-    <div class="light-leak-top"></div>
+    <div class="vignette"></div>
 
-    <!-- =========================================
-         [НОВОЕ] ЭКРАН 1: ГЛАВНОЕ МЕНЮ
-         ========================================= -->
-    <section id="main-menu" class="screen hidden">
-        
-        <!-- Верхняя плашка: Профиль и Баланс -->
-        <div class="menu-header">
-            <div class="user-badge">
-                <div class="avatar-small"><i class="fa-solid fa-user-secret"></i></div>
-                <div class="user-details">
-                    <span id="menu-username" class="u-name">Guest</span>
-                    <span class="u-id">ID: <span id="menu-userid">---</span></span>
-                </div>
+    <!-- Верхняя панель: Профиль и Валюта -->
+    <header class="top-bar">
+        <div class="user-info" onclick="window.location.href='profile.html'">
+            <div class="avatar-frame">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="user-avatar" alt="User">
             </div>
-            <div class="wallet-badge">
-                <span class="w-label">БАЛАНС</span>
-                <span class="w-amount"><span id="menu-balance">---</span> ₮</span>
-                <button class="btn-mini-add" onclick="openDepositModal()">+</button>
+            <div class="user-text">
+                <span id="username">Loading...</span>
+                <span class="user-id">ID: <span id="userid">---</span></span>
             </div>
         </div>
-
-        <!-- Сетка кнопок (Dashboard) -->
-        <div class="dashboard-grid">
+        
+        <!-- Выбор валюты -->
+        <div class="currency-selector" id="currency-btn">
+            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="curr-icon" id="curr-icon">
+            <span id="curr-name">USDT</span>
+            <i class="fa-solid fa-caret-down"></i>
             
-            <!-- Кнопка ИГРАТЬ (Большая) -->
-            <div class="dash-card big-card" onclick="showScreen('games-lobby')">
-                <div class="card-bg-icon"><i class="fa-solid fa-gamepad"></i></div>
-                <div class="card-content">
-                    <h2>ИГРЫ</h2>
-                    <p>Slots, Mines, Crash...</p>
+            <!-- Выпадающий список -->
+            <div class="curr-dropdown hidden" id="curr-dropdown">
+                <div class="curr-item" onclick="changeCurrency('RUB')">
+                    <span class="fi">₽</span> RUB
                 </div>
-                <div class="card-action"><i class="fa-solid fa-play"></i></div>
+                <div class="curr-item" onclick="changeCurrency('USDT')">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png"> USDT
+                </div>
+                <div class="curr-item" onclick="changeCurrency('STARS')">
+                    <i class="fa-solid fa-star" style="color:#ffd700"></i> STARS
+                </div>
             </div>
+        </div>
+    </header>
 
-            <!-- Профиль -->
-            <div class="dash-card" onclick="openProfileModal()">
-                <div class="card-icon"><i class="fa-regular fa-id-card"></i></div>
+    <!-- Главный блок баланса -->
+    <section class="balance-hub">
+        <div class="balance-toggle">
+            <button class="toggle-btn active" id="btn-real" onclick="setMode('real')">REAL</button>
+            <button class="toggle-btn" id="btn-demo" onclick="setMode('demo')">DEMO</button>
+        </div>
+        
+        <div class="balance-display">
+            <span class="currency-symbol" id="main-curr-sym">$</span>
+            <span class="amount odometer" id="balance-amount">0.00</span>
+        </div>
+
+        <div class="wallet-actions">
+            <button class="action-btn deposit" onclick="window.location.href='deposit.html'">
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
+                <span>Пополнить</span>
+            </button>
+            <button class="action-btn withdraw" onclick="window.location.href='withdraw.html'">
+                <div class="icon-circle"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+                <span>Вывести</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Основная навигация -->
+    <nav class="main-nav">
+        <!-- Огромная кнопка ИГРЫ -->
+        <div class="nav-card big-play" onclick="navigateTo('gamelist.html')">
+            <div class="card-bg"></div>
+            <div class="content">
+                <h2>ИГРЫ</h2>
+                <p>15+ режимов</p>
+            </div>
+            <div class="play-icon"><i class="fa-solid fa-gamepad"></i></div>
+        </div>
+
+        <div class="nav-grid">
+            <div class="nav-card" onclick="window.location.href='profile.html'">
+                <i class="fa-solid fa-user-astronaut"></i>
                 <span>Профиль</span>
             </div>
-
-            <!-- Кошелек -->
-            <div class="dash-card" onclick="openWalletModal()">
-                <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
-                <span>Кошелек</span>
+            <div class="nav-card" onclick="window.location.href='stat.html'">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Статистика</span>
             </div>
-
-            <!-- Друзья -->
-            <div class="dash-card" onclick="openReferralModal()">
-                <div class="card-icon"><i class="fa-solid fa-users"></i></div>
-                <span>Друзья</span>
+            <div class="nav-card" onclick="window.location.href='ref.html'">
+                <i class="fa-solid fa-users"></i>
+                <span>Рефералы</span>
             </div>
-
-            <!-- Статистика -->
-            <div class="dash-card" onclick="openStatsModal()">
-                <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
-                <span>Инфо</span>
+            <div class="nav-card support" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/fastmoneyhelp_bot')">
+                <i class="fa-solid fa-headset"></i>
+                <span>Support</span>
             </div>
         </div>
-
-        <!-- Баннер бонуса -->
-        <div class="promo-banner">
-            <div class="promo-text">
-                <h3>DAILY BONUS</h3>
-                <p>Получи +500 ₮ бесплатно</p>
-            </div>
-            <button class="btn-claim" onclick="claimDailyBonus()">ЗАБРАТЬ</button>
-        </div>
-    </section>
-
-    <!-- =========================================
-         [НОВОЕ] ЭКРАН 2: ЛОББИ ИГР
-         ========================================= -->
-    <section id="games-lobby" class="screen hidden">
-        <div class="screen-header">
-            <button class="btn-back" onclick="showScreen('main-menu')"><i class="fa-solid fa-chevron-left"></i></button>
-            <h2>GAMES LOBBY</h2>
-        </div>
-
-        <div class="games-grid">
-            <!-- Активная игра: СЛОТЫ -->
-            <div class="game-card active-game" onclick="showScreen('game-slots')">
-                <div class="game-img glow-gold">🎰</div>
-                <div class="game-info">
-                    <span class="g-title">SLOTS 777</span>
-                    <span class="g-status online">Live</span>
-                </div>
-            </div>
-
-            <!-- MINES (Заглушка) -->
-            <div class="game-card disabled">
-                <div class="game-img">💣</div>
-                <div class="game-info"><span class="g-title">Mines</span><span class="g-status soon">Скоро</span></div>
-            </div>
-            
-            <!-- CRASH (Заглушка) -->
-            <div class="game-card disabled">
-                <div class="game-img">🚀</div>
-                <div class="game-info"><span class="g-title">Crash</span><span class="g-status soon">Скоро</span></div>
-            </div>
-
-            <!-- TOWER (Заглушка) -->
-            <div class="game-card disabled">
-                <div class="game-img">🗼</div>
-                <div class="game-info"><span class="g-title">Tower</span><span class="g-status soon">Скоро</span></div>
-            </div>
-
-            <!-- КОСТИ (Заглушка) -->
-            <div class="game-card disabled">
-                <div class="game-img">🎲</div>
-                <div class="game-info"><span class="g-title">Dice</span><span class="g-status soon">Скоро</span></div>
-            </div>
-            
-            <!-- РУЛЕТКА (Заглушка) -->
-             <div class="game-card disabled">
-                <div class="game-img">🔫</div>
-                <div class="game-info"><span class="g-title">Roulette</span><span class="g-status soon">Скоро</span></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- [НОВОЕ] ОТКРЫВАЮЩИЙ ТЕГ ОБЕРТКИ СЛОТОВ -->
-    <div id="game-slots" class="screen hidden">
-        <!-- Кнопка выхода из игры обратно в меню -->
-        <button class="btn-exit-game" onclick="showScreen('games-lobby')">
-            <i class="fa-solid fa-arrow-left"></i> МЕНЮ
-        </button>
-
-    <!-- 3. ОСНОВНОЙ ИНТЕРФЕЙС ИГРЫ -->
-    <main id="game-app" class="game-wrapper hidden">
-        </div>
-        
-        <!-- Верхняя панель (HUD) -->
-        <header class="hud-top">
-            <!-- Блок профиля -->
-            <div class="profile-block">
-                <div class="avatar-circle" id="user-avatar">
-                    <i class="fa-solid fa-user-astronaut"></i>
-                </div>
-                <div class="user-info">
-                    <span id="username" class="user-name">Guest</span>
-                    <span class="status-badge">DEMO</span>
-                </div>
-            </div>
-
-            <!-- Блок баланса (Светится золотым) -->
-            <div class="balance-wrapper">
-                <div class="balance-label">WALLET</div>
-                <div class="balance-amount">
-                    <span class="currency-symbol">₮</span>
-                    <span id="balance-display" class="odometer">10,000</span>
-                </div>
-                <button class="add-funds-btn" onclick="openDepositModal()">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>
-
-            <!-- Кнопки меню -->
-            <div class="menu-controls">
-                <button class="icon-btn" id="sound-toggle"><i class="fa-solid fa-volume-high"></i></button>
-                <button class="icon-btn" onclick="openInfoModal()"><i class="fa-solid fa-circle-info"></i></button>
-            </div>
-        </header>
-
-        <!-- Джекпот табло (Бегущая строка или счетчик) -->
-        <div class="jackpot-banner">
-            <div class="jackpot-title">MEGA JACKPOT</div>
-            <div class="jackpot-value glow-red" id="jackpot-counter">777,777,777</div>
-        </div>
-
-        <!-- ИГРОВОЕ ПОЛЕ (Слоты) -->
-        <div class="slot-machine-container">
-            <!-- Декоративная рамка машины -->
-            <div class="machine-frame">
-                <div class="frame-lights-top"></div>
-                
-                <!-- Окно с барабанами -->
-                <div class="reels-window">
-                    <!-- Линия выигрыша (появляется при победе) -->
-                    <div class="payline-overlay hidden" id="payline-center"></div>
-                    
-                    <!-- Сами барабаны -->
-                    <div class="reels-wrapper">
-                        <!-- Reel 1 -->
-                        <div class="reel-column">
-                            <div class="reel-strip" id="reel-1">
-                                <!-- Символы будут генерироваться JS -->
-                                <div class="symbol symbol-placeholder">?</div>
-                            </div>
-                            <div class="reel-overlay"></div> <!-- Тень для эффекта 3D цилиндра -->
-                        </div>
-                        
-                        <!-- Reel 2 -->
-                        <div class="reel-column">
-                            <div class="reel-strip" id="reel-2">
-                                <div class="symbol symbol-placeholder">?</div>
-                            </div>
-                            <div class="reel-overlay"></div>
-                        </div>
-                        
-                        <!-- Reel 3 -->
-                        <div class="reel-column">
-                            <div class="reel-strip" id="reel-3">
-                                <div class="symbol symbol-placeholder">?</div>
-                            </div>
-                            <div class="reel-overlay"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="frame-lights-bottom"></div>
-            </div>
-        </div>
-
-        <!-- Нижняя панель управления (Controls) -->
-        <footer class="hud-bottom">
-            
-            <!-- Инфо-строка статуса -->
-            <div class="status-bar">
-                <div id="game-status" class="typewriter-text">WELCOME TO FASTMONEY 2.0</div>
-            </div>
-
-            <!-- Панель ставок -->
-            <div class="controls-grid">
-                
-                <!-- Управление ставкой -->
-                <div class="control-group bet-control">
-                    <span class="label-tiny">BET AMOUNT</span>
-                    <div class="stepper">
-                        <button class="step-btn minus" id="btn-dec-bet"><i class="fa-solid fa-minus"></i></button>
-                        <span id="current-bet" class="value-display">100</span>
-                        <button class="step-btn plus" id="btn-inc-bet"><i class="fa-solid fa-plus"></i></button>
-                    </div>
-                    <button class="max-bet-btn" id="btn-max-bet">MAX</button>
-                </div>
-
-                <!-- Главная кнопка SPIN -->
-                <div class="spin-area">
-                    <button id="spin-btn" class="spin-button-circle">
-                        <div class="inner-circle">
-                            <span class="spin-text">SPIN</span>
-                        </div>
-                        <div class="ring-pulse"></div>
-                    </button>
-                </div>
-
-                <!-- Авто-игра -->
-                <div class="control-group auto-control">
-                    <span class="label-tiny">AUTO SPIN</span>
-                    <label class="switch">
-                        <input type="checkbox" id="auto-spin-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-            </div>
-        </footer>
-    </main>
-
-    <!-- =========================================
-         [НОВОЕ] МОДАЛКИ (КОШЕЛЕК, РЕФЕРАЛЫ)
-         ========================================= -->
+    </nav>
     
-    <!-- Кошелек -->
-    <div id="modal-wallet" class="modal-overlay hidden">
-        <div class="modal-content wallet-panel">
-            <div class="modal-header">
-                <h3>КОШЕЛЕК</h3>
-                <button class="close-icon" onclick="closeModal('modal-wallet')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="wallet-tabs">
-                <button class="w-tab active">Пополнить</button>
-                <button class="w-tab">Вывести</button>
-            </div>
-            <div class="wallet-body">
-                <p style="color:#aaa; font-size:0.9rem;">Выберите способ:</p>
-                <div class="crypto-list">
-                    <button class="crypto-btn"><i class="fa-brands fa-telegram"></i> Telegram Stars</button>
-                    <button class="crypto-btn"><i class="fa-brands fa-bitcoin"></i> Crypto (TON)</button>
-                    <button class="crypto-btn"><i class="fa-solid fa-credit-card"></i> Карта (РФ)</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Нижний статус бар -->
+    <footer class="system-status">
+        <span class="ping"><span class="dot"></span> Online: 14,203</span>
+        <span class="version">v2.5.1 Stable</span>
+    </footer>
 
-    <!-- Рефералы -->
-    <div id="modal-refs" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>ПРИГЛАСИ ДРУГА</h3>
-                <button class="close-icon" onclick="closeModal('modal-refs')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div style="margin: 20px 0;">
-                <i class="fa-solid fa-gift" style="font-size: 3rem; color: var(--gold);"></i>
-            </div>
-            <p>Получи <b>500 ₮</b> за каждого друга!</p>
-            <div class="ref-link-box">
-                <input type="text" value="Загрузка ссылки..." readonly id="ref-link-input">
-                <button onclick="copyRef()">COPY</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Статистика / Профиль -->
-    <div id="modal-stats" class="modal-overlay hidden">
-        <div class="modal-content info-panel">
-            <div class="modal-header">
-                <h3>ПРОФИЛЬ</h3>
-                <button class="close-icon" onclick="closeModal('modal-stats')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="paytable-grid">
-                <div class="pay-row"><span class="sym">Игр сыграно:</span> <span class="x-val" id="stat-games">0</span></div>
-                <div class="pay-row"><span class="sym">Побед:</span> <span class="x-val" id="stat-wins" style="color:var(--neon-green)">0</span></div>
-                <div class="pay-row"><span class="sym">Макс. выигрыш:</span> <span class="x-val" id="stat-max">0</span></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. МОДАЛЬНЫЕ ОКНА (Попапы) -->
-    
-    <!-- Окно "BIG WIN" -->
-    <div id="modal-win" class="modal-overlay hidden">
-        <div class="modal-content win-popup">
-            <div class="rays-bg"></div> <!-- Вращающиеся лучи -->
-            <h2 class="win-title rubberBand">BIG WIN!</h2>
-            <div class="win-amount" id="win-display">0</div>
-            <button class="claim-btn" onclick="closeWinModal()">COLLECT</button>
-            <div class="confetti-container" id="confetti-canvas"></div>
-        </div>
-    </div>
-
-    <!-- Окно "Информация / Таблица выплат" -->
-    <div id="modal-info" class="modal-overlay hidden">
-        <div class="modal-content info-panel">
-            <div class="modal-header">
-                <h3>PAYTABLE</h3>
-                <button class="close-icon" onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="paytable-grid">
-                <!-- Ряды с коэффициентами -->
-                <div class="pay-row"><span class="sym">7️⃣7️⃣7️⃣</span> <span class="x-val">x50</span></div>
-                <div class="pay-row"><span class="sym">💎💎💎</span> <span class="x-val">x25</span></div>
-                <div class="pay-row"><span class="sym">🔔🔔🔔</span> <span class="x-val">x10</span></div>
-                <div class="pay-row"><span class="sym">🍒🍒🍒</span> <span class="x-val">x5</span></div>
-            </div>
-            <div class="modal-footer">
-                <p>Wild symbols substitute for any symbol.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. АУДИО РЕСУРСЫ -->
-    <div id="audio-assets" style="display: none;">
-        <!-- Ссылки на звуки (нужно будет найти или сгенерировать файлы) -->
-        <!-- Для примера используем ID, в JS подключим реальные звуки или синтез -->
-        <audio id="snd-spin" preload="auto"></audio>
-        <audio id="snd-win" preload="auto"></audio>
-        <audio id="snd-jackpot" preload="auto"></audio>
-        <audio id="snd-click" preload="auto"></audio>
-        <audio id="snd-bgm" loop preload="auto"></audio>
-    </div>
-
-    <!-- Основной скрипт -->
     <script src="script.js"></script>
 </body>
 </html>
