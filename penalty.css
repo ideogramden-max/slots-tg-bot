@@ -1,0 +1,316 @@
+/* =========================================
+   FASTMONEY - PENALTY SHOOTOUT STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.penalty-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #051008;
+    color: white;
+}
+
+/* Фон стадиона (Трава + Трибуны в темноте) */
+.stadium-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -3;
+    /* Градиент: Небо -> Трибуны -> Трава */
+    background: linear-gradient(180deg, #0b1a26 0%, #050f16 40%, #1e4d2b 40%, #2ecc71 100%);
+}
+
+/* Текстура травы */
+.stadium-bg::after {
+    content: ''; position: absolute; top: 40%; left: 0; width: 100%; height: 60%;
+    background-image: 
+        linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent),
+        linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent);
+    background-size: 50px 50px;
+    opacity: 0.3;
+    transform: perspective(500px) rotateX(60deg) scale(2);
+    transform-origin: top;
+}
+
+/* Прожекторы */
+.spotlights {
+    position: fixed; top: -50px; left: 0; width: 100%; height: 60%;
+    z-index: -2;
+    background: 
+        conic-gradient(from 160deg at 50% 0%, transparent 0deg, rgba(255,255,255,0.1) 15deg, transparent 30deg),
+        conic-gradient(from 190deg at 20% 0%, transparent 0deg, rgba(255,255,255,0.05) 15deg, transparent 30deg),
+        conic-gradient(from 130deg at 80% 0%, transparent 0deg, rgba(255,255,255,0.05) 15deg, transparent 30deg);
+    filter: blur(10px);
+    pointer-events: none;
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(5, 20, 10, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 10;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.1); border: none;
+    color: #ccc; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
+
+.balance-container .label { font-size: 0.55rem; color: #88dba3; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-gold, #ffd700); }
+
+/* --- ИСТОРИЯ --- */
+.history-bar {
+    height: 30px; background: rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.h-scroll { display: flex; gap: 5px; }
+.ball-mark {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; background: white;
+}
+.ball-mark.miss { filter: grayscale(1) brightness(0.7); opacity: 0.7; }
+
+/* --- ИГРОВАЯ СЦЕНА (3D) --- */
+.penalty-stage {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+    perspective: 800px; /* Глубина 3D */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end; /* Ворота внизу */
+    padding-bottom: 80px; /* Отступ под мяч */
+}
+
+/* ЗОНА ВОРОТ */
+.gate-area {
+    position: relative;
+    width: 320px; height: 200px;
+    transform-style: preserve-3d;
+}
+
+/* Штанги */
+.goal-post {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    border-top: 8px solid #ddd;
+    border-left: 8px solid #ddd;
+    border-right: 8px solid #ddd;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    /* Тень на траве */
+}
+.goal-post::after {
+    content: ''; position: absolute; bottom: 0; left: -10px; width: 106%; height: 2px;
+    background: rgba(255,255,255,0.5); /* Линия ворот */
+    z-index: 0;
+}
+
+/* Сетка */
+.net {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(0deg, rgba(255,255,255,0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px);
+    background-size: 15px 15px;
+    z-index: -1;
+    opacity: 0.6;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+}
+
+/* ВРАТАРЬ */
+.goalkeeper {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 80px; height: 100px;
+    z-index: 2;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); /* Плавный прыжок */
+}
+.goalkeeper img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+
+/* Анимация ожидания */
+.goalkeeper.idle { animation: idleSway 2s infinite ease-in-out; }
+@keyframes idleSway { 0%, 100% { transform: translateX(-50%) rotate(0deg); } 50% { transform: translateX(-50%) rotate(2deg) translateY(2px); } }
+
+/* Позиции прыжка */
+.goalkeeper.dive-left { transform: translate(-120px, 20px) rotate(-45deg); }
+.goalkeeper.dive-right { transform: translate(40px, 20px) rotate(45deg); }
+.goalkeeper.dive-top-left { transform: translate(-120px, -40px) rotate(-30deg); }
+.goalkeeper.dive-top-right { transform: translate(40px, -40px) rotate(30deg); }
+.goalkeeper.stay-center { transform: translateX(-50%) translateY(10px); }
+
+/* МЯЧ */
+.ball-wrapper {
+    position: absolute;
+    bottom: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 50px; height: 50px;
+    z-index: 10;
+    transition: transform 0.6s cubic-bezier(0.1, 0.6, 0.3, 1); /* Полет мяча */
+}
+
+.ball {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fff, #ddd 40%, #333 85%);
+    /* Текстура мяча (шашечки) */
+    background-image: url('https://cdn-icons-png.flaticon.com/512/33/33736.png'); /* Простой мяч */
+    background-size: cover;
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3);
+}
+
+.ball-shadow {
+    position: absolute; bottom: -5px; left: 10%; width: 80%; height: 10px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    filter: blur(4px);
+    z-index: -1;
+    transition: transform 0.6s, opacity 0.6s;
+}
+
+/* Анимация полета мяча (через классы JS) */
+.ball-wrapper.kick-tl { transform: translate3d(-130px, -180px, 0) scale(0.6); } /* Левый верх */
+.ball-wrapper.kick-tr { transform: translate3d(30px, -180px, 0) scale(0.6); }   /* Правый верх */
+.ball-wrapper.kick-c  { transform: translate3d(-50px, -100px, 0) scale(0.6); }  /* Центр */
+.ball-wrapper.kick-bl { transform: translate3d(-130px, -50px, 0) scale(0.6); }  /* Левый низ */
+.ball-wrapper.kick-br { transform: translate3d(30px, -50px, 0) scale(0.6); }    /* Правый низ */
+
+/* Вращение мяча при ударе */
+.ball-wrapper.kicked .ball { animation: spinBall 0.6s linear infinite; }
+@keyframes spinBall { 100% { transform: rotate(360deg); } }
+/* Тень уменьшается при полете */
+.ball-wrapper.kicked .ball-shadow { transform: scale(0.5); opacity: 0.3; }
+
+/* ЗОНЫ УДАРА (TARGETS) */
+.target-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    z-index: 20;
+}
+.target-overlay.disabled { pointer-events: none; }
+
+.target-btn {
+    background: transparent; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+.target-btn:active .t-circle { transform: scale(0.9); background: rgba(255,255,255,0.4); }
+
+/* Кружок прицела */
+.t-circle {
+    width: 40px; height: 40px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    position: relative;
+    transition: 0.2s;
+}
+.t-circle::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 6px; height: 6px; background: white;
+    border-radius: 50%; transform: translate(-50%,-50%);
+}
+
+/* Позиционирование зон в сетке */
+.t-tl { grid-column: 1; grid-row: 1; }
+.t-c  { grid-column: 2; grid-row: 1 / span 2; align-items: center; } /* Центр большой */
+.t-tr { grid-column: 3; grid-row: 1; }
+.t-bl { grid-column: 1; grid-row: 2; align-items: flex-end; padding-bottom: 20px; }
+.t-br { grid-column: 3; grid-row: 2; align-items: flex-end; padding-bottom: 20px; }
+
+/* Результат (Надпись GOAL) */
+.result-msg {
+    position: absolute; top: 40%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-family: var(--font-num); font-weight: 900; font-size: 3rem;
+    color: #f1c40f; text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.result-msg.visible { transform: translate(-50%, -50%) scale(1); }
+.result-msg.miss { color: #ff4444; }
+
+/* --- CONTROLS (FOOTER) --- */
+.penalty-controls {
+    background: #08140c;
+    border-top: 1px solid #1e4d2b;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.coeff-info {
+    text-align: center; font-size: 0.8rem; color: #88dba3; font-weight: 700;
+}
+.c-val { color: white; font-family: var(--font-num); font-size: 1rem; margin-left: 5px; }
+
+/* Ставка */
+.bet-row { display: flex; gap: 10px; height: 44px; }
+.stepper-box {
+    flex: 1.5; display: flex; align-items: center;
+    background: #0f2619; border: 1px solid #1e4d2b; border-radius: 10px;
+}
+.step-btn {
+    width: 40px; height: 100%; background: transparent; border: none; color: #88dba3;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #1e4d2b; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.quick-btns { flex: 1; display: flex; gap: 5px; }
+.quick-btns button {
+    flex: 1; background: #0f2619; border: none; color: #88dba3;
+    border-radius: 8px; font-weight: 700; font-size: 0.7rem; cursor: pointer;
+}
+.quick-btns button:active { background: #1e4d2b; color: white; }
+
+/* КНОПКА СТАРТА (Широкая) */
+.shoot-btn {
+    width: 100%; height: 55px;
+    border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.1s;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+.shoot-btn:active { transform: scale(0.98); }
+.shoot-btn .btn-text { font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; }
+
+/* --- МОДАЛКИ --- */
+.win-card, .loss-card {
+    background: #0f2619; width: 80%; max-width: 300px;
+    border-radius: 20px; padding: 25px; text-align: center;
+    border: 1px solid #1e4d2b; animation: zoomIn 0.3s;
+    position: relative;
+}
+.confetti-bg {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%);
+    pointer-events: none;
+}
+
+.win-icon { font-size: 3rem; margin-bottom: 10px; }
+.loss-icon { font-size: 3rem; margin-bottom: 10px; }
+
+.win-val { font-size: 2rem; font-weight: 900; color: #f1c40f; margin: 10px 0; font-family: var(--font-num); }
+.claim-btn { width: 100%; background: #f1c40f; color: black; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+.retry-btn { width: 100%; background: #1e4d2b; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+
+.info-card { background: #0f2619; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #1e4d2b; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
