@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Russian Roulette</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="roulette.css">    <!-- Уникальный для рулетки -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="roulette-body">
+
+    <!-- Фон: Мрачный бетон / Дым -->
+    <div class="grunge-bg"></div>
+    <div class="vignette-heavy"></div>
+    
+    <!-- Эффект "Крови" при проигрыше -->
+    <div id="blood-overlay" class="blood-screen hidden"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА -->
+    <main class="roulette-stage">
+        
+        <!-- Инфо о риске -->
+        <div class="risk-info">
+            <div class="risk-item">
+                <span class="r-label">МНОЖИТЕЛЬ</span>
+                <span class="r-val" id="current-mult">1.18x</span>
+            </div>
+            <div class="risk-item">
+                <span class="r-label">ШАНС ВЫЖИТЬ</span>
+                <span class="r-val highlight" id="survival-chance">83.3%</span>
+            </div>
+        </div>
+
+        <!-- Барабан револьвера -->
+        <div class="cylinder-wrapper">
+            <div class="pointer-arrow">▼</div> <!-- Стрелка, указывающая на активную камеру -->
+            
+            <div class="cylinder" id="cylinder">
+                <!-- Камеры (генерируются или статичны) -->
+                <!-- 1 -->
+                <div class="chamber c1"><div class="bullet-hole hidden"></div></div>
+                <!-- 2 -->
+                <div class="chamber c2"><div class="bullet-hole hidden"></div></div>
+                <!-- 3 -->
+                <div class="chamber c3"><div class="bullet-hole hidden"></div></div>
+                <!-- 4 -->
+                <div class="chamber c4"><div class="bullet-hole hidden"></div></div>
+                <!-- 5 -->
+                <div class="chamber c5"><div class="bullet-hole hidden"></div></div>
+                <!-- 6 -->
+                <div class="chamber c6"><div class="bullet-hole hidden"></div></div>
+                
+                <div class="center-pin">
+                    <div class="pin-detail"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статус -->
+        <div class="game-status" id="game-status">ЗАРЯЖАЙ И КРУТИ</div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="roulette-controls">
+        
+        <!-- Выбор количества патронов -->
+        <div class="bullet-selector">
+            <span class="label-tiny">КОЛ-ВО ПАТРОНОВ</span>
+            <div class="bullet-options">
+                <button class="b-opt active" onclick="setBullets(1)">1</button>
+                <button class="b-opt" onclick="setBullets(2)">2</button>
+                <button class="b-opt" onclick="setBullets(3)">3</button>
+                <button class="b-opt danger" onclick="setBullets(4)">4</button>
+                <button class="b-opt death" onclick="setBullets(5)">5</button>
+            </div>
+        </div>
+
+        <!-- Ставка -->
+        <div class="bet-row">
+            <div class="stepper-box">
+                <button id="btn-dec" class="step-btn">-</button>
+                <span id="bet-amount">100</span>
+                <button id="btn-inc" class="step-btn">+</button>
+            </div>
+            <div class="quick-btns">
+                <button onclick="setBet(100)">MIN</button>
+                <button onclick="setBet('max')">MAX</button>
+            </div>
+        </div>
+
+        <!-- КНОПКА ВЫСТРЕЛА -->
+        <div class="action-wrapper">
+            <button id="shoot-btn" class="shoot-btn">
+                <span class="btn-text">ВЫСТРЕЛИТЬ</span>
+                <span class="btn-sub">Испытай удачу</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа (Жив) -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="win-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+            <h2>ВЫЖИЛ!</h2>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-currency">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ЗАБРАТЬ</button>
+        </div>
+    </div>
+
+    <!-- Поражение (Мертв) -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="loss-icon"><i class="fa-solid fa-skull"></i></div>
+            <h2>WASTED</h2>
+            <p>Выстрел был роковым.</p>
+            <button class="retry-btn" onclick="closeLossModal()">РЕСПАУН</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. В барабане 6 камер.</p>
+                <p>2. Зарядите от 1 до 5 патронов.</p>
+                <p>3. Чем больше патронов, тем выше множитель выигрыша.</p>
+                <p>4. Если выпадает ПУСТАЯ камера — вы победили.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-spin" src="assets/revolver_spin.mp3"></audio>
+        <audio id="snd-click" src="assets/dry_fire.mp3"></audio> <!-- Пустой щелчок -->
+        <audio id="snd-bang" src="assets/gunshot.mp3"></audio>   <!-- Выстрел -->
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+    </div>
+
+    <script src="roulette.js"></script>
+</body>
+</html>
