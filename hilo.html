@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - HiLo</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="hilo.css">      <!-- Уникальный для HiLo -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="hilo-body">
+
+    <!-- Фон: Абстрактный покерный стол -->
+    <div class="poker-bg"></div>
+    <div class="vignette"></div>
+    <div class="suits-float"></div> <!-- Летающие масти на фоне -->
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- История карт -->
+    <div class="history-bar-wrapper">
+        <div class="history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <div class="cards-history" id="history-container">
+            <!-- Сюда JS добавляет мини-карты -->
+            <!-- <div class="mini-card red">K♦</div> -->
+        </div>
+    </div>
+
+    <!-- ОСНОВНАЯ ЗОНА -->
+    <main class="hilo-stage">
+        
+        <!-- Текущая карта (3D Flip) -->
+        <div class="card-scene">
+            <div class="main-card" id="active-card">
+                <!-- Лицевая сторона (генерируется JS) -->
+                <div class="card-face front red">
+                    <div class="corner-top">
+                        <span class="rank">7</span>
+                        <span class="suit">♥</span>
+                    </div>
+                    <div class="center-suit">♥</div>
+                    <div class="corner-bottom">
+                        <span class="rank">7</span>
+                        <span class="suit">♥</span>
+                    </div>
+                </div>
+                <!-- Рубашка -->
+                <div class="card-face back">
+                    <div class="pattern"></div>
+                    <i class="fa-solid fa-dragon"></i>
+                </div>
+            </div>
+            
+            <!-- Колода (декор) -->
+            <div class="deck-stack"></div>
+        </div>
+
+        <!-- Инфо о раунде -->
+        <div class="round-info hidden" id="round-info">
+            <div class="profit-badge">
+                ВЫИГРЫШ: <span id="current-win">0</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="hilo-controls">
+        
+        <!-- Кнопки выбора (HI / LO) -->
+        <!-- Отображаются только во время игры -->
+        <div class="decision-buttons hidden" id="decision-buttons">
+            
+            <!-- Кнопка НИЖЕ -->
+            <button class="hilo-btn btn-lo" id="btn-lo" onclick="makeGuess('lo')">
+                <div class="btn-content">
+                    <span class="arrow">▼</span>
+                    <span class="title">НИЖЕ</span>
+                    <span class="btn-odds" id="odds-lo">x2.10</span>
+                </div>
+                <div class="prob-bar" id="prob-lo" style="height: 40%">40%</div>
+            </button>
+
+            <!-- Кнопка ВЫШЕ -->
+            <button class="hilo-btn btn-hi" id="btn-hi" onclick="makeGuess('hi')">
+                <div class="btn-content">
+                    <span class="arrow">▲</span>
+                    <span class="title">ВЫШЕ</span>
+                    <span class="btn-odds" id="odds-hi">x1.80</span>
+                </div>
+                <div class="prob-bar" id="prob-hi" style="height: 55%">55%</div>
+            </button>
+
+            <!-- Кнопка SKIP (Пропустить карту) - Опционально -->
+            <button class="skip-btn" onclick="skipCard()">
+                <i class="fa-solid fa-forward"></i>
+                <span>SKIP</span>
+            </button>
+        </div>
+
+        <!-- Панель ставки (Скрывается во время игры) -->
+        <div class="bet-panel" id="bet-panel">
+            <div class="bet-input-row">
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+                <div class="quick-btns">
+                    <button onclick="setBet(100)">MIN</button>
+                    <button onclick="setBet(500)">500</button>
+                    <button onclick="setBet('max')">MAX</button>
+                </div>
+            </div>
+            
+            <button class="start-btn" onclick="startGame()">
+                ИГРАТЬ
+            </button>
+        </div>
+
+        <!-- Кнопка ЗАБРАТЬ (Появляется во время игры) -->
+        <div class="cashout-panel hidden" id="cashout-panel">
+            <button class="cashout-btn" onclick="cashOut()">
+                <div class="c-left">ЗАБРАТЬ</div>
+                <div class="c-right" id="cashout-val">150 $</div>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа (Финальная) -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="rays"></div>
+            <div class="card-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <h2>ВЫ ЗАБРАЛИ</h2>
+            <div class="win-val">
+                <span id="final-win-amount">0</span>
+                <span id="final-win-curr">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Проигрыш -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="loss-icon">❌</div>
+            <h2>НЕУДАЧА</h2>
+            <p>Карта оказалась не той.</p>
+            <button class="retry-btn" onclick="closeLossModal()">ЕЩЕ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА HI-LO</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Сделайте ставку, чтобы открыть первую карту.</p>
+                <p>2. Угадайте: следующая карта будет <b>Выше</b> или <b>Ниже</b>?</p>
+                <p>3. <b>Туз (A)</b> — самая младшая карта (1), <b>Король (K)</b> — самая старшая.</p>
+                <p>4. Если выпадает такая же карта — возврат (Push) или проигрыш (зависит от настроек, у нас будет возврат).</p>
+                <p>5. Забирайте выигрыш в любой момент!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-flip" src="assets/card_flip.mp3"></audio>
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+        <audio id="snd-lose" src="assets/lose.mp3"></audio>
+        <audio id="snd-click" src="assets/click.mp3"></audio>
+    </div>
+
+    <script src="hilo.js"></script>
+</body>
+                      </html>
