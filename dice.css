@@ -1,164 +1,273 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FastMoney - Dice</title>
-    
-    <!-- Шрифты и Иконки -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Стили -->
-    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
-    <link rel="stylesheet" href="dice.css">      <!-- Уникальный для дайса -->
-    
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
-<body class="dice-body">
+/* =========================================
+   FASTMONEY - DICE STYLES
+   ========================================= */
 
-    <!-- Фон: Цифровой поток -->
-    <div class="digital-rain"></div>
-    <div class="vignette"></div>
+/* --- ФОН И СТРУКТУРА --- */
+.dice-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0d0d12;
+    color: white;
+}
 
-    <!-- Верхняя панель -->
-    <header class="game-header">
-        <button class="back-btn" onclick="window.location.href='gamelist.html'">
-            <i class="fa-solid fa-arrow-left"></i>
-        </button>
-        
-        <div class="balance-container">
-            <span class="label">БАЛАНС</span>
-            <div class="balance-val">
-                <span id="balance-display">Loading...</span>
-                <span id="currency-display">$</span>
-            </div>
-        </div>
+/* Фон "Цифровой дождь" */
+.digital-rain {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 136, .03) 25%, rgba(0, 255, 136, .03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 136, .03) 75%, rgba(0, 255, 136, .03) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 136, .03) 25%, rgba(0, 255, 136, .03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 136, .03) 75%, rgba(0, 255, 136, .03) 76%, transparent 77%, transparent);
+    background-size: 30px 30px;
+    animation: rain 60s linear infinite;
+}
+@keyframes rain { 0% { background-position: 0 0; } 100% { background-position: 0 1000px; } }
 
-        <button class="icon-btn" onclick="openInfoModal()">
-            <i class="fa-solid fa-circle-question"></i>
-        </button>
-    </header>
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(13, 13, 18, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
 
-    <!-- ОСНОВНАЯ ЗОНА -->
-    <main class="dice-stage">
-        
-        <!-- Результат ролла -->
-        <div class="result-box">
-            <div class="result-number" id="result-val">50.00</div>
-            <div class="result-status" id="result-status">ПЕРЕТАЩИ ПОЛЗУНОК</div>
-        </div>
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: none;
+    color: #888; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
 
-        <!-- Инфо-панель (Множитель / Шанс) -->
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="lbl">МНОЖИТЕЛЬ</span>
-                <span class="val" id="multiplier-val">2.00x</span>
-            </div>
-            <div class="stat-item">
-                <span class="lbl">ШАНС ПОБЕДЫ</span>
-                <span class="val highlight" id="chance-val">49.5%</span>
-            </div>
-        </div>
+.balance-container .label { font-size: 0.55rem; color: #555; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-blue, #00f3ff); }
 
-        <!-- СЛАЙДЕР (Главный элемент) -->
-        <div class="slider-wrapper">
-            <!-- Трек слайдера -->
-            <div class="range-track" id="range-track">
-                <div class="range-fill" id="range-fill"></div> <!-- Зеленая зона -->
-                <div class="roll-marker hidden" id="roll-marker">
-                    <div class="marker-val">0.00</div>
-                    <div class="marker-arrow"></div>
-                </div>
-            </div>
-            
-            <!-- Сам инпут (прозрачный сверху) -->
-            <input type="range" min="2" max="98" value="50" step="1" class="dice-range" id="dice-slider">
-            
-            <!-- Метки шкалы -->
-            <div class="range-labels">
-                <span>0</span>
-                <span>25</span>
-                <span>50</span>
-                <span>75</span>
-                <span>100</span>
-            </div>
-        </div>
+/* --- ИГРОВАЯ ЗОНА --- */
+.dice-stage {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 20px;
+    gap: 25px;
+}
 
-        <!-- Переключатель (Меньше / Больше) -->
-        <div class="direction-toggle">
-            <span class="dir-lbl">ROLL</span>
-            <button class="dir-btn active" id="btn-under" onclick="setDirection('under')">UNDER</button>
-            <button class="dir-btn" id="btn-over" onclick="setDirection('over')">OVER</button>
-        </div>
+/* Окно результата */
+.result-box {
+    text-align: center;
+    position: relative;
+    z-index: 5;
+}
+.result-number {
+    font-family: var(--font-num);
+    font-size: 4rem;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 0 20px rgba(255,255,255,0.1);
+    transition: color 0.2s, text-shadow 0.2s;
+}
+.result-number.win { color: #00ff88; text-shadow: 0 0 30px rgba(0, 255, 136, 0.4); animation: pulseWin 0.3s; }
+.result-number.loss { color: #ff0055; text-shadow: 0 0 30px rgba(255, 0, 85, 0.4); animation: shake 0.3s; }
 
-    </main>
+.result-status {
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 2px;
+    color: #555; margin-top: -5px;
+}
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ -->
-    <footer class="dice-controls">
-        
-        <!-- Выбор ставки -->
-        <div class="bet-panel">
-            <div class="bet-input-group">
-                <label>СТАВКА</label>
-                <div class="stepper-box">
-                    <button id="btn-dec" class="step-btn">-</button>
-                    <span id="bet-amount">100</span>
-                    <button id="btn-inc" class="step-btn">+</button>
-                </div>
-            </div>
-            <div class="bet-shortcuts">
-                <button onclick="setBet(100)">MIN</button>
-                <button onclick="setBet(0.5, 'mul')">1/2</button>
-                <button onclick="setBet(2, 'mul')">x2</button>
-                <button onclick="setBet('max')">MAX</button>
-            </div>
-        </div>
+/* Статистика (Множитель/Шанс) */
+.stats-grid {
+    display: flex; gap: 15px; width: 100%; max-width: 340px;
+}
+.stat-item {
+    flex: 1;
+    background: #1a1a22; border: 1px solid #333;
+    border-radius: 12px; padding: 10px;
+    display: flex; flex-direction: column; align-items: center;
+}
+.stat-item .lbl { font-size: 0.6rem; color: #777; font-weight: 700; margin-bottom: 2px; }
+.stat-item .val { font-family: var(--font-num); font-size: 1.1rem; color: white; }
+.stat-item .val.highlight { color: #00f3ff; text-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
 
-        <!-- КНОПКА РОЛЛ -->
-        <div class="action-wrapper">
-            <button id="roll-btn" class="roll-button">
-                <span class="btn-text">БРОСОК</span>
-                <span class="btn-sub">Выигрыш: <span id="potential-win">198</span> <span class="curr-s">$</span></span>
-            </button>
-        </div>
+/* --- СЛАЙДЕР (ГЛАВНЫЙ ЭЛЕМЕНТ) --- */
+.slider-wrapper {
+    width: 100%; max-width: 340px;
+    position: relative;
+    padding: 20px 0;
+}
 
-    </footer>
+/* Трек (Фон слайдера) */
+.range-track {
+    position: relative;
+    height: 12px;
+    background: #2a1010; /* Красный фон (зона проигрыша) */
+    border-radius: 6px;
+    width: 100%;
+    overflow: hidden; /* Чтобы fill не вылезал */
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
 
-    <!-- МОДАЛКИ -->
+/* Заполнение (Зеленая зона) */
+.range-fill {
+    position: absolute; top: 0; left: 0; height: 100%;
+    background: #00ff88;
+    box-shadow: 0 0 10px #00ff88;
+    width: 50%; /* JS будет менять это */
+    transition: width 0.1s linear, left 0.1s linear;
+}
 
-    <!-- Победа (Тост сверху, чтобы не мешать спамить кнопку) -->
-    <div id="toast-win" class="toast-overlay hidden">
-        <div class="toast-card win">
-            <i class="fa-solid fa-check"></i>
-            <span class="t-val" id="toast-val">+200</span>
-        </div>
-    </div>
+/* Маркер результата (появляется после ролла) */
+.roll-marker {
+    position: absolute; top: -35px;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center;
+    transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+.roll-marker.hidden { display: none; }
 
-    <!-- Инфо -->
-    <div id="modal-info" class="modal-overlay hidden">
-        <div class="info-card">
-            <div class="card-header">
-                <h3>ПРАВИЛА DICE</h3>
-                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="card-body">
-                <p>1. Настройте ползунок, чтобы выбрать шанс победы.</p>
-                <p>2. Чем меньше шанс, тем выше выигрыш.</p>
-                <p>3. Выберите "Under" (Меньше) или "Over" (Больше).</p>
-                <p>4. Если число попадет в зеленую зону — вы победили.</p>
-            </div>
-        </div>
-    </div>
+.marker-val {
+    background: white; color: black;
+    font-family: var(--font-num); font-weight: 700; font-size: 0.75rem;
+    padding: 2px 6px; border-radius: 4px;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+.marker-val.win { background: #00ff88; }
+.marker-val.loss { background: #ff0055; color: white; }
 
-    <!-- Аудио -->
-    <div style="display:none;">
-        <audio id="snd-roll" src="assets/roll.mp3"></audio>
-        <audio id="snd-win" src="assets/win.mp3"></audio>
-        <audio id="snd-lose" src="assets/lose.mp3"></audio>
-    </div>
+.marker-arrow {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid white; /* Цвет стрелки */
+    margin-top: 2px;
+}
+.roll-marker.win .marker-arrow { border-top-color: #00ff88; }
+.roll-marker.loss .marker-arrow { border-top-color: #ff0055; }
 
-    <script src="dice.js"></script>
-</body>
-</html>
+/* Реальный Input (прозрачный, лежит сверху) */
+.dice-range {
+    -webkit-appearance: none;
+    position: absolute; top: 18px; left: 0; /* Подгонка по высоте */
+    width: 100%; height: 16px;
+    background: transparent;
+    z-index: 5;
+    margin: 0;
+    cursor: pointer;
+}
+.dice-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 28px; width: 28px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+    margin-top: -8px; /* Центрирование */
+    border: 2px solid #0d0d12;
+}
+.dice-range::-webkit-slider-runnable-track {
+    width: 100%; height: 100%; background: transparent;
+}
+
+/* Метки (0, 25, 50...) */
+.range-labels {
+    display: flex; justify-content: space-between;
+    margin-top: 10px;
+    font-family: var(--font-num); font-size: 0.65rem; color: #555;
+}
+
+/* Переключатель направления (Under/Over) */
+.direction-toggle {
+    display: flex; align-items: center; gap: 10px;
+    background: #1a1a22; padding: 5px; border-radius: 20px;
+    border: 1px solid #333;
+}
+.dir-lbl { font-size: 0.7rem; font-weight: 800; color: #777; margin: 0 10px; }
+.dir-btn {
+    background: transparent; border: none; color: #777;
+    padding: 8px 15px; border-radius: 15px;
+    font-size: 0.75rem; font-weight: 800; cursor: pointer;
+    transition: 0.2s;
+}
+.dir-btn.active {
+    background: #333; color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.dice-controls {
+    background: #101014;
+    border-top: 1px solid #2a2a30;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.bet-panel { display: flex; gap: 10px; align-items: flex-end; }
+.bet-input-group { flex: 1; }
+.bet-input-group label { display: block; font-size: 0.6rem; color: #666; font-weight: 700; margin-bottom: 5px; }
+
+.stepper-box {
+    display: flex; align-items: center;
+    background: #1a1a22; border: 1px solid #333;
+    border-radius: 10px; height: 44px;
+}
+.step-btn {
+    width: 44px; height: 100%; background: transparent; border: none; color: #888; font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #2a2a30; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.bet-shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 110px; }
+.bet-shortcuts button {
+    background: #222; border: none; color: #777;
+    border-radius: 8px; font-weight: 700; font-size: 0.65rem; height: 20px;
+    cursor: pointer;
+}
+.bet-shortcuts button:active { background: #333; color: white; }
+
+/* ROLL BUTTON */
+.roll-button {
+    width: 100%; height: 60px;
+    border: none; border-radius: 16px;
+    background: linear-gradient(135deg, #00f3ff, #0099ff);
+    color: #002233;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.1s;
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+}
+.roll-button:active { transform: scale(0.98); box-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+
+.btn-text { font-size: 1.3rem; font-weight: 900; letter-spacing: 2px; }
+.btn-sub { font-size: 0.7rem; opacity: 0.8; font-weight: 600; }
+.curr-s { font-weight: 900; }
+
+/* --- МОДАЛКИ (TOAST WIN) --- */
+.toast-overlay {
+    position: fixed; top: 80px; left: 0; width: 100%;
+    display: flex; justify-content: center;
+    pointer-events: none; z-index: 100;
+}
+.toast-overlay.hidden { display: none; }
+
+.toast-card {
+    background: rgba(0, 255, 136, 0.9);
+    backdrop-filter: blur(5px);
+    padding: 8px 20px; border-radius: 30px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast-card i { background: white; color: #00ff88; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+.t-val { font-family: var(--font-num); font-weight: 900; color: #003319; font-size: 1rem; }
+
+/* Анимации */
+@keyframes pulseWin { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Инфо модалка */
+.info-card { background: #14141a; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #333; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
