@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Warships</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="warships.css">    <!-- Уникальный для кораблей -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="warships-body">
+
+    <!-- Фон: Радарная сетка / Океан -->
+    <div class="sonar-bg"></div>
+    <div class="grid-overlay-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА БОЯ -->
+    <main class="battle-interface">
+        
+        <!-- Статус бар -->
+        <div class="battle-log">
+            <div class="log-msg" id="status-msg">СДЕЛАЙТЕ СТАВКУ</div>
+            <div class="turn-indicator" id="turn-indicator"></div>
+        </div>
+
+        <!-- Поле ВРАГА (Активное) -->
+        <div class="grid-section">
+            <div class="section-label">
+                <span>RADAR (ENEMY)</span>
+                <span class="ships-left red" id="enemy-ships-count">Ships: 5</span>
+            </div>
+            
+            <div class="radar-frame">
+                <div class="scan-line"></div> <!-- Анимация сканера -->
+                <div class="battle-grid enemy" id="enemy-grid">
+                    <!-- Ячейки 6x6 генерируются JS -->
+                </div>
+                <!-- Оверлей блокировки до старта -->
+                <div class="radar-lock" id="radar-lock">
+                    <i class="fa-solid fa-crosshairs"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Поле ИГРОКА (Пассивное, меньше) -->
+        <div class="grid-section mini">
+            <div class="section-label">
+                <span>MY FLEET</span>
+                <span class="ships-left green" id="player-ships-count">Ships: 5</span>
+            </div>
+            
+            <div class="fleet-frame">
+                <div class="battle-grid player" id="player-grid">
+                    <!-- Ячейки генерируются JS -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="warships-controls">
+        
+        <!-- Панель ставки (Скрывается при игре) -->
+        <div class="bet-panel" id="bet-panel">
+            <div class="coeff-display">
+                <span>WIN RATE:</span>
+                <span class="c-val">x1.95</span>
+            </div>
+            
+            <div class="bet-input-row">
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+                <button class="start-btn" onclick="startGame()">
+                    В БОЙ!
+                </button>
+            </div>
+        </div>
+
+        <!-- Кнопка "Сдаться" (Во время игры) -->
+        <div class="game-active-panel hidden" id="active-panel">
+            <button class="surrender-btn" onclick="surrenderGame()">
+                СДАТЬСЯ
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="win-icon"><i class="fa-solid fa-medal"></i></div>
+            <h2>VICTORY!</h2>
+            <p>Вражеский флот уничтожен.</p>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-currency">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ТАК ТОЧНО</button>
+        </div>
+    </div>
+
+    <!-- Поражение -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="loss-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+            <h2>DEFEAT</h2>
+            <p>Ваш флот потоплен.</p>
+            <button class="retry-btn" onclick="closeLossModal()">РЕВАНШ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ТАКТИЧЕСКИЕ ДАННЫЕ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p><b>Формат:</b> Блиц 6x6.</p>
+                <p><b>Флот:</b> 1 Трехпалубный, 2 Двухпалубных, 2 Однопалубных.</p>
+                <p><b>Правила:</b></p>
+                <ul>
+                    <li>Стреляйте по радару.</li>
+                    <li>Попадание дает доп. ход.</li>
+                    <li>Побеждает тот, кто первый уничтожит все корабли.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-miss" src="assets/splash.mp3"></audio>
+        <audio id="snd-hit" src="assets/explosion.mp3"></audio>
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+        <audio id="snd-lose" src="assets/lose.mp3"></audio>
+        <audio id="snd-radar" src="assets/sonar.mp3"></audio>
+    </div>
+
+    <script src="warships.js"></script>
+</body>
+          </html>
