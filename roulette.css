@@ -1,0 +1,287 @@
+/* =========================================
+   FASTMONEY - RUSSIAN ROULETTE STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.roulette-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #08080a; /* Почти черный */
+    color: white;
+}
+
+/* Гранжевый фон (бетон/шум) */
+.grunge-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: url("https://www.transparenttextures.com/patterns/black-felt.png"); /* Или любой шум */
+    background-color: #1a1a1d;
+    opacity: 1;
+}
+
+/* Сильная виньетка для мрачности */
+.vignette-heavy {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 30%, #000 120%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Эффект КРОВИ (Оверлей) */
+.blood-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 50;
+    background: radial-gradient(circle, transparent 20%, rgba(138, 3, 3, 0.9) 100%);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    animation: bloodPulse 2s infinite;
+}
+.blood-screen.hidden { display: none; }
+
+@keyframes bloodPulse {
+    0% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 0.8; transform: scale(1); }
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(20, 20, 20, 0.9);
+    border-bottom: 1px solid #333;
+    z-index: 10;
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: none;
+    color: #777; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: #333; color: white; }
+
+.balance-container .label { font-size: 0.55rem; color: #555; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-gold, #ffd700); }
+
+/* --- ИГРОВАЯ ЗОНА (STAGE) --- */
+.roulette-stage {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+}
+
+/* Инфо о риске */
+.risk-info {
+    width: 100%; max-width: 340px;
+    display: flex; gap: 10px;
+    margin-bottom: 30px;
+}
+.risk-item {
+    flex: 1;
+    background: #111; border: 1px solid #222;
+    border-radius: 10px; padding: 8px;
+    display: flex; flex-direction: column; align-items: center;
+}
+.r-label { font-size: 0.6rem; color: #666; font-weight: 700; }
+.r-val { font-family: var(--font-num); font-size: 1.1rem; color: white; }
+.r-val.highlight { color: #00ff88; }
+
+/* БАРАБАН (CYLINDER) */
+.cylinder-wrapper {
+    position: relative;
+    width: 280px; height: 280px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+}
+
+/* Стрелка указателя */
+.pointer-arrow {
+    position: absolute; top: -15px; left: 50%;
+    transform: translateX(-50%);
+    color: #ff0000; font-size: 1.5rem;
+    z-index: 5;
+    filter: drop-shadow(0 0 5px red);
+    animation: pointBounce 1s infinite;
+}
+@keyframes pointBounce { 0%, 100% { top: -15px; } 50% { top: -20px; } }
+
+/* Сам вращающийся цилиндр */
+.cylinder {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    /* Металлический градиент */
+    background: conic-gradient(from 180deg, #2b2b2b, #555, #2b2b2b, #444, #2b2b2b);
+    position: relative;
+    box-shadow: 
+        inset 0 0 30px #000,
+        0 0 10px rgba(0,0,0,0.8);
+    transition: transform 3s cubic-bezier(0.15, 0.9, 0.3, 1); /* Плавная остановка */
+}
+
+/* Центральная ось */
+.center-pin {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px; height: 60px;
+    background: radial-gradient(circle, #888, #222);
+    border-radius: 50%;
+    border: 2px solid #111;
+    box-shadow: 0 0 10px rgba(0,0,0,0.8);
+    z-index: 4;
+}
+.pin-detail {
+    width: 20px; height: 20px; background: #111;
+    border-radius: 50%;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+}
+
+/* Камеры (Chambers) */
+.chamber {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 70px; height: 70px;
+    background: #050505; /* Темная дыра */
+    border-radius: 50%;
+    box-shadow: inset 0 0 10px #000;
+    margin-top: -35px; margin-left: -35px; /* Центрируем саму камеру */
+}
+
+/* Расстановка камер по кругу (радиус 85px) */
+.c1 { transform: rotate(0deg) translate(0, -85px) rotate(0deg); }
+.c2 { transform: rotate(60deg) translate(0, -85px) rotate(-60deg); }
+.c3 { transform: rotate(120deg) translate(0, -85px) rotate(-120deg); }
+.c4 { transform: rotate(180deg) translate(0, -85px) rotate(-180deg); }
+.c5 { transform: rotate(240deg) translate(0, -85px) rotate(-240deg); }
+.c6 { transform: rotate(300deg) translate(0, -85px) rotate(-300deg); }
+
+/* ПАТРОН (BULLET) */
+.bullet-hole {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    /* Рисуем донце гильзы */
+    background: radial-gradient(circle, #bbb 10%, #d4af37 15%, #d4af37 40%, #a88620 60%);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    position: relative;
+}
+.bullet-hole.hidden { display: none; }
+/* Капсюль (центр патрона) */
+.bullet-hole::after {
+    content: ''; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 15px; height: 15px;
+    background: #888; border-radius: 50%;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Статус */
+.game-status {
+    font-family: var(--font-num);
+    font-weight: 700; color: #777;
+    letter-spacing: 2px;
+    height: 20px;
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.roulette-controls {
+    background: #0f0f12;
+    border-top: 1px solid #222;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+/* Выбор патронов */
+.bullet-selector { display: flex; flex-direction: column; gap: 5px; }
+.label-tiny { font-size: 0.6rem; color: #555; font-weight: 700; }
+
+.bullet-options { display: flex; gap: 8px; }
+.b-opt {
+    flex: 1; height: 40px;
+    background: #1a1a1d; border: 1px solid #333;
+    color: #888; border-radius: 8px;
+    font-family: var(--font-num); font-weight: 700;
+    cursor: pointer; transition: 0.2s;
+}
+
+/* Цвета кнопок патронов */
+.b-opt.active { transform: translateY(-2px); color: white; border: none; }
+
+/* 1-2 патрона: Синий */
+.b-opt:nth-child(1).active, .b-opt:nth-child(2).active { background: #007bff; box-shadow: 0 0 10px rgba(0,123,255,0.4); }
+/* 3 патрона: Желтый */
+.b-opt:nth-child(3).active { background: #f1c40f; color: black; box-shadow: 0 0 10px rgba(241,196,15,0.4); }
+/* 4 патрона: Оранжевый */
+.b-opt:nth-child(4).active { background: #e67e22; box-shadow: 0 0 10px rgba(230,126,34,0.4); }
+/* 5 патронов: Красный/Смерть */
+.b-opt:nth-child(5).active { background: #c0392b; box-shadow: 0 0 15px rgba(192, 57, 43, 0.6); }
+
+/* Ставка */
+.bet-row { display: flex; gap: 10px; height: 44px; }
+.stepper-box {
+    flex: 1.5; display: flex; align-items: center;
+    background: #1a1a1d; border: 1px solid #333; border-radius: 10px;
+}
+.step-btn {
+    width: 40px; height: 100%; background: transparent; border: none; color: #888;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #2a2a30; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.quick-btns { flex: 1; display: flex; gap: 5px; }
+.quick-btns button {
+    flex: 1; background: #222; border: none; color: #777;
+    border-radius: 8px; font-weight: 700; font-size: 0.7rem; cursor: pointer;
+}
+.quick-btns button:active { background: #333; color: white; }
+
+/* КНОПКА ВЫСТРЕЛА */
+.shoot-btn {
+    width: 100%; height: 60px;
+    border: none; border-radius: 16px;
+    /* Кроваво-черный градиент */
+    background: linear-gradient(135deg, #800000, #300000);
+    color: white;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.1s;
+    box-shadow: 0 0 15px rgba(128, 0, 0, 0.3);
+    position: relative; overflow: hidden;
+}
+.shoot-btn:active { transform: scale(0.98); }
+
+/* Блик на кнопке */
+.shoot-btn::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1), transparent 60%);
+    animation: pulseRed 2s infinite;
+}
+@keyframes pulseRed { 0% { opacity: 0.3; } 50% { opacity: 0.6; } 100% { opacity: 0.3; } }
+
+.btn-text { font-size: 1.3rem; font-weight: 900; letter-spacing: 2px; z-index: 2; }
+.btn-sub { font-size: 0.7rem; opacity: 0.7; font-weight: 600; z-index: 2; }
+
+/* МОДАЛКИ */
+.win-card, .loss-card {
+    background: #1a1a1d; width: 80%; max-width: 300px;
+    border-radius: 20px; padding: 25px; text-align: center;
+    border: 1px solid #333; animation: zoomIn 0.3s;
+}
+.win-icon { font-size: 3rem; color: #00ff88; margin-bottom: 10px; }
+.loss-icon { font-size: 3rem; color: #ff0055; margin-bottom: 10px; }
+
+.win-val { font-size: 2rem; font-weight: 900; color: #00ff88; margin: 10px 0; font-family: var(--font-num); }
+.claim-btn { width: 100%; background: #00ff88; color: black; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+.retry-btn { width: 100%; background: #333; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+
+.info-card { background: #1a1a1d; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #333; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
