@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Penalty</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="penalty.css">    <!-- Уникальный для пенальти -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="penalty-body">
+
+    <!-- Фон: Стадион ночью -->
+    <div class="stadium-bg"></div>
+    <div class="spotlights"></div> <!-- Лучи прожекторов -->
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- История последних ударов -->
+    <div class="history-bar">
+        <div class="h-scroll" id="history-container">
+            <!-- <div class="ball-mark goal">⚽</div> -->
+            <!-- <div class="ball-mark miss">❌</div> -->
+        </div>
+    </div>
+
+    <!-- ОСНОВНАЯ ЗОНА (ВОРОТА) -->
+    <main class="penalty-stage">
+        
+        <div class="gate-area">
+            <!-- Каркас ворот -->
+            <div class="goal-post">
+                <div class="net"></div>
+                
+                <!-- Вратарь -->
+                <div class="goalkeeper" id="keeper">
+                    <img src="https://cdn-icons-png.flaticon.com/512/166/166366.png" alt="Keeper">
+                </div>
+            </div>
+
+            <!-- Мяч -->
+            <div class="ball-wrapper" id="ball-wrapper">
+                <div class="ball" id="ball"></div>
+                <div class="ball-shadow"></div>
+            </div>
+
+            <!-- Зоны удара (Невидимые кнопки поверх ворот) -->
+            <div class="target-overlay disabled" id="targets">
+                <button class="target-btn t-tl" onclick="kick('tl')">
+                    <div class="t-circle"></div>
+                </button>
+                <button class="target-btn t-tr" onclick="kick('tr')">
+                    <div class="t-circle"></div>
+                </button>
+                <button class="target-btn t-c" onclick="kick('c')">
+                    <div class="t-circle"></div>
+                </button>
+                <button class="target-btn t-bl" onclick="kick('bl')">
+                    <div class="t-circle"></div>
+                </button>
+                <button class="target-btn t-br" onclick="kick('br')">
+                    <div class="t-circle"></div>
+                </button>
+            </div>
+            
+            <!-- Сообщение результата -->
+            <div class="result-msg hidden" id="result-msg">GOAL!</div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="penalty-controls">
+        
+        <!-- Инфо о коэффициенте -->
+        <div class="coeff-info">
+            <span>КОЭФФИЦИЕНТ ЗА ГОЛ:</span>
+            <span class="c-val">x1.92</span>
+        </div>
+
+        <!-- Ставка -->
+        <div class="bet-row">
+            <div class="stepper-box">
+                <button id="btn-dec" class="step-btn">-</button>
+                <span id="bet-amount">100</span>
+                <button id="btn-inc" class="step-btn">+</button>
+            </div>
+            <div class="quick-btns">
+                <button onclick="setBet(100)">MIN</button>
+                <button onclick="setBet('max')">MAX</button>
+            </div>
+        </div>
+
+        <!-- Кнопка "Новый раунд" (Появляется после удара) -->
+        <div class="action-wrapper">
+            <button id="main-btn" class="shoot-btn" onclick="prepareRound()">
+                <span class="btn-text">СДЕЛАТЬ СТАВКУ</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="confetti-bg"></div>
+            <h1>GOAL!</h1>
+            <div class="win-icon">⚽</div>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-currency">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ОТЛИЧНО</button>
+        </div>
+    </div>
+
+    <!-- Поражение -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <h1>SAVED!</h1>
+            <div class="loss-icon">🧤</div>
+            <p>Вратарь отбил мяч.</p>
+            <button class="retry-btn" onclick="closeLossModal()">ЕЩЕ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Сделайте ставку.</p>
+                <p>2. Выберите угол ворот для удара.</p>
+                <p>3. Если вратарь не угадал направление — вы победили (x1.92).</p>
+                <p>4. В игре 5 зон: Левый/Правый верх, Левый/Правый низ и Центр.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-whistle" src="assets/whistle.mp3"></audio> <!-- Свисток -->
+        <audio id="snd-kick" src="assets/kick.mp3"></audio>       <!-- Удар -->
+        <audio id="snd-goal" src="assets/goal_crowd.mp3"></audio> <!-- Ликование -->
+        <audio id="snd-save" src="assets/save_groan.mp3"></audio> <!-- Разочарование -->
+    </div>
+
+    <script src="penalty.js"></script>
+</body>
+          </html>
