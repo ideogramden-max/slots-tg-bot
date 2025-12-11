@@ -1,0 +1,336 @@
+/* =========================================
+   FASTMONEY - HILO STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.hilo-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #05080a;
+    color: white;
+}
+
+/* Фон: Покерное сукно (Темно-бирюзовое/Зеленое) */
+.poker-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: radial-gradient(circle at center, #134e4a 0%, #042f2e 60%, #000 100%);
+    opacity: 0.8;
+}
+
+/* Летающие масти на фоне */
+.suits-float {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+    animation: panBackground 60s linear infinite;
+}
+@keyframes panBackground { from { background-position: 0 0; } to { background-position: 100% 100%; } }
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(4, 47, 46, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.1); border: none;
+    color: #ccc; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
+
+.balance-container .label { font-size: 0.55rem; color: #5eead4; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-gold, #ffd700); }
+
+/* --- ИСТОРИЯ КАРТ --- */
+.history-bar-wrapper {
+    height: 40px;
+    background: rgba(0,0,0,0.3);
+    display: flex; align-items: center;
+    padding: 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.history-icon { color: #5eead4; font-size: 0.9rem; margin-right: 10px; opacity: 0.7; }
+
+.cards-history {
+    flex-grow: 1; display: flex; gap: 5px; overflow: hidden; align-items: center;
+}
+
+/* Мини-карта в истории */
+.mini-card {
+    width: 24px; height: 32px;
+    background: white; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-num); font-weight: 700; font-size: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+}
+.mini-card.red { color: #ff0055; }
+.mini-card.black { color: #111; }
+
+/* --- ИГРОВАЯ СЦЕНА --- */
+.hilo-stage {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    perspective: 1000px; /* Для 3D переворота */
+}
+
+/* Сцена с картой */
+.card-scene {
+    position: relative;
+    width: 200px; height: 280px;
+    margin-bottom: 20px;
+}
+
+/* Колода под низом */
+.deck-stack {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: #111; border-radius: 15px;
+    border: 1px solid #444;
+    transform: translate(4px, 4px);
+    z-index: -1;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+}
+.deck-stack::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: #1a1a1a; border-radius: 15px; border: 1px solid #444;
+    transform: translate(4px, 4px); z-index: -2;
+}
+
+/* ГЛАВНАЯ КАРТА */
+.main-card {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d; /* Важно для 3D */
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Переворот */
+.main-card.flipped { transform: rotateY(180deg); }
+
+/* Стороны карты */
+.card-face {
+    position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden; /* Скрываем задник при повороте */
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 15px;
+}
+
+/* Лицевая сторона */
+.card-face.front {
+    background: white;
+    transform: rotateY(0deg);
+}
+.card-face.front.red { color: #ff0055; }
+.card-face.front.black { color: #111; }
+
+.corner-top, .corner-bottom {
+    display: flex; flex-direction: column; align-items: center;
+    font-family: var(--font-num); font-weight: 700; font-size: 1.5rem;
+    line-height: 1;
+}
+.corner-bottom { transform: rotate(180deg); }
+.suit { font-size: 1rem; margin-top: -2px; }
+
+.center-suit {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem; opacity: 0.2;
+}
+
+/* Рубашка карты */
+.card-face.back {
+    background: linear-gradient(135deg, #111, #222);
+    transform: rotateY(180deg);
+    border: 2px solid #444;
+    display: flex; align-items: center; justify-content: center;
+}
+.card-face.back .pattern {
+    position: absolute; inset: 10px;
+    border: 2px dashed #555; border-radius: 10px;
+    background-image: repeating-linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222), repeating-linear-gradient(45deg, #222 25%, #111 25%, #111 75%, #222 75%, #222);
+    background-position: 0 0, 10px 10px;
+    background-size: 20px 20px;
+    opacity: 0.5;
+}
+.card-face.back i {
+    font-size: 3rem; color: #ffd700; z-index: 2;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+}
+
+/* Инфо раунда */
+.round-info {
+    position: absolute; bottom: 20px;
+    text-align: center;
+    animation: fadeInUp 0.3s;
+}
+.round-info.hidden { display: none; }
+
+.profit-badge {
+    background: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    padding: 8px 20px; border-radius: 20px;
+    border: 1px solid #00ff88;
+    font-weight: 800; font-size: 0.9rem;
+    box-shadow: 0 0 15px rgba(0,255,136,0.2);
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.hilo-controls {
+    background: #020606;
+    border-top: 1px solid #134e4a;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    min-height: 160px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+
+/* КНОПКИ РЕШЕНИЯ (HI/LO) */
+.decision-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 60px; /* Lo, Hi, Skip */
+    gap: 10px;
+    height: 100px;
+}
+.decision-buttons.hidden { display: none; }
+
+.hilo-btn {
+    position: relative;
+    border: none; border-radius: 16px;
+    background: #1a1a20;
+    overflow: hidden; /* Чтобы бар не вылезал */
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+    border: 1px solid #333;
+}
+.hilo-btn:active { transform: translateY(4px); box-shadow: none; }
+
+/* Содержимое кнопки (над баром) */
+.btn-content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%;
+}
+
+.hilo-btn .arrow { font-size: 1.5rem; margin-bottom: 2px; }
+.hilo-btn .title { font-weight: 900; font-size: 0.8rem; letter-spacing: 1px; }
+.hilo-btn .btn-odds {
+    margin-top: 5px;
+    background: rgba(0,0,0,0.4);
+    padding: 2px 8px; border-radius: 10px;
+    font-family: var(--font-num); font-size: 0.8rem; font-weight: 700;
+}
+
+/* Цвета кнопок */
+.btn-lo { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
+.btn-hi { color: #00d2d3; border-bottom: 3px solid #00d2d3; }
+
+/* Бар вероятности (фон кнопки) */
+.prob-bar {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    background: currentColor; /* Берет цвет текста кнопки */
+    opacity: 0.15;
+    z-index: 1;
+    transition: height 0.3s;
+    display: flex; align-items: flex-start; justify-content: center;
+    font-size: 0.6rem; font-weight: 700; padding-top: 2px; color: white;
+}
+
+/* Кнопка Skip */
+.skip-btn {
+    background: #222; border: 1px solid #333; color: #777;
+    border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.7rem; font-weight: 700;
+}
+.skip-btn i { font-size: 1.2rem; margin-bottom: 5px; }
+.skip-btn:active { background: #333; color: white; }
+
+/* ПАНЕЛЬ СТАВКИ */
+.bet-panel { display: flex; flex-direction: column; gap: 15px; }
+.bet-input-row { display: flex; gap: 10px; height: 44px; }
+
+.stepper-box {
+    flex: 1.5; display: flex; align-items: center;
+    background: #0f1f1e; border: 1px solid #134e4a; border-radius: 10px;
+}
+.step-btn {
+    width: 40px; height: 100%; background: transparent; border: none; color: #5eead4;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #134e4a; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.quick-btns { flex: 1; display: flex; gap: 5px; }
+.quick-btns button {
+    flex: 1; background: #0f1f1e; border: none; color: #5eead4;
+    border-radius: 8px; font-weight: 700; font-size: 0.7rem; cursor: pointer;
+}
+.quick-btns button:active { background: #134e4a; color: white; }
+
+.start-btn {
+    width: 100%; height: 50px;
+    background: linear-gradient(135deg, #00d2d3, #0abde3);
+    border: none; border-radius: 12px;
+    font-weight: 900; font-size: 1.1rem; color: #003333;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(0, 210, 211, 0.3);
+}
+.start-btn:active { transform: scale(0.98); }
+
+/* CASHOUT ПАНЕЛЬ */
+.cashout-panel.hidden { display: none; }
+.cashout-btn {
+    width: 100%; height: 60px;
+    border: none; border-radius: 16px;
+    background: linear-gradient(135deg, #feca57, #ff9f43);
+    color: #332200;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; cursor: pointer;
+    box-shadow: 0 0 20px rgba(255, 159, 67, 0.4);
+    animation: pulseCash 1s infinite;
+}
+.c-left { font-weight: 900; font-size: 1.2rem; }
+.c-right { font-family: var(--font-num); font-weight: 700; font-size: 1.2rem; background: rgba(0,0,0,0.1); padding: 5px 10px; border-radius: 8px; }
+
+@keyframes pulseCash { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* МОДАЛКИ */
+.win-card {
+    background: #042f2e; width: 80%; padding: 30px; border-radius: 20px;
+    text-align: center; border: 1px solid #5eead4;
+    position: relative; animation: zoomIn 0.3s;
+}
+.loss-card {
+    background: #2a0a0a; width: 80%; padding: 30px; border-radius: 20px;
+    text-align: center; border: 1px solid #ff4444; animation: zoomIn 0.3s;
+}
+
+.rays {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(255,215,0,0.2), transparent 70%);
+    z-index: -1; pointer-events: none;
+}
+
+.win-val { font-size: 2rem; color: #ffd700; font-weight: 900; margin: 10px 0; font-family: var(--font-num); }
+.claim-btn { width: 100%; padding: 12px; background: #ffd700; border: none; border-radius: 10px; font-weight: 800; color: black; }
+.retry-btn { width: 100%; padding: 12px; background: #333; border: none; border-radius: 10px; font-weight: 800; color: white; }
+
+.info-card { background: #042f2e; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #5eead4; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
