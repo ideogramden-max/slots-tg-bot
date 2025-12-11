@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - RPG Battle</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="rpg.css">       <!-- Уникальный для RPG -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="rpg-body">
+
+    <!-- Фон: Мрачный лес/Пещера -->
+    <div class="dungeon-bg"></div>
+    <div class="rain-overlay"></div> <!-- Эффект дождя/искр -->
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- СЦЕНА БИТВЫ -->
+    <main class="battle-stage">
+        
+        <!-- Монстр -->
+        <div class="enemy-container">
+            <!-- Полоска здоровья -->
+            <div class="hp-bar-wrapper">
+                <div class="hp-bar-fill" id="enemy-hp" style="width: 100%;"></div>
+                <span class="hp-text">BOSS HP</span>
+            </div>
+
+            <!-- Аватар врага (Анимированный CSS) -->
+            <div class="enemy-sprite" id="enemy">
+                <div class="enemy-aura"></div>
+                <i class="fa-solid fa-dragon"></i> <!-- Иконка дракона -->
+            </div>
+
+            <!-- Эффект получения урона (вылетающие цифры) -->
+            <div class="damage-container" id="damage-container"></div>
+        </div>
+
+        <!-- Игрок (Визуально, меч) -->
+        <div class="player-container">
+            <div class="sword-icon hidden" id="player-sword">
+                <i class="fa-solid fa-khanda"></i>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="rpg-controls">
+        
+        <!-- Выбор типа атаки (Риск) -->
+        <div class="attack-selector">
+            <span class="label-tiny">ВЫБЕРИ УДАР</span>
+            <div class="attack-options">
+                
+                <!-- Легкий (x1.5, Шанс 65%) -->
+                <button class="atk-btn active" onclick="setAttack('light')" data-type="light">
+                    <div class="atk-icon"><i class="fa-solid fa-wind"></i></div>
+                    <div class="atk-info">
+                        <span class="atk-name">БЫСТРЫЙ</span>
+                        <span class="atk-mult">x1.48</span>
+                    </div>
+                </button>
+
+                <!-- Средний (x3.0, Шанс 30%) -->
+                <button class="atk-btn" onclick="setAttack('heavy')" data-type="heavy">
+                    <div class="atk-icon"><i class="fa-solid fa-gavel"></i></div>
+                    <div class="atk-info">
+                        <span class="atk-name">ТЯЖЕЛЫЙ</span>
+                        <span class="atk-mult">x2.90</span>
+                    </div>
+                </button>
+
+                <!-- Ульта (x10.0, Шанс 9%) -->
+                <button class="atk-btn ult" onclick="setAttack('ult')" data-type="ult">
+                    <div class="atk-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="atk-info">
+                        <span class="atk-name">CRIT</span>
+                        <span class="atk-mult">x9.80</span>
+                    </div>
+                </button>
+
+            </div>
+        </div>
+
+        <!-- Ставка -->
+        <div class="bet-row">
+            <div class="stepper-box">
+                <button id="btn-dec" class="step-btn">-</button>
+                <span id="bet-amount">100</span>
+                <button id="btn-inc" class="step-btn">+</button>
+            </div>
+            <div class="quick-btns">
+                <button onclick="setBet(100)">MIN</button>
+                <button onclick="setBet('max')">MAX</button>
+            </div>
+        </div>
+
+        <!-- КНОПКА АТАКИ -->
+        <div class="action-wrapper">
+            <button id="attack-btn" class="main-attack-btn">
+                <span class="btn-text">АТАКА!</span>
+                <span class="btn-sub">Нанести урон</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа (Лут) -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="loot-card">
+            <div class="shine-effect"></div>
+            <div class="loot-icon"><i class="fa-solid fa-treasure-chest"></i></div>
+            <h2>BOSS DEFEATED!</h2>
+            <div class="loot-val">
+                <span id="win-amount">0</span>
+                <span id="win-currency">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ЗАБРАТЬ ЛУТ</button>
+        </div>
+    </div>
+
+    <!-- Поражение (Смерть) -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="death-card">
+            <h1>YOU DIED</h1>
+            <p>Атака была отражена.</p>
+            <button class="retry-btn" onclick="closeLossModal()">ВОЗРОДИТЬСЯ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>РУКОВОДСТВО БОЯ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>Выбирайте стиль боя:</p>
+                <ul>
+                    <li><b>Быстрый:</b> Высокий шанс попадания, малый урон.</li>
+                    <li><b>Тяжелый:</b> Средний риск, хороший трофей.</li>
+                    <li><b>CRIT:</b> Огромный риск, легендарная награда.</li>
+                </ul>
+                <p>Если атака успешна — вы побеждаете.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-sword" src="assets/sword_swing.mp3"></audio>
+        <audio id="snd-hit" src="assets/monster_hit.mp3"></audio>
+        <audio id="snd-block" src="assets/shield_block.mp3"></audio>
+        <audio id="snd-win" src="assets/rpg_win.mp3"></audio>
+    </div>
+
+    <script src="rpg.js"></script>
+</body>
+                          </html>
