@@ -1,0 +1,264 @@
+/* =========================================
+   FASTMONEY - SAFE CRACKING STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.safe-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #050505;
+    color: white;
+}
+
+/* Фон хранилища (Металлические стены) */
+.vault-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -3;
+    background: 
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
+        linear-gradient(180deg, #1a1a1a 0%, #000 100%);
+}
+
+/* Лазерная сигнализация */
+.laser-beams {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: 
+        linear-gradient(135deg, transparent 40%, rgba(255, 0, 0, 0.4) 45%, rgba(255, 0, 0, 0.8) 50%, rgba(255, 0, 0, 0.4) 55%, transparent 60%);
+    background-size: 200% 200%;
+    opacity: 0.3;
+    animation: moveLasers 8s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+@keyframes moveLasers { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(10, 10, 10, 0.9);
+    border-bottom: 1px solid #333;
+    z-index: 10;
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.1); border: none;
+    color: #ccc; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
+
+.balance-container .label { font-size: 0.55rem; color: #555; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-green, #00ff88); }
+
+/* --- ИГРОВАЯ СЦЕНА (STAGE) --- */
+.safe-stage {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    padding-bottom: 30px;
+}
+
+/* Хакерский планшет */
+.hacker-panel {
+    background: #001a00;
+    border: 1px solid #00ff88;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+    width: 280px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
+}
+.h-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.h-row:last-child { margin-bottom: 0; }
+.h-lbl { font-size: 0.7rem; color: #00cc6a; font-weight: 700; }
+.h-val { font-size: 0.9rem; color: #00ff88; font-weight: 700; letter-spacing: 1px; }
+.h-val.gold { color: #ffd700; }
+
+.blinking { animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* МЕХАНИЗМ ЗАМКА */
+.safe-door-container {
+    position: relative;
+    width: 280px; height: 280px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* Металлическое кольцо (статор) */
+.safe-metal-ring {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    /* Эффект металла */
+    background: conic-gradient(from 135deg, #444, #888, #444, #999, #444);
+    box-shadow: 
+        inset 0 0 20px #000,
+        0 10px 30px rgba(0,0,0,0.8);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    border: 4px solid #222;
+}
+
+/* Вращающийся диск (ротор) */
+.dial-wheel {
+    width: 80%; height: 80%;
+    background: #1a1a1a;
+    border-radius: 50%;
+    position: relative;
+    transition: transform 3s cubic-bezier(0.15, 0.9, 0.2, 1); /* Плавное торможение */
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    overflow: hidden; /* Скрываем вылеты сектора */
+}
+
+/* Риски (шкала) */
+.ticks {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-conic-gradient(#555 0 2deg, transparent 2deg 6deg);
+    border-radius: 50%;
+    mask-image: radial-gradient(transparent 65%, black 66%);
+    -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
+}
+
+/* Сектор победы (Зеленая зона) */
+.win-sector {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(#00ff88 0deg, transparent 0deg); /* JS меняет градусы */
+    opacity: 0.6;
+    mix-blend-mode: screen;
+    box-shadow: inset 0 0 20px #00ff88;
+    transform: rotate(0deg); /* JS установит позицию зоны */
+}
+
+/* Ручка (центр) */
+.handle-center {
+    position: absolute; width: 40%; height: 40%;
+    background: radial-gradient(circle at 30% 30%, #999, #333);
+    border-radius: 50%;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+    z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+}
+.handle-bar {
+    width: 80%; height: 12px;
+    background: linear-gradient(90deg, #333, #777, #333);
+    border-radius: 4px;
+}
+
+/* Стрелка указатель */
+.pointer-arrow {
+    position: absolute; top: -25px; left: 50%;
+    transform: translateX(-50%);
+    color: #ff0000; font-size: 2rem;
+    z-index: 6;
+    filter: drop-shadow(0 0 5px red);
+}
+
+/* Искры (эффект взлома) */
+.sparks-container {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 10;
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.safe-controls {
+    background: #080808;
+    border-top: 1px solid #333;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+/* Слайдер сложности */
+.difficulty-slider-box {
+    background: #111; padding: 10px; border-radius: 12px;
+    border: 1px solid #333;
+}
+.ds-header {
+    display: flex; justify-content: space-between; margin-bottom: 8px;
+    font-size: 0.7rem; color: #888; font-weight: 700;
+}
+#chance-val { color: #00ff88; }
+
+.safe-range {
+    width: 100%; -webkit-appearance: none; background: transparent; cursor: pointer;
+}
+.safe-range::-webkit-slider-runnable-track {
+    width: 100%; height: 6px; background: #333; border-radius: 3px;
+}
+.safe-range::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+    background: #00ff88; margin-top: -7px;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+/* Ставка */
+.bet-row { display: flex; gap: 10px; height: 44px; }
+.stepper-box {
+    flex: 1.5; display: flex; align-items: center;
+    background: #111; border: 1px solid #333; border-radius: 10px;
+}
+.step-btn {
+    width: 40px; height: 100%; background: transparent; border: none; color: #888;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #222; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.quick-btns { flex: 1; display: flex; gap: 5px; }
+.quick-btns button {
+    flex: 1; background: #111; border: none; color: #777;
+    border-radius: 8px; font-weight: 700; font-size: 0.7rem; cursor: pointer;
+}
+.quick-btns button:active { background: #222; color: white; }
+
+/* КНОПКА ВЗЛОМА */
+.crack-btn {
+    width: 100%; height: 55px;
+    border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.1s;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+.crack-btn:active { transform: scale(0.98); }
+.btn-text { font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; }
+.btn-sub { font-size: 0.7rem; opacity: 0.8; }
+
+/* --- МОДАЛКИ --- */
+.win-card, .loss-card {
+    background: #111; width: 80%; max-width: 320px;
+    border-radius: 20px; padding: 25px; text-align: center;
+    border: 1px solid #333; animation: zoomIn 0.3s;
+    position: relative;
+}
+
+.safe-open-visual {
+    position: relative; width: 80px; height: 80px; margin: 0 auto 15px;
+}
+.safe-open-visual img { width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2; }
+.glow-gold {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,215,0,0.3), transparent 70%);
+    z-index: 1;
+}
+
+.alarm-icon { font-size: 3rem; color: #ff4444; margin-bottom: 10px; animation: flashRed 0.5s infinite; }
+@keyframes flashRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.win-val { font-size: 2rem; font-weight: 900; color: #00ff88; margin: 10px 0; font-family: var(--font-num); }
+.claim-btn { width: 100%; background: #00ff88; color: black; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+.retry-btn { width: 100%; background: #333; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+
+.info-card { background: #111; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #333; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
