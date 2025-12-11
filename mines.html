@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Mines</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="mines.css">     <!-- Уникальный для мин -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="mines-body">
+
+    <!-- Фон: Техно-сетка -->
+    <div class="tech-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА -->
+    <main class="mines-stage">
+        
+        <!-- Инфо о текущей игре (появляется после ставки) -->
+        <div class="game-stats hidden" id="game-stats-bar">
+            <div class="stat-box">
+                <span class="s-label">МНОЖИТЕЛЬ</span>
+                <span class="s-val" id="current-mult">1.00x</span>
+            </div>
+            <div class="stat-box highlight">
+                <span class="s-label">СЛЕД. ШАГ</span>
+                <span class="s-val" id="next-profit">+0</span>
+            </div>
+        </div>
+
+        <!-- Сетка 5x5 -->
+        <div class="grid-wrapper">
+            <div class="mines-grid" id="mines-grid">
+                <!-- Ячейки генерируются JS: 
+                     <div class="tile"></div> 
+                -->
+            </div>
+            
+            <!-- Оверлей блокировки (когда игра не идет) -->
+            <div class="grid-overlay" id="grid-overlay">
+                <i class="fa-solid fa-lock"></i>
+                <span>Сделайте ставку</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ УПРАВЛЕНИЯ -->
+    <footer class="mines-controls">
+        
+        <!-- Настройки (скрываются во время игры) -->
+        <div class="settings-area" id="settings-area">
+            
+            <!-- Выбор кол-ва мин -->
+            <div class="mines-selector">
+                <span class="label-tiny">КОЛ-ВО МИН</span>
+                <div class="mines-options">
+                    <button class="m-opt active" onclick="setMines(1)">1</button>
+                    <button class="m-opt" onclick="setMines(3)">3</button>
+                    <button class="m-opt" onclick="setMines(5)">5</button>
+                    <button class="m-opt" onclick="setMines(10)">10</button>
+                    <div class="custom-mines">
+                        <button class="m-opt-custom" id="custom-mines-btn" onclick="toggleCustomMines()">
+                            <span id="mines-count-display">3</span> 💣
+                        </button>
+                    </div>
+                </div>
+                <!-- Слайдер для кастомного кол-ва (скрыт) -->
+                <div class="mines-slider-box hidden" id="mines-slider-box">
+                    <input type="range" min="1" max="24" value="3" id="mines-range">
+                </div>
+            </div>
+
+            <!-- Ставка -->
+            <div class="bet-input-row">
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+                <div class="quick-bets">
+                    <button onclick="setBet(100)">MIN</button>
+                    <button onclick="setBet(500)">500</button>
+                    <button onclick="setBet('max')">MAX</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ГЛАВНАЯ КНОПКА -->
+        <div class="action-wrapper">
+            <button id="main-btn" class="main-action-btn">
+                <span class="btn-text">ИГРАТЬ</span>
+                <span class="btn-sub" id="btn-sub-text">Начать раунд</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="win-glow"></div>
+            <div class="win-icon"><i class="fa-solid fa-gem"></i></div>
+            <h2>YOU WON!</h2>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-currency">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ОТЛИЧНО</button>
+        </div>
+    </div>
+
+    <!-- Поражение (Взрыв) -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="loss-icon"><i class="fa-solid fa-bomb"></i></div>
+            <h2>BOOM!</h2>
+            <p>Вы подорвались на мине.</p>
+            <button class="retry-btn" onclick="closeLossModal()">ЕЩЕ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Выберите количество мин (чем больше, тем выше коэффициент).</p>
+                <p>2. Открывайте ячейки с 💎.</p>
+                <p>3. Нажмите <b>ЗАБРАТЬ</b> в любой момент, чтобы сохранить выигрыш.</p>
+                <p>4. Если откроете 💣 — ставка сгорит.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-gem" src="assets/gem.mp3"></audio>
+        <audio id="snd-bomb" src="assets/bomb.mp3"></audio>
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+    </div>
+
+    <script src="mines.js"></script>
+</body>
+</html>
