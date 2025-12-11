@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - KNB</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="knb.css">       <!-- Уникальный для КНБ -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="knb-body">
+
+    <!-- Фон: Неоновый ринг -->
+    <div class="arena-bg"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- История последних игр -->
+    <div class="history-strip">
+        <span class="h-label">ИСТОРИЯ:</span>
+        <div class="h-list" id="history-container">
+            <!-- <div class="dot win"></div> -->
+        </div>
+    </div>
+
+    <!-- ОСНОВНАЯ ЗОНА (АРЕНА) -->
+    <main class="knb-stage">
+        
+        <!-- Статус боя -->
+        <div class="battle-status">
+            <h2 id="status-text">ВЫБЕРИ ОРУЖИЕ</h2>
+            <div class="vs-badge">VS</div>
+        </div>
+
+        <!-- Руки -->
+        <div class="hands-container">
+            
+            <!-- Игрок (Слева) -->
+            <div class="hand-box player">
+                <div class="hand-icon" id="player-hand">
+                    <i class="fa-solid fa-hand-back-fist"></i> <!-- Исходное положение (Камень) -->
+                </div>
+                <span class="hand-label">ТЫ</span>
+            </div>
+
+            <!-- Противник (Справа) -->
+            <div class="hand-box enemy">
+                <div class="hand-icon" id="enemy-hand">
+                    <i class="fa-solid fa-hand-back-fist"></i>
+                </div>
+                <span class="hand-label">AI BOT</span>
+            </div>
+
+        </div>
+
+        <!-- Выбор оружия (Кнопки действий) -->
+        <div class="weapons-grid" id="weapons-area">
+            
+            <button class="weapon-btn" onclick="playRound('rock')">
+                <div class="w-icon rock"><i class="fa-solid fa-hand-back-fist"></i></div>
+                <span>КАМЕНЬ</span>
+            </button>
+
+            <button class="weapon-btn" onclick="playRound('scissors')">
+                <div class="w-icon scissors"><i class="fa-solid fa-hand-scissors"></i></div>
+                <span>НОЖНИЦЫ</span>
+            </button>
+            
+            <button class="weapon-btn" onclick="playRound('paper')">
+                <div class="w-icon paper"><i class="fa-solid fa-hand"></i></div>
+                <span>БУМАГА</span>
+            </button>
+
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ (Ставки) -->
+    <footer class="knb-controls">
+        <div class="bet-panel">
+            <div class="bet-input-group">
+                <label>СУММА СТАВКИ</label>
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+            </div>
+            <div class="bet-shortcuts">
+                <button onclick="setBet(100)">MIN</button>
+                <button onclick="setBet(0.5, 'mul')">1/2</button>
+                <button onclick="setBet(2, 'mul')">x2</button>
+                <button onclick="setBet('max')">MAX</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="result-card win">
+            <div class="glow-bg"></div>
+            <h1>ПОБЕДА!</h1>
+            <div class="res-icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="res-val">
+                <span id="win-amount">0</span>
+                <span id="win-currency">$</span>
+            </div>
+            <button class="res-btn" onclick="closeResultModal()">КРУТО</button>
+        </div>
+    </div>
+
+    <!-- Поражение -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="result-card loss">
+            <h1>ПОРАЖЕНИЕ</h1>
+            <div class="res-icon"><i class="fa-solid fa-heart-crack"></i></div>
+            <p>Бот оказался хитрее.</p>
+            <button class="res-btn retry" onclick="closeResultModal()">ЕЩЕ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Ничья -->
+    <div id="modal-draw" class="modal-overlay hidden">
+        <div class="result-card draw">
+            <h1>НИЧЬЯ</h1>
+            <div class="res-icon"><i class="fa-solid fa-handshake"></i></div>
+            <p>Ставка возвращена.</p>
+            <button class="res-btn draw" onclick="closeResultModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>Классическая игра:</p>
+                <ul>
+                    <li>🪨 Камень бьет Ножницы</li>
+                    <li>✂️ Ножницы бьют Бумагу</li>
+                    <li>📄 Бумага бьет Камень</li>
+                </ul>
+                <p>Победа: x2.00</p>
+                <p>Ничья: Возврат ставки</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-select" src="assets/click.mp3"></audio>
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+        <audio id="snd-lose" src="assets/lose.mp3"></audio>
+        <audio id="snd-shake" src="assets/whoosh.mp3"></audio> <!-- Звук взмаха руки -->
+    </div>
+
+    <script src="knb.js"></script>
+</body>
+</html>
