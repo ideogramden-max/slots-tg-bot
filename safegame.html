@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Safe</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="safegame.css">    <!-- Уникальный для сейфа -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="safe-body">
+
+    <!-- Фон: Банковское хранилище -->
+    <div class="vault-bg"></div>
+    <div class="laser-beams"></div> <!-- Лазерная сигнализация на фоне -->
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА (ДВЕРЬ СЕЙФА) -->
+    <main class="safe-stage">
+        
+        <!-- Хакерский планшет (Инфо) -->
+        <div class="hacker-panel">
+            <div class="h-row">
+                <span class="h-lbl">STATUS:</span>
+                <span class="h-val blinking" id="lock-status">LOCKED</span>
+            </div>
+            <div class="h-row">
+                <span class="h-lbl">MULTIPLIER:</span>
+                <span class="h-val gold" id="current-mult">x2.00</span>
+            </div>
+        </div>
+
+        <!-- Механизм замка -->
+        <div class="safe-door-container">
+            <div class="safe-metal-ring">
+                <!-- Вращающийся диск -->
+                <div class="dial-wheel" id="dial-wheel">
+                    <!-- Сектора генерируются CSS/JS (градиент) -->
+                    <!-- Зеленая зона победы -->
+                    <div class="win-sector" id="win-sector"></div>
+                    <!-- Декоративные риски -->
+                    <div class="ticks"></div>
+                </div>
+                
+                <!-- Неподвижная ручка в центре -->
+                <div class="handle-center">
+                    <div class="handle-bar"></div>
+                </div>
+                
+                <!-- Стрелка указатель (Сверху) -->
+                <div class="pointer-arrow">▼</div>
+            </div>
+            
+            <!-- Искры при взломе -->
+            <div class="sparks-container" id="sparks"></div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="safe-controls">
+        
+        <!-- Настройка сложности (Диапазон победы) -->
+        <div class="difficulty-slider-box">
+            <div class="ds-header">
+                <span>ШАНС ВЗЛОМА</span>
+                <span id="chance-val">50%</span>
+            </div>
+            <input type="range" min="10" max="90" value="50" step="1" class="safe-range" id="difficulty-slider">
+        </div>
+
+        <!-- Ставка -->
+        <div class="bet-row">
+            <div class="stepper-box">
+                <button id="btn-dec" class="step-btn">-</button>
+                <span id="bet-amount">100</span>
+                <button id="btn-inc" class="step-btn">+</button>
+            </div>
+            <div class="quick-btns">
+                <button onclick="setBet(100)">MIN</button>
+                <button onclick="setBet('max')">MAX</button>
+            </div>
+        </div>
+
+        <!-- КНОПКА ВЗЛОМА -->
+        <div class="action-wrapper">
+            <button id="crack-btn" class="crack-btn">
+                <span class="btn-text">ВЗЛОМАТЬ</span>
+                <span class="btn-sub" id="potential-win">Выигрыш: 200 $</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа (Открытый сейф с деньгами) -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="safe-open-visual">
+                <img src="https://cdn-icons-png.flaticon.com/512/2845/2845682.png" alt="Money">
+                <div class="glow-gold"></div>
+            </div>
+            <h2>ВЗЛОМАНО!</h2>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-currency">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ЗАБРАТЬ</button>
+        </div>
+    </div>
+
+    <!-- Поражение (Сирена) -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="alarm-icon"><i class="fa-solid fa-light-emergency-on"></i></div>
+            <h2>ALARM!</h2>
+            <p>Система безопасности сработала.</p>
+            <button class="retry-btn" onclick="closeLossModal()">СБЕЖАТЬ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ИНСТРУКЦИЯ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Настройте шанс взлома ползунком.</p>
+                <p>2. Зеленая зона на диске — это зона успеха.</p>
+                <p>3. Чем меньше зеленая зона, тем больше награда.</p>
+                <p>4. Нажмите "ВЗЛОМАТЬ", чтобы раскрутить механизм.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-spin" src="assets/lock_spin.mp3"></audio> <!-- Трещотка -->
+        <audio id="snd-click" src="assets/lock_click.mp3"></audio> <!-- Щелчок открытия -->
+        <audio id="snd-alarm" src="assets/alarm.mp3"></audio>     <!-- Сирена -->
+        <audio id="snd-win" src="assets/cash_register.mp3"></audio>
+    </div>
+
+    <script src="safegame.js"></script>
+</body>
+  </html>
