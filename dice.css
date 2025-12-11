@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Dice</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="dice.css">      <!-- Уникальный для дайса -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="dice-body">
+
+    <!-- Фон: Цифровой поток -->
+    <div class="digital-rain"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА -->
+    <main class="dice-stage">
+        
+        <!-- Результат ролла -->
+        <div class="result-box">
+            <div class="result-number" id="result-val">50.00</div>
+            <div class="result-status" id="result-status">ПЕРЕТАЩИ ПОЛЗУНОК</div>
+        </div>
+
+        <!-- Инфо-панель (Множитель / Шанс) -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="lbl">МНОЖИТЕЛЬ</span>
+                <span class="val" id="multiplier-val">2.00x</span>
+            </div>
+            <div class="stat-item">
+                <span class="lbl">ШАНС ПОБЕДЫ</span>
+                <span class="val highlight" id="chance-val">49.5%</span>
+            </div>
+        </div>
+
+        <!-- СЛАЙДЕР (Главный элемент) -->
+        <div class="slider-wrapper">
+            <!-- Трек слайдера -->
+            <div class="range-track" id="range-track">
+                <div class="range-fill" id="range-fill"></div> <!-- Зеленая зона -->
+                <div class="roll-marker hidden" id="roll-marker">
+                    <div class="marker-val">0.00</div>
+                    <div class="marker-arrow"></div>
+                </div>
+            </div>
+            
+            <!-- Сам инпут (прозрачный сверху) -->
+            <input type="range" min="2" max="98" value="50" step="1" class="dice-range" id="dice-slider">
+            
+            <!-- Метки шкалы -->
+            <div class="range-labels">
+                <span>0</span>
+                <span>25</span>
+                <span>50</span>
+                <span>75</span>
+                <span>100</span>
+            </div>
+        </div>
+
+        <!-- Переключатель (Меньше / Больше) -->
+        <div class="direction-toggle">
+            <span class="dir-lbl">ROLL</span>
+            <button class="dir-btn active" id="btn-under" onclick="setDirection('under')">UNDER</button>
+            <button class="dir-btn" id="btn-over" onclick="setDirection('over')">OVER</button>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="dice-controls">
+        
+        <!-- Выбор ставки -->
+        <div class="bet-panel">
+            <div class="bet-input-group">
+                <label>СТАВКА</label>
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+            </div>
+            <div class="bet-shortcuts">
+                <button onclick="setBet(100)">MIN</button>
+                <button onclick="setBet(0.5, 'mul')">1/2</button>
+                <button onclick="setBet(2, 'mul')">x2</button>
+                <button onclick="setBet('max')">MAX</button>
+            </div>
+        </div>
+
+        <!-- КНОПКА РОЛЛ -->
+        <div class="action-wrapper">
+            <button id="roll-btn" class="roll-button">
+                <span class="btn-text">БРОСОК</span>
+                <span class="btn-sub">Выигрыш: <span id="potential-win">198</span> <span class="curr-s">$</span></span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа (Тост сверху, чтобы не мешать спамить кнопку) -->
+    <div id="toast-win" class="toast-overlay hidden">
+        <div class="toast-card win">
+            <i class="fa-solid fa-check"></i>
+            <span class="t-val" id="toast-val">+200</span>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА DICE</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Настройте ползунок, чтобы выбрать шанс победы.</p>
+                <p>2. Чем меньше шанс, тем выше выигрыш.</p>
+                <p>3. Выберите "Under" (Меньше) или "Over" (Больше).</p>
+                <p>4. Если число попадет в зеленую зону — вы победили.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-roll" src="assets/roll.mp3"></audio>
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+        <audio id="snd-lose" src="assets/lose.mp3"></audio>
+    </div>
+
+    <script src="dice.js"></script>
+</body>
+</html>
