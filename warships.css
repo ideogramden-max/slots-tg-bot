@@ -1,0 +1,269 @@
+/* =========================================
+   FASTMONEY - WARSHIPS (SEA BATTLE) STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.warships-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #020a10;
+    color: #aaddff;
+    font-family: 'Orbitron', sans-serif; /* Техно шрифт */
+}
+
+/* Фон: Сонар / Радар */
+.sonar-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -3;
+    background: 
+        radial-gradient(circle, transparent 20%, rgba(0, 255, 255, 0.05) 21%, rgba(0, 255, 255, 0.05) 22%, transparent 23%),
+        radial-gradient(circle, transparent 40%, rgba(0, 255, 255, 0.05) 41%, rgba(0, 255, 255, 0.05) 42%, transparent 43%),
+        radial-gradient(circle, transparent 60%, rgba(0, 255, 255, 0.05) 61%, rgba(0, 255, 255, 0.05) 62%, transparent 43%);
+    background-size: 100% 100%;
+}
+/* Вращающийся луч радара */
+.sonar-bg::after {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 255, 255, 0.1) 60deg, transparent 60deg);
+    animation: radarSweep 10s linear infinite;
+    border-radius: 50%;
+}
+@keyframes radarSweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Сетка поверх фона */
+.grid-overlay-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: 
+        linear-gradient(rgba(0, 100, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 100, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(2, 10, 16, 0.9);
+    border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+    z-index: 10;
+}
+
+.back-btn, .icon-btn {
+    background: rgba(0, 255, 255, 0.1); border: 1px solid rgba(0, 255, 255, 0.2);
+    color: #00ffff; width: 38px; height: 38px;
+    border-radius: 8px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: #00ffff; color: #000; }
+
+.balance-container .label { font-size: 0.55rem; color: #0088aa; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; font-family: var(--font-main); }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: #00ffff; }
+
+/* --- ИГРОВОЙ ИНТЕРФЕЙС --- */
+.battle-interface {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    gap: 15px;
+    overflow-y: auto;
+}
+
+/* Лог боя */
+.battle-log {
+    width: 100%; max-width: 340px;
+    background: rgba(0, 20, 30, 0.8);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    padding: 8px 15px; border-radius: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+}
+.log-msg { font-size: 0.8rem; letter-spacing: 1px; color: #00ffff; font-weight: 700; }
+.turn-indicator {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #333; box-shadow: 0 0 5px #333;
+}
+.turn-indicator.active { background: #00ff00; box-shadow: 0 0 8px #00ff00; animation: blinkTurn 1s infinite; }
+@keyframes blinkTurn { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* Секция сетки */
+.grid-section { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 5px; }
+.section-label { display: flex; justify-content: space-between; font-size: 0.7rem; color: #5588aa; font-weight: 700; padding: 0 5px; }
+.ships-left { font-family: var(--font-num); }
+.ships-left.red { color: #ff4444; }
+.ships-left.green { color: #00ff88; }
+
+/* Рамка радара */
+.radar-frame {
+    position: relative;
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(0, 10, 20, 0.8);
+    padding: 2px;
+    overflow: hidden;
+}
+
+/* Сканирующая линия */
+.scan-line {
+    position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+    background: linear-gradient(180deg, rgba(0,255,255,0.5), transparent);
+    z-index: 5; pointer-events: none;
+    animation: scanMove 3s linear infinite;
+    opacity: 0.5;
+}
+@keyframes scanMove { 0% { top: -10%; } 100% { top: 110%; } }
+
+/* СЕТКА БОЯ (GRID) */
+.battle-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 2px;
+    aspect-ratio: 1/1;
+}
+
+/* ЯЧЕЙКА (CELL) */
+.cell {
+    background: rgba(0, 60, 80, 0.4);
+    border: 1px solid rgba(0, 100, 150, 0.3);
+    cursor: pointer;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.2s;
+}
+
+/* Вражеская сетка: интерактивная */
+.battle-grid.enemy .cell:active { background: rgba(0, 255, 255, 0.3); }
+.battle-grid.enemy .cell.revealed { cursor: default; }
+
+/* Состояния */
+.cell.miss {
+    background: rgba(255, 255, 255, 0.1);
+}
+.cell.miss::after {
+    content: '•'; color: white; font-size: 1.5rem; line-height: 0;
+}
+
+.cell.hit {
+    background: rgba(255, 0, 0, 0.3);
+    border-color: rgba(255, 0, 0, 0.6);
+    animation: pulseHit 1s infinite;
+}
+.cell.hit::after {
+    content: '✖'; color: #ff4444; font-size: 1.2rem; font-weight: bold;
+}
+
+.cell.sunk {
+    background: rgba(255, 0, 0, 0.6);
+    border-color: #ff0000;
+}
+
+/* Игрок: свои корабли */
+.battle-grid.player .cell.ship {
+    background: rgba(0, 255, 136, 0.3);
+    border-color: rgba(0, 255, 136, 0.5);
+    box-shadow: inset 0 0 5px rgba(0, 255, 136, 0.2);
+}
+.battle-grid.player .cell.hit {
+    background: rgba(255, 50, 0, 0.5); /* Оранжевый огонь */
+}
+
+/* Блокировка радара */
+.radar-lock {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 10, 20, 0.7);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(0, 255, 255, 0.5);
+    font-size: 3rem;
+}
+.radar-lock.hidden { display: none; }
+
+/* Мини-флот (Игрок) */
+.grid-section.mini { max-width: 200px; opacity: 0.9; }
+.fleet-frame {
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 6px; padding: 2px;
+    background: rgba(0, 20, 10, 0.8);
+}
+
+@keyframes pulseHit { 0% { box-shadow: inset 0 0 0 rgba(255,0,0,0); } 50% { box-shadow: inset 0 0 10px rgba(255,0,0,0.5); } 100% { box-shadow: inset 0 0 0 rgba(255,0,0,0); } }
+
+/* --- CONTROLS (FOOTER) --- */
+.warships-controls {
+    background: #020a10;
+    border-top: 1px solid #004455;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+/* Панель ставки */
+.bet-panel { display: flex; flex-direction: column; gap: 10px; }
+.coeff-display {
+    display: flex; justify-content: space-between;
+    font-size: 0.8rem; color: #5588aa;
+    background: rgba(0, 255, 255, 0.05); padding: 5px 10px; border-radius: 6px;
+}
+.c-val { color: #00ffff; font-weight: 700; }
+
+.bet-input-row { display: flex; gap: 10px; height: 44px; }
+.stepper-box {
+    flex: 1.5; display: flex; align-items: center;
+    background: #051520; border: 1px solid #004455; border-radius: 10px;
+}
+.step-btn {
+    width: 40px; height: 100%; background: transparent; border: none; color: #00ffff;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { background: #004455; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; color: white; }
+
+.start-btn {
+    flex: 1; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, #0088cc, #005577);
+    color: white; font-weight: 900; font-size: 1rem;
+    cursor: pointer; box-shadow: 0 0 10px rgba(0, 136, 204, 0.3);
+}
+.start-btn:active { transform: scale(0.98); }
+
+/* Активная панель */
+.game-active-panel.hidden { display: none; }
+.surrender-btn {
+    width: 100%; height: 44px;
+    background: transparent; border: 1px solid #ff4444; color: #ff4444;
+    border-radius: 10px; font-weight: 700; cursor: pointer;
+}
+.surrender-btn:active { background: rgba(255, 68, 68, 0.1); }
+
+/* --- МОДАЛКИ --- */
+.win-card {
+    background: #021a20; width: 80%; max-width: 320px;
+    border-radius: 20px; padding: 30px; text-align: center;
+    border: 1px solid #00ff88; animation: zoomIn 0.3s;
+}
+.loss-card {
+    background: #1a0505; width: 80%; padding: 30px; border-radius: 20px;
+    text-align: center; border: 1px solid #ff4444; animation: zoomIn 0.3s;
+}
+
+.win-icon { font-size: 3rem; color: #00ff88; margin-bottom: 10px; }
+.loss-icon { font-size: 3rem; color: #ff4444; margin-bottom: 10px; }
+
+.win-val { font-size: 2rem; font-weight: 900; color: #00ff88; margin: 10px 0; font-family: var(--font-num); }
+.claim-btn { width: 100%; background: #00ff88; color: black; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+.retry-btn { width: 100%; background: #333; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+
+.info-card { background: #051520; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #0088aa; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #aaddff; margin-bottom: 8px; }
+.card-body ul { padding-left: 20px; font-size: 0.8rem; color: #88aabb; }
+
+@keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
