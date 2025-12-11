@@ -1,0 +1,277 @@
+/* =========================================
+   FASTMONEY - RPG BATTLE STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.rpg-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0f0505; /* Кроваво-черный */
+    color: white;
+}
+
+/* Фон подземелья */
+.dungeon-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -3;
+    background: radial-gradient(circle at 50% 30%, #2a0a0a 0%, #000 90%);
+}
+
+/* Эффект атмосферы (искры/пепел) */
+.rain-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: radial-gradient(2px 2px at 50% 50%, rgba(255, 100, 0, 0.3), transparent);
+    background-size: 100px 100px;
+    animation: ashes 10s linear infinite;
+    opacity: 0.5;
+}
+@keyframes ashes { 0% { transform: translateY(0); } 100% { transform: translateY(-500px); } }
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(20, 5, 5, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    border-bottom: 1px solid rgba(255, 50, 50, 0.1);
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: none;
+    color: #aaa; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
+
+.balance-container .label { font-size: 0.55rem; color: #a55; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-gold, #ffd700); }
+
+/* --- БИТВА (STAGE) --- */
+.battle-stage {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* КОНТЕЙНЕР ВРАГА */
+.enemy-container {
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+/* HP BAR */
+.hp-bar-wrapper {
+    width: 200px; height: 16px;
+    background: #220000;
+    border: 2px solid #440000;
+    border-radius: 10px;
+    position: relative;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+.hp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #ff4444);
+    width: 100%;
+    transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.hp-text {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.55rem; font-weight: 900; color: white; text-shadow: 0 0 3px black;
+    letter-spacing: 1px;
+}
+
+/* БОСС (СПРАЙТ) */
+.enemy-sprite {
+    font-size: 8rem;
+    color: #ff3333;
+    filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.3));
+    position: relative;
+    animation: float 3s ease-in-out infinite;
+    transition: transform 0.1s;
+}
+.enemy-sprite.hit { animation: shakeHit 0.3s; color: white; } /* Мигание при ударе */
+
+/* Аура босса */
+.enemy-aura {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(255,0,0,0.2), transparent 70%);
+    z-index: -1;
+    animation: pulseAura 2s infinite;
+}
+
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes pulseAura { 0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.5; } 50% { transform: translate(-50%,-50%) scale(1.2); opacity: 0.8; } }
+@keyframes shakeHit { 
+    0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 
+    50% { transform: translateX(10px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } 
+}
+
+/* Эффект меча (Игрок) */
+.player-container {
+    position: absolute; bottom: 20px;
+    width: 100%; height: 100px;
+    pointer-events: none;
+    display: flex; justify-content: center;
+    overflow: hidden;
+}
+.sword-icon {
+    font-size: 10rem; color: #fff;
+    opacity: 0;
+    transform: translateY(100px) rotate(45deg);
+    filter: drop-shadow(0 0 10px white);
+}
+/* Анимация удара */
+.sword-icon.attack {
+    animation: swordSlash 0.3s ease-out forwards;
+}
+@keyframes swordSlash {
+    0% { opacity: 0; transform: translateY(100px) rotate(45deg) scale(0.5); }
+    50% { opacity: 1; transform: translateY(-50px) rotate(0deg) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-100px) rotate(-45deg) scale(1); }
+}
+
+/* DAMAGE NUMBERS */
+.damage-container {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+}
+.dmg-text {
+    position: absolute;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    color: #fff;
+    text-shadow: 0 0 5px red;
+    animation: damageFly 1s forwards;
+}
+.dmg-text.crit { color: #ffd700; font-size: 3rem; text-shadow: 0 0 10px orange; }
+.dmg-text.miss { color: #888; font-size: 1.5rem; }
+
+@keyframes damageFly {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    20% { transform: translate(-50%, -100%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%, -200%) scale(1); opacity: 0; }
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.rpg-controls {
+    background: #110505;
+    border-top: 1px solid #330000;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+/* Выбор атаки */
+.attack-selector { display: flex; flex-direction: column; gap: 5px; }
+.label-tiny { font-size: 0.6rem; color: #885555; font-weight: 700; }
+
+.attack-options { display: flex; gap: 8px; }
+.atk-btn {
+    flex: 1;
+    background: #220a0a;
+    border: 1px solid #441111;
+    border-radius: 10px;
+    padding: 8px 5px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    cursor: pointer; transition: 0.2s;
+    position: relative; overflow: hidden;
+}
+
+.atk-btn.active { background: #331111; border-color: white; transform: translateY(-3px); box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
+
+/* Цветовые коды кнопок */
+/* Light */
+.atk-btn[data-type="light"].active { border-color: #00f3ff; }
+.atk-btn[data-type="light"].active .atk-icon { color: #00f3ff; }
+/* Heavy */
+.atk-btn[data-type="heavy"].active { border-color: #ff9f43; }
+.atk-btn[data-type="heavy"].active .atk-icon { color: #ff9f43; }
+/* Ult */
+.atk-btn[data-type="ult"].active { border-color: #bc13fe; }
+.atk-btn[data-type="ult"].active .atk-icon { color: #bc13fe; }
+
+.atk-icon { font-size: 1.2rem; color: #555; transition: 0.2s; }
+.atk-info { display: flex; flex-direction: column; align-items: center; }
+.atk-name { font-size: 0.55rem; font-weight: 800; color: #ccc; }
+.atk-mult { font-family: var(--font-num); font-size: 0.7rem; color: white; font-weight: 700; }
+
+/* Ставка */
+.bet-row { display: flex; gap: 10px; height: 44px; }
+.stepper-box {
+    flex: 1.5; display: flex; align-items: center;
+    background: #1a0808; border: 1px solid #330000; border-radius: 10px;
+}
+.step-btn {
+    width: 40px; height: 100%; background: transparent; border: none; color: #a55;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #330000; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.quick-btns { flex: 1; display: flex; gap: 5px; }
+.quick-btns button {
+    flex: 1; background: #1a0808; border: none; color: #a55;
+    border-radius: 8px; font-weight: 700; font-size: 0.7rem; cursor: pointer;
+}
+.quick-btns button:active { background: #330000; color: white; }
+
+/* ГЛАВНАЯ КНОПКА */
+.main-attack-btn {
+    width: 100%; height: 55px;
+    border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    color: white;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.1s;
+    box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);
+}
+.main-attack-btn:active { transform: scale(0.98); }
+.btn-text { font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; }
+.btn-sub { font-size: 0.7rem; opacity: 0.8; }
+
+/* --- МОДАЛКИ --- */
+.loot-card, .death-card {
+    background: #1a0808; width: 80%; max-width: 320px;
+    border-radius: 20px; padding: 30px 20px; text-align: center;
+    border: 1px solid #441111; animation: zoomIn 0.3s;
+    position: relative;
+}
+
+.shine-effect {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,215,0,0.2), transparent 70%);
+    z-index: -1;
+}
+
+.loot-icon { font-size: 3rem; color: #ffd700; margin-bottom: 10px; filter: drop-shadow(0 0 10px #ffd700); }
+.loot-card h2 { color: #ffd700; font-family: var(--font-num); margin: 0; }
+.loot-val { font-size: 2rem; font-weight: 900; color: white; margin: 10px 0; font-family: var(--font-num); }
+
+.death-card h1 { color: #ff0000; font-family: 'Times New Roman', serif; letter-spacing: 2px; font-size: 2.5rem; text-transform: uppercase; margin: 0; }
+.death-card p { color: #888; font-size: 0.9rem; }
+
+.claim-btn { width: 100%; background: #ffd700; color: black; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+.retry-btn { width: 100%; background: #333; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; }
+
+.info-card { background: #1a0808; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #441111; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
+.card-body ul { padding-left: 20px; font-size: 0.8rem; color: #aaa; }
