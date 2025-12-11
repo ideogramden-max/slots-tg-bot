@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Tower</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="tower.css">     <!-- Уникальный для башни -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="tower-body">
+
+    <!-- Фон: Подземелье / Башня -->
+    <div class="dungeon-bg"></div>
+    <div class="vignette"></div>
+    <!-- Частицы пыли/тумана -->
+    <div class="fog-container"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА (БАШНЯ) -->
+    <main class="tower-stage">
+        
+        <!-- Контейнер для скролла, если башня высокая -->
+        <div class="tower-scroll-wrapper" id="tower-scroll">
+            
+            <!-- Сама сетка башни (Генерируется JS: rows -> tiles) -->
+            <div class="tower-grid" id="tower-grid">
+                <!-- 
+                Пример ряда (генерируется скриптом):
+                <div class="tower-row active">
+                    <div class="row-mult">1.50x</div>
+                    <div class="t-tile"></div>
+                    <div class="t-tile"></div>
+                    <div class="t-tile"></div>
+                </div> 
+                -->
+            </div>
+        </div>
+
+        <!-- Оверлей блокировки (пока нет игры) -->
+        <div class="tower-overlay" id="tower-overlay">
+            <i class="fa-solid fa-dungeon"></i>
+            <span>Выберите сложность и начните</span>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ УПРАВЛЕНИЯ -->
+    <footer class="tower-controls">
+        
+        <!-- Панель настроек (прячется при игре) -->
+        <div class="settings-panel" id="settings-panel">
+            
+            <!-- Сложность -->
+            <div class="diff-selector">
+                <span class="label-tiny">СЛОЖНОСТЬ</span>
+                <div class="diff-options">
+                    <button class="d-opt active" onclick="setDifficulty('easy')" data-diff="easy">
+                        EASY <span class="stars">★☆☆</span>
+                    </button>
+                    <button class="d-opt" onclick="setDifficulty('medium')" data-diff="medium">
+                        MED <span class="stars">★★☆</span>
+                    </button>
+                    <button class="d-opt" onclick="setDifficulty('hard')" data-diff="hard">
+                        HARD <span class="stars">★★★</span>
+                    </button>
+                    <button class="d-opt danger" onclick="setDifficulty('crazy')" data-diff="crazy">
+                        😈
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ставка -->
+            <div class="bet-row">
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+                <div class="quick-btns">
+                    <button onclick="setBet(100)">MIN</button>
+                    <button onclick="setBet('max')">MAX</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Кнопка действия -->
+        <div class="action-wrapper">
+            <button id="main-btn" class="main-tower-btn">
+                <span class="btn-text">ИГРАТЬ</span>
+                <span class="btn-sub" id="btn-sub">Начать восхождение</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="win-light"></div>
+            <div class="icon-box"><i class="fa-solid fa-crown"></i></div>
+            <h2>VICTORY!</h2>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-curr">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ЗАБРАТЬ</button>
+        </div>
+    </div>
+
+    <!-- Поражение -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="icon-box fail"><i class="fa-solid fa-skull"></i></div>
+            <h2>GAME OVER</h2>
+            <p>Вы оступились и упали.</p>
+            <button class="retry-btn" onclick="closeLossModal()">ЕЩЕ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА БАШНИ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Выбирайте ячейку на активном этаже.</p>
+                <p>2. Если там <i class="fa-regular fa-gem" style="color:cyan"></i> — вы поднимаетесь выше.</p>
+                <p>3. Если там <i class="fa-solid fa-skull" style="color:red"></i> — вы теряете всё.</p>
+                <p>4. Забирайте выигрыш на любом этапе, пока не проиграли!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-step" src="assets/step.mp3"></audio>
+        <audio id="snd-fall" src="assets/fall.mp3"></audio>
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+    </div>
+
+    <script src="tower.js"></script>
+</body>
+</html>
