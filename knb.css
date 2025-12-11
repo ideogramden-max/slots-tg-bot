@@ -1,0 +1,281 @@
+/* =========================================
+   FASTMONEY - KNB (ROCK PAPER SCISSORS) STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.knb-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0b0b15;
+    color: white;
+}
+
+/* Фон арены */
+.arena-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #000 90%);
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+}
+
+/* Частицы на фоне */
+.particles {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -1;
+    background-image: radial-gradient(#ffffff 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.1;
+    animation: drift 20s linear infinite;
+}
+@keyframes drift { from { transform: translateY(0); } to { transform: translateY(-50px); } }
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(20, 20, 30, 0.9);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    z-index: 10;
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: none;
+    color: #888; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
+
+.balance-container .label { font-size: 0.55rem; color: #555; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-blue, #00f3ff); }
+
+/* --- ИСТОРИЯ (ПОЛОСКА) --- */
+.history-strip {
+    background: #111;
+    height: 30px;
+    display: flex; align-items: center;
+    padding: 0 10px;
+    border-bottom: 1px solid #222;
+}
+.h-label { font-size: 0.6rem; color: #555; font-weight: 700; margin-right: 10px; }
+.h-list { display: flex; gap: 5px; overflow: hidden; }
+
+.dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    box-shadow: 0 0 5px currentColor;
+}
+.dot.win { background: #00ff88; color: #00ff88; }
+.dot.loss { background: #ff0055; color: #ff0055; }
+.dot.draw { background: #888; color: #888; }
+
+/* --- ИГРОВАЯ АРЕНА --- */
+.knb-stage {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    position: relative;
+}
+
+/* Статус VS */
+.battle-status {
+    text-align: center;
+    margin-bottom: 20px;
+    height: 40px;
+}
+.battle-status h2 {
+    margin: 0; font-size: 0.9rem; letter-spacing: 2px;
+    color: #888; font-weight: 700;
+}
+.vs-badge {
+    display: inline-block;
+    background: #222; color: #fff;
+    font-family: var(--font-num); font-weight: 900; font-style: italic;
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 0.8rem; margin-top: 5px;
+    border: 1px solid #444;
+}
+
+/* КОНТЕЙНЕР РУК */
+.hands-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%; max-width: 320px;
+    margin-bottom: 30px;
+}
+
+.hand-box {
+    display: flex; flex-direction: column; align-items: center;
+    width: 120px;
+}
+
+.hand-icon {
+    font-size: 5rem;
+    transition: transform 0.2s;
+    /* По умолчанию кулаки смотрят друг на друга */
+}
+
+/* Игрок (Слева) - Кулак вправо */
+.player .hand-icon {
+    color: var(--accent-blue, #00f3ff);
+    transform: rotate(90deg);
+    filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.3));
+}
+
+/* Враг (Справа) - Кулак влево */
+.enemy .hand-icon {
+    color: #ff0055;
+    transform: scaleX(-1) rotate(90deg);
+    filter: drop-shadow(0 0 15px rgba(255, 0, 85, 0.3));
+}
+
+.hand-label {
+    margin-top: 15px;
+    font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;
+    opacity: 0.5;
+}
+
+/* АНИМАЦИЯ ТРЯСКИ (SHAKE) */
+/* Для игрока */
+.player .hand-icon.shake {
+    animation: shakePlayer 0.5s ease-in-out 3; /* 3 раза */
+}
+@keyframes shakePlayer {
+    0% { transform: rotate(90deg) translateY(0); }
+    50% { transform: rotate(90deg) translateY(-30px); }
+    100% { transform: rotate(90deg) translateY(0); }
+}
+
+/* Для врага */
+.enemy .hand-icon.shake {
+    animation: shakeEnemy 0.5s ease-in-out 3;
+}
+@keyframes shakeEnemy {
+    0% { transform: scaleX(-1) rotate(90deg) translateY(0); }
+    50% { transform: scaleX(-1) rotate(90deg) translateY(-30px); }
+    100% { transform: scaleX(-1) rotate(90deg) translateY(0); }
+}
+
+/* --- ВЫБОР ОРУЖИЯ --- */
+.weapons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    width: 100%; max-width: 340px;
+}
+.weapons-grid.disabled {
+    opacity: 0.5; pointer-events: none; filter: grayscale(1);
+}
+
+.weapon-btn {
+    background: #15151a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 15px 5px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; transition: 0.2s;
+}
+.weapon-btn:active { transform: scale(0.95); background: #222; }
+
+.w-icon {
+    font-size: 2rem;
+    width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+}
+
+/* Цвета иконок */
+.w-icon.rock { color: #888; box-shadow: 0 0 10px rgba(136,136,136,0.2); }
+.w-icon.scissors { color: #f39c12; box-shadow: 0 0 10px rgba(243, 156, 18, 0.2); }
+.w-icon.paper { color: #ecf0f1; box-shadow: 0 0 10px rgba(236, 240, 241, 0.2); }
+
+.weapon-btn span {
+    font-size: 0.65rem; font-weight: 700; color: #777;
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.knb-controls {
+    background: #101014;
+    border-top: 1px solid #2a2a30;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+}
+
+.bet-panel { display: flex; gap: 10px; align-items: flex-end; }
+.bet-input-group { flex: 1; }
+.bet-input-group label { display: block; font-size: 0.6rem; color: #666; font-weight: 700; margin-bottom: 5px; }
+
+.stepper-box {
+    display: flex; align-items: center;
+    background: #1a1a20; border: 1px solid #333;
+    border-radius: 10px; height: 44px;
+}
+.step-btn {
+    width: 44px; height: 100%; background: transparent; border: none; color: #888;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #2a2a30; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.bet-shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 110px; }
+.bet-shortcuts button {
+    background: #222; border: none; color: #777;
+    border-radius: 8px; font-weight: 700; font-size: 0.65rem; height: 20px;
+    cursor: pointer;
+}
+.bet-shortcuts button:active { background: #333; color: white; }
+
+/* --- МОДАЛКИ (РЕЗУЛЬТАТ) --- */
+.result-card {
+    background: #1a1a20; width: 85%; max-width: 320px;
+    border-radius: 20px; padding: 30px; text-align: center;
+    position: relative; border: 1px solid #333;
+    animation: zoomIn 0.3s;
+    overflow: hidden;
+}
+
+.result-card h1 { margin: 0; font-family: var(--font-num); font-size: 2rem; }
+.res-icon { font-size: 4rem; margin: 15px 0; }
+.res-btn {
+    width: 100%; padding: 12px; border-radius: 12px; border: none;
+    font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 15px;
+}
+
+/* Стили для WIN */
+.result-card.win { border-color: #00ff88; }
+.result-card.win h1 { color: #00ff88; text-shadow: 0 0 10px rgba(0,255,136,0.5); }
+.result-card.win .res-icon { color: #00ff88; }
+.result-card.win .res-btn { background: #00ff88; color: black; box-shadow: 0 0 15px rgba(0,255,136,0.3); }
+
+/* Стили для LOSS */
+.result-card.loss { border-color: #ff0055; }
+.result-card.loss h1 { color: #ff0055; }
+.result-card.loss .res-icon { color: #ff0055; }
+.result-card.loss .res-btn { background: #333; color: white; }
+
+/* Стили для DRAW */
+.result-card.draw { border-color: #888; }
+.result-card.draw h1 { color: #ccc; }
+.result-card.draw .res-icon { color: #888; }
+.result-card.draw .res-btn { background: #444; color: white; }
+
+.res-val { font-size: 1.5rem; font-weight: 900; color: white; font-family: var(--font-num); }
+.glow-bg {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 200px; height: 200px; background: radial-gradient(circle, rgba(0,255,136,0.2), transparent 70%);
+    z-index: -1;
+}
+
+/* Инфо */
+.info-card { background: #1a1a20; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #333; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 5px; }
+.card-body ul { padding-left: 20px; font-size: 0.85rem; color: #aaa; }
+
+@keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
