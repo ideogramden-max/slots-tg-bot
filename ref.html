@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Referrals</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="ref.css">       <!-- Уникальный -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="ref-body">
+
+    <!-- Фон: Сеть связей -->
+    <div class="network-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">
+            <i class="fa-solid fa-house"></i>
+        </button>
+        <span class="header-title">ПАРТНЕРЫ</span>
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-info"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="ref-content">
+        
+        <!-- Баннер -->
+        <div class="hero-banner">
+            <div class="hero-icon"><i class="fa-solid fa-users-rays"></i></div>
+            <div class="hero-text">
+                <h2>ПРИГЛАСИ ДРУГА</h2>
+                <p>Получи <span class="highlight">10%</span> от их пополнений</p>
+            </div>
+        </div>
+
+        <!-- Ссылка -->
+        <div class="link-section">
+            <span class="lbl">ВАША ССЫЛКА</span>
+            <div class="link-box">
+                <input type="text" id="ref-link" value="https://t.me/fastmoney_bot?start=..." readonly>
+                <button class="copy-btn" onclick="copyLink()">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="ref-stats-grid">
+            <div class="rs-card">
+                <span class="rs-val" id="ref-count">0</span>
+                <span class="rs-lbl">ДРУЗЕЙ</span>
+            </div>
+            <div class="rs-card">
+                <span class="rs-val gold" id="total-earned">0 $</span>
+                <span class="rs-lbl">ВСЕГО ЗАРАБОТАНО</span>
+            </div>
+        </div>
+
+        <!-- Доступно к выводу -->
+        <div class="claim-card">
+            <div class="claim-info">
+                <span>ДОСТУПНО:</span>
+                <h1 id="available-balance">0.00 $</h1>
+            </div>
+            <button class="claim-btn" id="claim-btn" onclick="claimRewards()">
+                ЗАБРАТЬ
+            </button>
+        </div>
+
+        <!-- Список друзей -->
+        <div class="friends-list-wrapper">
+            <h3>ВАША КОМАНДА</h3>
+            <div class="friends-list" id="friends-list">
+                <!-- Генерируется JS -->
+                <!-- <div class="friend-item">...</div> -->
+                <div class="empty-state">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <p>Пока никого нет</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Успешный клейм -->
+    <div id="modal-success" class="modal-overlay hidden">
+        <div class="success-card">
+            <div class="confetti"></div>
+            <div class="s-icon"><i class="fa-solid fa-check-circle"></i></div>
+            <h2>ЗАЧИСЛЕНО!</h2>
+            <p>Средства переведены на основной баланс.</p>
+            <button class="ok-btn" onclick="closeSuccessModal()">ОТЛИЧНО</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Скопируйте ссылку и отправьте другу.</p>
+                <p>2. Когда друг пополнит баланс, вы получите 10%.</p>
+                <p>3. Нажмите "ЗАБРАТЬ", чтобы перевести деньги на игровой счет.</p>
+                <p>4. Фейковые аккаунты запрещены.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="ref.js"></script>
+</body>
+</html>
