@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Deposit</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="deposit.css">     <!-- Уникальный для депозита -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="deposit-body">
+
+    <!-- Фон: Матрица денег -->
+    <div class="matrix-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">
+            <i class="fa-solid fa-house"></i>
+        </button>
+        <span class="header-title">ПОПОЛНЕНИЕ</span>
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-shield-halved"></i>
+        </button>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="deposit-content">
+        
+        <!-- Текущий баланс -->
+        <div class="balance-card">
+            <span class="lbl">ТЕКУЩИЙ БАЛАНС</span>
+            <div class="val-row">
+                <span id="balance-val">0</span>
+                <span id="currency-sym">$</span>
+            </div>
+        </div>
+
+        <!-- Выбор метода -->
+        <div class="section-title">МЕТОД ОПЛАТЫ</div>
+        <div class="methods-grid">
+            <button class="method-card active" onclick="selectMethod('card')" data-method="card">
+                <div class="m-icon"><i class="fa-solid fa-credit-card"></i></div>
+                <span>Карта РФ</span>
+                <div class="m-badge">Быстро</div>
+            </button>
+            <button class="method-card" onclick="selectMethod('sbp')" data-method="sbp">
+                <div class="m-icon" style="color:#aaeeff;"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                <span>СБП</span>
+            </button>
+            <button class="method-card" onclick="selectMethod('crypto')" data-method="crypto">
+                <div class="m-icon" style="color:#00ff88;"><i class="fa-brands fa-bitcoin"></i></div>
+                <span>Crypto</span>
+            </button>
+            <button class="method-card" onclick="selectMethod('stars')" data-method="stars">
+                <div class="m-icon" style="color:#ffd700;"><i class="fa-solid fa-star"></i></div>
+                <span>TG Stars</span>
+            </button>
+        </div>
+
+        <!-- Ввод суммы -->
+        <div class="deposit-form">
+            <div class="input-group">
+                <label>Сумма пополнения (RUB)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="amount-input" placeholder="Min 100">
+                    <span class="currency-tag">₽</span>
+                </div>
+            </div>
+
+            <!-- Быстрые суммы -->
+            <div class="quick-amounts">
+                <button onclick="setAmount(100)">+100</button>
+                <button onclick="setAmount(500)">+500</button>
+                <button onclick="setAmount(1000)">+1000</button>
+                <button onclick="setAmount(5000)">+5000</button>
+            </div>
+
+            <!-- Итоговая конвертация (Визуально) -->
+            <div class="conversion-box">
+                <div class="conv-row">
+                    <span>Вы оплачиваете:</span>
+                    <span id="pay-amount">0 ₽</span>
+                </div>
+                <div class="conv-row highlight">
+                    <span>Получите на баланс:</span>
+                    <span id="receive-amount">0.00 $</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Нижняя панель -->
+    <footer class="deposit-footer">
+        <button class="pay-btn" id="pay-btn" onclick="initiatePayment()">
+            ПЕРЕЙТИ К ОПЛАТЕ
+        </button>
+        <div class="secure-label">
+            <i class="fa-solid fa-lock"></i> Secured by 1plat.cash
+        </div>
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Загрузка -->
+    <div id="modal-loading" class="modal-overlay hidden">
+        <div class="status-card">
+            <div class="spinner"></div>
+            <h3>СОЗДАНИЕ СЧЕТА</h3>
+            <p>Связываемся с платежным шлюзом...</p>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ЛИМИТЫ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p><b>Мин. депозит:</b> 100 ₽</p>
+                <p><b>Макс. депозит:</b> 500,000 ₽</p>
+                <p><b>Зачисление:</b> Мгновенно (1-2 мин)</p>
+                <hr style="border-color:#333; margin:10px 0;">
+                <p style="font-size:0.7rem; color:#666;">При оплате криптовалютой учитывается курс на момент транзакции.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="deposit.js"></script>
+</body>
+</html>
