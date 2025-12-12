@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Mafia</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="mafia.css">     <!-- Уникальный -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="mafia-body">
+
+    <!-- Фон: Нуарный город -->
+    <div class="rain-bg"></div>
+    <div class="smoke-overlay"></div>
+    <div class="vignette"></div>
+
+    <!-- Хедер -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val"><span id="balance-display">Loading...</span> <span id="currency-display">$</span></div>
+        </div>
+        <button class="icon-btn" onclick="openInfoModal()"><i class="fa-solid fa-book-skull"></i></button>
+    </header>
+
+    <!-- ОСНОВНАЯ СЦЕНА -->
+    <main class="mafia-stage">
+        
+        <!-- Фаза игры (День/Ночь) -->
+        <div class="phase-indicator" id="phase-indicator">
+            <i class="fa-solid fa-sun"></i> <span>ДЕНЬ 1</span>
+        </div>
+
+        <!-- Игровой стол (8 мест) -->
+        <div class="table-area">
+            <div class="players-grid" id="players-grid">
+                <!-- Генерируется JS: 
+                     <div class="player-seat" onclick="targetPlayer(0)">
+                        <div class="avatar"><img src="..."></div>
+                        <div class="p-status">Жив</div>
+                        <span class="p-name">Игрок 1</span>
+                     </div>
+                -->
+            </div>
+            
+            <!-- Центр стола (Лог событий) -->
+            <div class="table-center">
+                <div class="game-log" id="game-log">
+                    <div class="log-entry">Добро пожаловать в Город...</div>
+                    <div class="log-entry">Сделайте ставку, чтобы получить роль.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ваша роль (Карточка) -->
+        <div class="my-role-panel hidden" id="my-role-panel">
+            <div class="role-card-mini">
+                <div class="r-icon" id="my-role-icon"><i class="fa-solid fa-user"></i></div>
+                <div class="r-info">
+                    <span class="r-name" id="my-role-name">Мирный</span>
+                    <span class="r-obj" id="my-role-obj">Вычисли мафию</span>
+                </div>
+                <div class="r-mult" id="my-role-mult">x1.5</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="mafia-controls">
+        
+        <!-- ПАНЕЛЬ СТАВОК (Начало) -->
+        <div class="bet-panel" id="bet-panel">
+            <div class="bet-header">ЦЕНА ВХОДА В СЕМЬЮ</div>
+            <div class="bet-row">
+                <button id="btn-dec" class="step-btn">-</button>
+                <span id="bet-amount">100</span>
+                <button id="btn-inc" class="step-btn">+</button>
+                <button class="start-btn" onclick="startGame()">ПОЛУЧИТЬ РОЛЬ</button>
+            </div>
+        </div>
+
+        <!-- ПАНЕЛЬ ДЕЙСТВИЙ (В игре) -->
+        <div class="action-panel hidden" id="action-panel">
+            <div class="action-text" id="action-text">Ждем ночи...</div>
+            <button id="action-btn" class="main-action-btn" disabled onclick="confirmAction()">
+                ДЕЙСТВИЕ
+            </button>
+            <button id="skip-btn" class="skip-btn hidden" onclick="skipNight()">ПРОПУСТИТЬ НОЧЬ</button>
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Выпадение роли (Анимация) -->
+    <div id="modal-role" class="modal-overlay hidden">
+        <div class="role-reveal-card" id="reveal-card">
+            <div class="card-face back">
+                <i class="fa-solid fa-question"></i>
+            </div>
+            <div class="card-face front">
+                <div class="role-img" id="reveal-icon"><i class="fa-solid fa-user-secret"></i></div>
+                <h2 id="reveal-title">МАФИЯ</h2>
+                <p id="reveal-desc">Убейте всех мирных.</p>
+                <div class="reveal-mult" id="reveal-mult">x2.0</div>
+                <button class="claim-btn" onclick="acceptRole()">НАЧАТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Победа/Поражение -->
+    <div id="modal-end" class="modal-overlay hidden">
+        <div class="end-card">
+            <h1 id="end-title">ПОБЕДА</h1>
+            <div class="end-icon" id="end-icon">🏆</div>
+            <p id="end-msg">Город очищен.</p>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-curr">$</span>
+            </div>
+            <button class="retry-btn" onclick="closeEndModal()">В СЛЕДУЮЩИЙ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Инфо о ролях -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ДОСЬЕ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="roles-list-scroll">
+                <div class="role-item"><b>🕵️ Мирный (x1.5):</b> Выгнать мафию.</div>
+                <div class="role-item"><b>🌹 Мафия/Дон (x2.0):</b> Убить всех.</div>
+                <div class="role-item"><b>👮 Комиссар (x1.8):</b> Найти мафию.</div>
+                <div class="role-item"><b>🩸 Маньяк (x10):</b> Остаться одному.</div>
+                <div class="role-item"><b>💊 Доктор (x1.5):</b> Лечить.</div>
+                <div class="role-item"><b>💣 Камикадзе (x15):</b> Умереть и забрать Дона.</div>
+                <div class="role-item"><b>💀 Самоубийца (x5):</b> Быть повешенным.</div>
+                <!-- Остальные роли в JS логике -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-shot" src="assets/shot_silencer.mp3"></audio>
+        <audio id="snd-night" src="assets/night_ambience.mp3" loop></audio>
+        <audio id="snd-vote" src="assets/vote.mp3"></audio>
+        <audio id="snd-win" src="assets/win_dark.mp3"></audio>
+        <audio id="snd-flip" src="assets/card_flip.mp3"></audio>
+    </div>
+
+    <script src="mafia.js"></script>
+</body>
+                  </html>
