@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Tic Tac Toe</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="tictactoe.css">   <!-- Уникальный -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="tictac-body">
+
+    <!-- Фон: Неоновая сетка -->
+    <div class="grid-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА -->
+    <main class="tictac-stage">
+        
+        <!-- Статус хода -->
+        <div class="turn-display" id="turn-display">
+            СДЕЛАЙТЕ СТАВКУ
+        </div>
+
+        <!-- Игровое поле 3x3 -->
+        <div class="board-wrapper">
+            <div class="board" id="board">
+                <!-- Ячейки (0-8) -->
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+                
+                <!-- Линия победы -->
+                <div class="win-line" id="win-line"></div>
+            </div>
+        </div>
+
+        <!-- Счет в текущей сессии -->
+        <div class="score-board">
+            <div class="score-item">
+                <span class="sc-label">YOU</span>
+                <span class="sc-val" id="score-player">0</span>
+            </div>
+            <div class="score-item">
+                <span class="sc-label">DRAW</span>
+                <span class="sc-val" id="score-draw">0</span>
+            </div>
+            <div class="score-item">
+                <span class="sc-label">BOT</span>
+                <span class="sc-val" id="score-bot">0</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="tictac-controls">
+        
+        <!-- Панель настроек (Скрывается при игре) -->
+        <div class="setup-panel" id="setup-panel">
+            
+            <!-- Выбор стороны -->
+            <div class="side-selector">
+                <span class="label-tiny">ВЫБЕРИ СТОРОНУ</span>
+                <div class="side-options">
+                    <button class="side-btn active" onclick="setSide('x')" data-side="x">
+                        <i class="fa-solid fa-xmark"></i> (Первый)
+                    </button>
+                    <button class="side-btn" onclick="setSide('o')" data-side="o">
+                        <i class="fa-solid fa-o"></i> (Второй)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ставка -->
+            <div class="bet-row">
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+                <div class="quick-btns">
+                    <button onclick="setBet(100)">MIN</button>
+                    <button onclick="setBet('max')">MAX</button>
+                </div>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">ИГРАТЬ</button>
+        </div>
+
+        <!-- Сообщение во время игры -->
+        <div class="game-active-msg hidden" id="active-msg">
+            ИГРА ИДЕТ...
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="result-card win">
+            <div class="glow-bg"></div>
+            <div class="res-icon"><i class="fa-solid fa-trophy"></i></div>
+            <h2>ПОБЕДА!</h2>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-curr">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeResultModal()">КРУТО</button>
+        </div>
+    </div>
+
+    <!-- Поражение -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="result-card loss">
+            <div class="res-icon"><i class="fa-solid fa-robot"></i></div>
+            <h2>БОТ ВЫИГРАЛ</h2>
+            <p>Искусственный интеллект оказался сильнее.</p>
+            <button class="retry-btn" onclick="closeResultModal()">РЕВАНШ</button>
+        </div>
+    </div>
+
+    <!-- Ничья -->
+    <div id="modal-draw" class="modal-overlay hidden">
+        <div class="result-card draw">
+            <div class="
