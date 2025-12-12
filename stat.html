@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Stats</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">     <!-- Глобальный -->
+    <link rel="stylesheet" href="stat.css">      <!-- Уникальный -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="stat-body">
+
+    <!-- Фон: Цифровая сетка -->
+    <div class="data-grid-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">
+            <i class="fa-solid fa-house"></i>
+        </button>
+        <span class="header-title">СТАТИСТИКА</span>
+        <div class="dummy"></div> <!-- Для центровки -->
+    </header>
+
+    <!-- Переключатель Табов -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('global')" id="tab-global">
+            <i class="fa-solid fa-globe"></i> ТОП ИГРОКОВ
+        </button>
+        <button class="tab-btn" onclick="switchTab('personal')" id="tab-personal">
+            <i class="fa-solid fa-chart-pie"></i> МОИ ДАННЫЕ
+        </button>
+    </div>
+
+    <!-- КОНТЕНТ: ГЛОБАЛЬНЫЙ ТОП -->
+    <main class="stat-content" id="view-global">
+        
+        <!-- Карточки общих показателей -->
+        <div class="summary-cards">
+            <div class="s-card">
+                <span class="lbl">ОНЛАЙН</span>
+                <span class="val" id="online-count">14,205</span>
+            </div>
+            <div class="s-card">
+                <span class="lbl">ВЫПЛАЧЕНО (24Ч)</span>
+                <span class="val gold">$<span id="payout-day">842k</span></span>
+            </div>
+        </div>
+
+        <!-- Таблица лидеров -->
+        <div class="leaderboard-wrapper">
+            <div class="lb-header">
+                <span>ИГРОК</span>
+                <span>ПРОФИТ</span>
+            </div>
+            <div class="lb-list" id="leaderboard-list">
+                <!-- Генерируется JS -->
+                <!-- <div class="lb-row rank-1">...</div> -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- КОНТЕНТ: ЛИЧНЫЕ ДАННЫЕ -->
+    <main class="stat-content hidden" id="view-personal">
+        
+        <!-- Круг Винрейта -->
+        <div class="chart-section">
+            <h3>ВАШ ВИНРЕЙТ</h3>
+            <div class="chart-wrapper">
+                <div class="pie-chart" id="winrate-chart">
+                    <span class="chart-text" id="winrate-text">0%</span>
+                </div>
+            </div>
+            <div class="chart-legend">
+                <div class="leg-item"><span class="dot win"></span> Побед: <b id="cnt-wins">0</b></div>
+                <div class="leg-item"><span class="dot loss"></span> Поражений: <b id="cnt-losses">0</b></div>
+            </div>
+        </div>
+
+        <!-- Любимая игра -->
+        <div class="fav-game-card">
+            <div class="fg-icon" id="fav-icon"><i class="fa-solid fa-gamepad"></i></div>
+            <div class="fg-info">
+                <span class="fg-label">ЛЮБИМАЯ ИГРА</span>
+                <span class="fg-name" id="fav-name">Нет данных</span>
+                <span class="fg-stat" id="fav-count">0 раундов</span>
+            </div>
+        </div>
+
+        <!-- Общая сводка -->
+        <div class="personal-summary">
+            <div class="ps-row">
+                <span>Всего ставок:</span>
+                <span id="total-wagered">0 $</span>
+            </div>
+            <div class="ps-row">
+                <span>Чистый профит:</span>
+                <span id="net-profit" class="neutral">0 $</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="stat.js"></script>
+</body>
+  </html>
