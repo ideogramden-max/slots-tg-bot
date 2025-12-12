@@ -1,0 +1,165 @@
+/* =========================================
+   FASTMONEY - WITHDRAW STYLES
+   ========================================= */
+
+/* --- ФОН --- */
+.withdraw-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #05080a;
+    color: white;
+}
+
+/* Фон: Потоки данных */
+.money-stream-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 50px, rgba(0, 255, 136, 0.03) 50px, rgba(0, 255, 136, 0.03) 51px);
+    background-size: 100% 100px;
+    animation: scrollBg 5s linear infinite;
+}
+@keyframes scrollBg { from { background-position: 0 0; } to { background-position: 0 100px; } }
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 20px;
+    background: rgba(10, 15, 20, 0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    z-index: 10;
+}
+.header-title { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 1px; color: #fff; }
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #ccc; width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+/* --- CONTENT --- */
+.withdraw-content {
+    flex-grow: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+.withdraw-content::-webkit-scrollbar { display: none; }
+
+/* Баланс */
+.balance-display-card {
+    background: linear-gradient(135deg, #004d40, #00251a);
+    border: 1px solid #00ff88;
+    border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 5px 20px rgba(0, 255, 136, 0.1);
+}
+.balance-display-card .lbl { font-size: 0.7rem; color: #88dba3; font-weight: 700; letter-spacing: 2px; }
+.val-row { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700; color: #fff; margin-top: 5px; }
+#currency-sym { color: #00ff88; }
+
+/* Методы */
+.section-title { font-size: 0.8rem; color: #888; font-weight: 700; margin-left: 5px; }
+.methods-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.method-card {
+    background: #111; border: 1px solid #2a2a2a;
+    border-radius: 12px; padding: 15px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; transition: 0.2s;
+}
+.method-card img { width: 32px; height: 32px; object-fit: contain; }
+.method-card i { font-size: 32px; }
+.method-card span { font-size: 0.8rem; font-weight: 600; color: #ccc; }
+
+.method-card.active {
+    background: rgba(0, 255, 136, 0.05);
+    border-color: #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+}
+.method-card.active span { color: #fff; }
+
+/* Форма */
+.withdraw-form {
+    background: #111; border: 1px solid #222;
+    border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.input-group label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 8px; font-weight: 600; }
+.input-wrapper {
+    position: relative; display: flex; align-items: center;
+    background: #080808; border: 1px solid #333; border-radius: 10px;
+    padding: 0 12px; height: 50px;
+}
+.input-wrapper:focus-within { border-color: #00ff88; }
+
+.input-wrapper input {
+    flex-grow: 1; background: transparent; border: none;
+    color: white; font-size: 1rem; font-family: 'Montserrat', sans-serif;
+    outline: none; width: 100%;
+}
+
+.max-btn {
+    background: rgba(0, 255, 136, 0.1); color: #00ff88;
+    border: none; padding: 5px 10px; border-radius: 6px;
+    font-size: 0.7rem; font-weight: 700; cursor: pointer;
+}
+.input-icon { color: #666; font-size: 1.1rem; cursor: pointer; }
+.input-icon:active { color: #fff; }
+
+.conversion-hint { font-size: 0.75rem; color: #888; text-align: right; margin-top: 5px; }
+.conversion-hint.hidden { display: none; }
+
+.summary-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #aaa; margin-top: 5px; }
+.total { color: #fff; font-weight: 700; font-size: 1rem; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; }
+.total-val { color: #00ff88; }
+
+/* --- FOOTER --- */
+.withdraw-footer {
+    background: #08080a; border-top: 1px solid #222;
+    padding: 20px; z-index: 20;
+}
+.action-btn {
+    width: 100%; height: 55px;
+    background: linear-gradient(135deg, #00b359, #00ff88);
+    border: none; border-radius: 14px;
+    color: #003319; font-weight: 900; font-size: 1.1rem;
+    cursor: pointer; box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
+    transition: 0.2s;
+}
+.action-btn:active { transform: scale(0.98); }
+.action-btn:disabled { background: #333; color: #666; box-shadow: none; cursor: not-allowed; }
+
+/* --- МОДАЛКИ --- */
+.status-card {
+    background: #151a20; width: 85%; padding: 30px; border-radius: 24px;
+    text-align: center; border: 1px solid #333; position: relative;
+}
+
+/* Лоадер */
+.loader-ring {
+    display: inline-block; width: 60px; height: 60px;
+}
+.loader-ring:after {
+    content: " "; display: block; width: 44px; height: 44px; margin: 8px;
+    border-radius: 50%; border: 4px solid #00ff88; border-color: #00ff88 transparent #00ff88 transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.check-icon {
+    font-size: 3rem; color: #00ff88; margin-bottom: 20px; animation: popIn 0.3s;
+}
+.hidden { display: none; }
+
+.status-card h2 { margin: 15px 0 10px; font-family: 'Orbitron', sans-serif; }
+.status-card p { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
+
+.close-btn { width: 100%; padding: 12px; background: #333; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+/* Инфо */
+.info-card { background: #151a20; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #00ff88; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
+
+@keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
