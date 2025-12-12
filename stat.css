@@ -1,0 +1,176 @@
+/* =========================================
+   FASTMONEY - STATS STYLES
+   ========================================= */
+
+/* --- ФОН --- */
+.stat-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #050508;
+    color: white;
+}
+
+.data-grid-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: 
+        linear-gradient(rgba(0, 100, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 100, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    perspective: 1000px;
+    transform: rotateX(20deg) scale(1.2);
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 20px;
+    background: rgba(10, 15, 25, 0.95);
+    border-bottom: 1px solid rgba(0, 100, 255, 0.1);
+    z-index: 10;
+}
+.header-title {
+    font-family: 'Orbitron', sans-serif; letter-spacing: 2px; font-weight: 900;
+    background: linear-gradient(to right, #00f3ff, #0066ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.back-btn {
+    background: rgba(255,255,255,0.05); border: none; color: #ccc;
+    width: 40px; height: 40px; border-radius: 12px; font-size: 1rem; cursor: pointer;
+}
+.dummy { width: 40px; } /* Для баланса хедера */
+
+/* --- TABS --- */
+.tabs-container {
+    display: flex; padding: 15px 20px; gap: 10px;
+    background: rgba(10, 15, 25, 0.5);
+}
+.tab-btn {
+    flex: 1; padding: 12px;
+    background: #111; border: 1px solid #333;
+    color: #666; border-radius: 10px;
+    font-weight: 700; font-size: 0.8rem;
+    cursor: pointer; transition: 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.tab-btn.active {
+    background: #001a33; border-color: #00f3ff; color: #00f3ff;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+
+/* --- CONTENT --- */
+.stat-content {
+    flex-grow: 1; overflow-y: auto;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+.stat-content.hidden { display: none; }
+.stat-content::-webkit-scrollbar { display: none; }
+
+/* SUMMARY CARDS (GLOBAL) */
+.summary-cards { display: flex; gap: 10px; }
+.s-card {
+    flex: 1; background: #151a22;
+    border: 1px solid #2a3a4a; border-radius: 12px;
+    padding: 15px; display: flex; flex-direction: column; align-items: center;
+}
+.s-card .lbl { font-size: 0.6rem; color: #6688aa; font-weight: 700; margin-bottom: 5px; }
+.s-card .val { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; }
+.val.gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+/* LEADERBOARD */
+.leaderboard-wrapper {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid #2a3a4a; border-radius: 16px;
+    padding: 10px; flex-grow: 1;
+    display: flex; flex-direction: column;
+}
+.lb-header {
+    display: flex; justify-content: space-between;
+    padding: 10px 15px; font-size: 0.7rem; color: #6688aa; font-weight: 700;
+    border-bottom: 1px solid #2a3a4a; margin-bottom: 10px;
+}
+.lb-list { display: flex; flex-direction: column; gap: 8px; }
+
+.lb-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 15px; background: #111;
+    border-radius: 10px; border: 1px solid #222;
+    animation: slideIn 0.3s ease-out backwards;
+}
+.lb-user { display: flex; align-items: center; gap: 10px; }
+.lb-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.lb-name { font-weight: 700; font-size: 0.9rem; }
+.lb-val { font-family: 'Orbitron', sans-serif; color: #00f3ff; }
+
+/* Топ 3 цвета */
+.rank-1 { border-color: #ffd700; background: linear-gradient(90deg, rgba(255,215,0,0.1), transparent); }
+.rank-1 .lb-val { color: #ffd700; }
+.rank-2 { border-color: #c0c0c0; }
+.rank-2 .lb-val { color: #e0e0e0; }
+.rank-3 { border-color: #cd7f32; }
+.rank-3 .lb-val { color: #cd7f32; }
+
+/* PERSONAL STATS */
+.chart-section {
+    background: #151a22; border: 1px solid #2a3a4a;
+    border-radius: 20px; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
+}
+.chart-section h3 { margin: 0 0 20px 0; font-size: 0.9rem; color: #88a; }
+
+.chart-wrapper {
+    width: 150px; height: 150px; position: relative; margin-bottom: 20px;
+}
+.pie-chart {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: conic-gradient(#00ff88 0deg, #333 0deg); /* JS меняет */
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+    transition: background 1s ease-out;
+}
+.pie-chart::after {
+    content: ''; width: 80%; height: 80%;
+    background: #151a22; border-radius: 50%; position: absolute;
+}
+.chart-text {
+    position: relative; z-index: 2;
+    font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; color: white;
+}
+
+.chart-legend { display: flex; gap: 20px; font-size: 0.8rem; }
+.leg-item { display: flex; align-items: center; gap: 5px; color: #ccc; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.win { background: #00ff88; }
+.dot.loss { background: #333; }
+
+/* Любимая игра */
+.fav-game-card {
+    background: linear-gradient(135deg, #2a1a4a, #1a1a2a);
+    border: 1px solid #5a4a8a; border-radius: 16px;
+    padding: 20px; display: flex; align-items: center; gap: 20px;
+}
+.fg-icon {
+    width: 50px; height: 50px; background: rgba(255,255,255,0.1);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; color: #d4aaff;
+}
+.fg-info { display: flex; flex-direction: column; }
+.fg-label { font-size: 0.6rem; color: #888; font-weight: 700; margin-bottom: 4px; }
+.fg-name { font-size: 1.1rem; font-weight: 800; color: white; }
+.fg-stat { font-size: 0.8rem; color: #aaa; }
+
+/* Сводка */
+.personal-summary {
+    background: #111; border: 1px solid #222;
+    border-radius: 16px; padding: 15px;
+}
+.ps-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid #222;
+    font-size: 0.9rem;
+}
+.ps-row:last-child { border: none; }
+.ps-row span:last-child { font-family: 'Orbitron',
