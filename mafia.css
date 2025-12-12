@@ -1,0 +1,235 @@
+/* =========================================
+   FASTMONEY - MAFIA STYLES
+   ========================================= */
+
+.mafia-body {
+    background-color: #050505;
+    color: #e0e0e0;
+    font-family: 'Playfair Display', serif; /* Нуарный шрифт */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Фон дождя */
+.rain-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: url('https://www.transparenttextures.com/patterns/stardust.png');
+    opacity: 0.2;
+    z-index: -2;
+    animation: rainAnim 1s linear infinite;
+}
+@keyframes rainAnim { from { background-position: 0 0; } to { background-position: -20px 40px; } }
+
+.smoke-overlay {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(to top, rgba(20,20,20,0.9), transparent);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(10, 10, 10, 0.95);
+    border-bottom: 1px solid #333;
+    z-index: 10;
+}
+.back-btn, .icon-btn {
+    background: transparent; border: 1px solid #444; color: #888;
+    width: 38px; height: 38px; border-radius: 50%;
+    cursor: pointer; transition: 0.3s;
+}
+.back-btn:active { background: #fff; color: #000; }
+
+.balance-container .label { font-family: 'Montserrat', sans-serif; font-size: 0.55rem; color: #888; text-align: right; display: block; }
+.balance-val { font-family: 'Montserrat', sans-serif; font-weight: 800; color: #c0a062; font-size: 1rem; }
+
+/* --- ИГРОВАЯ СЦЕНА --- */
+.mafia-stage {
+    flex-grow: 1;
+    position: relative;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding-top: 10px;
+}
+
+/* Индикатор фазы */
+.phase-indicator {
+    background: #111; border: 1px solid #333;
+    padding: 5px 15px; border-radius: 20px;
+    font-size: 0.9rem; color: #fff;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 15px;
+    transition: all 0.5s;
+}
+.phase-indicator.night { background: #000033; border-color: #000066; color: #aaaaff; }
+.phase-indicator.day { background: #332200; border-color: #664400; color: #ffcc00; }
+
+/* Стол с игроками */
+.table-area {
+    position: relative;
+    width: 340px; height: 340px;
+    margin: 0 auto;
+}
+
+.players-grid {
+    width: 100%; height: 100%;
+    position: relative;
+}
+
+/* Аватар игрока (Рассадка по кругу) */
+.player-seat {
+    position: absolute;
+    width: 60px; display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; transition: 0.3s;
+}
+.player-seat:active { transform: scale(0.95); }
+
+.avatar {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #222; border: 2px solid #444;
+    overflow: hidden; position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: border-color 0.3s;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Статусы */
+.player-seat.dead .avatar { filter: grayscale(1) brightness(0.4); border-color: #333; }
+.player-seat.dead::after { content: '✝'; position: absolute; top: 10px; font-size: 2rem; color: red; }
+
+.player-seat.selected .avatar { border-color: #c0a062; box-shadow: 0 0 15px #c0a062; }
+.player-seat.target .avatar { border-color: #ff0000; box-shadow: 0 0 15px red; }
+
+.p-name { font-size: 0.6rem; margin-top: 4px; background: #000; padding: 2px 4px; border-radius: 4px; }
+.p-status { display: none; } /* Скрыто, используем визуал */
+
+/* Позиции (Круг) */
+/* Центр 170, 170. Радиус 130 */
+.seat-0 { bottom: 0; left: 140px; } /* Юзер */
+.seat-1 { bottom: 40px; left: 20px; }
+.seat-2 { top: 100px; left: 0px; }
+.seat-3 { top: 20px; left: 60px; }
+.seat-4 { top: 0; left: 140px; }
+.seat-5 { top: 20px; right: 60px; }
+.seat-6 { top: 100px; right: 0px; }
+.seat-7 { bottom: 40px; right: 20px; }
+
+/* Лог в центре */
+.table-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 140px; height: 140px;
+    background: rgba(0,0,0,0.8);
+    border: 1px solid #333; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 15px; text-align: center;
+    overflow-y: auto;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.6rem; line-height: 1.4;
+    color: #ccc;
+    box-shadow: inset 0 0 20px #000;
+}
+.game-log::-webkit-scrollbar { display: none; }
+.log-entry { margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 2px; }
+.log-entry:last-child { border: none; color: #c0a062; font-weight: bold; }
+
+/* Панель роли игрока */
+.my-role-panel {
+    position: absolute; bottom: 80px; left: 20px;
+    background: rgba(20,20,20,0.9);
+    border: 1px solid #c0a062; border-radius: 12px;
+    padding: 10px;
+    display: flex; align-items: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    animation: slideUp 0.5s;
+}
+.my-role-panel.hidden { display: none; }
+
+.r-icon { font-size: 1.5rem; color: #c0a062; margin-right: 10px; }
+.r-info { display: flex; flex-direction: column; margin-right: 15px; }
+.r-name { font-weight: bold; font-size: 0.9rem; color: #fff; }
+.r-obj { font-size: 0.6rem; color: #888; font-family: 'Montserrat', sans-serif; }
+.r-mult { font-family: 'Montserrat', sans-serif; font-weight: 800; color: #c0a062; }
+
+/* --- CONTROLS --- */
+.mafia-controls {
+    background: #080808;
+    border-top: 1px solid #333;
+    padding: 20px;
+    z-index: 20;
+    min-height: 120px;
+}
+
+/* Панель ставки */
+.bet-header { text-align: center; font-size: 0.7rem; color: #666; margin-bottom: 10px; letter-spacing: 2px; }
+.bet-row { display: flex; justify-content: center; gap: 10px; height: 44px; }
+.step-btn { background: #222; border: 1px solid #444; color: #fff; width: 44px; font-size: 1.2rem; cursor: pointer; }
+#bet-amount { background: #111; color: #c0a062; border: 1px solid #333; display: flex; align-items: center; padding: 0 20px; font-family: 'Montserrat', sans-serif; font-weight: 700; }
+.start-btn {
+    background: #c0a062; color: #000; border: none; padding: 0 20px; font-weight: 800; cursor: pointer;
+    font-family: 'Montserrat', sans-serif; transition: 0.2s;
+}
+.start-btn:active { transform: scale(0.95); }
+
+/* Панель действий */
+.action-panel.hidden { display: none; }
+.action-panel { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.action-text { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
+.main-action-btn {
+    width: 100%; height: 50px;
+    background: #333; color: #666;
+    border: 1px solid #444; font-weight: bold;
+    cursor: not-allowed; transition: 0.3s;
+}
+.main-action-btn.ready { background: #800000; color: #fff; border-color: #ff0000; cursor: pointer; box-shadow: 0 0 10px #800000; }
+.skip-btn { background: transparent; border: none; color: #666; font-size: 0.7rem; text-decoration: underline; cursor: pointer; }
+
+/* --- МОДАЛКИ --- */
+.role-reveal-card {
+    width: 200px; height: 300px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s;
+    cursor: pointer;
+}
+.role-reveal-card.flipped { transform: rotateY(180deg); }
+
+.card-face {
+    position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden;
+    border-radius: 15px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+}
+.card-face.back {
+    background: #111;
+    border: 2px solid #444;
+    background-image: radial-gradient(#333 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+.card-face.back i { font-size: 4rem; color: #333; }
+
+.card-face.front {
+    background: #eaddcf; /* Цвет старой бумаги */
+    color: #222;
+    transform: rotateY(180deg);
+    padding: 15px; text-align: center;
+    border: 5px solid #222;
+}
+.role-img { font-size: 4rem; margin-bottom: 10px; color: #800000; }
+.reveal-mult { font-size: 1.5rem; font-weight: 900; margin: 10px 0; color: #800000; }
+.claim-btn { background: #222; color: #eaddcf; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; }
+
+.end-card {
+    background: #111; border: 1px solid #c0a062;
+    padding: 30px; text-align: center; border-radius: 10px;
+    width: 80%;
+}
+.end-icon { font-size: 4rem; margin: 15px 0; }
+.win-val { font-size: 2rem; color: #c0a062; font-family: 'Montserrat', sans-serif; margin: 10px 0; }
+.retry-btn { width: 100%; padding: 12px; background: #c0a062; border: none; font-weight: bold; }
+
+@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
