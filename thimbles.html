@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Thimbles</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="thimbles.css">    <!-- Уникальный -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="thimbles-body">
+
+    <!-- Фон: Кибер-стол -->
+    <div class="table-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНАЯ ЗОНА -->
+    <main class="thimbles-stage">
+        
+        <!-- Статус -->
+        <div class="game-status" id="status-text">СДЕЛАЙТЕ СТАВКУ</div>
+
+        <!-- Зона стаканов -->
+        <div class="cups-container">
+            <!-- Шарики (скрыты под стаканами) -->
+            <!-- Позиционируются абсолютно относительно контейнера -->
+            <div class="ball hidden" id="ball-0"></div>
+            <div class="ball hidden" id="ball-1"></div>
+            <div class="ball hidden" id="ball-2"></div>
+
+            <!-- Стаканы (Наперстки) -->
+            <div class="cup-wrapper" id="cup-0" onclick="selectCup(0)">
+                <div class="cup-model">
+                    <div class="cup-top"></div>
+                    <div class="cup-body"></div>
+                    <div class="cup-rim"></div>
+                </div>
+                <div class="cup-shadow"></div>
+            </div>
+
+            <div class="cup-wrapper" id="cup-1" onclick="selectCup(1)">
+                <div class="cup-model">
+                    <div class="cup-top"></div>
+                    <div class="cup-body"></div>
+                    <div class="cup-rim"></div>
+                </div>
+                <div class="cup-shadow"></div>
+            </div>
+
+            <div class="cup-wrapper" id="cup-2" onclick="selectCup(2)">
+                <div class="cup-model">
+                    <div class="cup-top"></div>
+                    <div class="cup-body"></div>
+                    <div class="cup-rim"></div>
+                </div>
+                <div class="cup-shadow"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="thimbles-controls">
+        
+        <!-- Настройки игры -->
+        <div class="game-options" id="options-panel">
+            
+            <!-- Кол-во шаров -->
+            <div class="balls-selector">
+                <span class="label-tiny">КОЛ-ВО ШАРОВ</span>
+                <div class="balls-opts">
+                    <button class="b-opt active" onclick="setBallCount(1)">
+                        1 <span>(x2.88)</span>
+                    </button>
+                    <button class="b-opt" onclick="setBallCount(2)">
+                        2 <span>(x1.44)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ставка -->
+            <div class="bet-row">
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn">-</button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn">+</button>
+                </div>
+                <div class="quick-btns">
+                    <button onclick="setBet(100)">MIN</button>
+                    <button onclick="setBet('max')">MAX</button>
+                </div>
+            </div>
+
+            <!-- Кнопка старта -->
+            <button id="play-btn" class="play-btn" onclick="startGame()">
+                ИГРАТЬ
+            </button>
+        </div>
+
+        <!-- Сообщение во время перемешивания -->
+        <div class="shuffling-msg hidden" id="shuffling-msg">
+            ПЕРЕМЕШИВАНИЕ...
+        </div>
+
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Победа -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="sparkles"></div>
+            <div class="win-icon"><i class="fa-solid fa-gem"></i></div>
+            <h2>НАШЕЛ!</h2>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-curr">$</span>
+            </div>
+            <button class="claim-btn" onclick="closeWinModal()">ОТЛИЧНО</button>
+        </div>
+    </div>
+
+    <!-- Поражение -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="loss-icon"><i class="fa-solid fa-eye-slash"></i></div>
+            <h2>ПУСТО</h2>
+            <p>В этом стакане ничего нет.</p>
+            <button class="retry-btn" onclick="closeLossModal()">ЕЩЕ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ПРАВИЛА</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Выберите количество шаров (1 или 2).</p>
+                <p>2. Нажмите "ИГРАТЬ". Стаканы перемешаются.</p>
+                <p>3. Угадайте, где спрятан шар.</p>
+                <p>4. <b>1 Шар:</b> Выигрыш x2.88</p>
+                <p>5. <b>2 Шара:</b> Выигрыш x1.44</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div style="display:none;">
+        <audio id="snd-whoosh" src="assets/whoosh.mp3"></audio> <!-- Звук движения -->
+        <audio id="snd-win" src="assets/win.mp3"></audio>
+        <audio id="snd-lose" src="assets/lose.mp3"></audio>
+        <audio id="snd-lift" src="assets/pop.mp3"></audio> <!-- Поднятие стакана -->
+    </div>
+
+    <script src="thimbles.js"></script>
+</body>
+                      </html>
