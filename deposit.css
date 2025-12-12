@@ -1,0 +1,140 @@
+/* =========================================
+   FASTMONEY - DEPOSIT STYLES
+   ========================================= */
+
+/* --- ФОН --- */
+.deposit-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #050a05; /* Очень темно-зеленый */
+    color: white;
+}
+
+/* Фон матрицы */
+.matrix-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: linear-gradient(180deg, rgba(0, 255, 136, 0.05) 0%, transparent 100%);
+    background-size: 20px 20px;
+    background-image: 
+        linear-gradient(to right, rgba(0,255,136,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,255,136,0.05) 1px, transparent 1px);
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 20px;
+    background: rgba(5, 15, 10, 0.95);
+    border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+    z-index: 10;
+}
+.header-title { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 1px; color: #fff; }
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #00ff88; width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+/* --- CONTENT --- */
+.deposit-content {
+    flex-grow: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+.deposit-content::-webkit-scrollbar { display: none; }
+
+/* Баланс */
+.balance-card {
+    background: linear-gradient(135deg, #003322, #001a11);
+    border: 1px solid #00ff88;
+    border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 5px 25px rgba(0, 255, 136, 0.15);
+}
+.balance-card .lbl { font-size: 0.7rem; color: #88dba3; font-weight: 700; letter-spacing: 2px; }
+.val-row { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 700; color: #fff; margin-top: 5px; }
+#currency-sym { color: #00ff88; }
+
+/* Методы */
+.section-title { font-size: 0.8rem; color: #888; font-weight: 700; margin-left: 5px; }
+.methods-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.method-card {
+    background: #111; border: 1px solid #2a2a2a;
+    border-radius: 12px; padding: 15px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; transition: 0.2s; position: relative;
+    overflow: hidden;
+}
+.method-card .m-icon { font-size: 1.8rem; color: #ccc; }
+.method-card span { font-size: 0.8rem; font-weight: 600; color: #ccc; }
+.method-card .m-badge {
+    position: absolute; top: 5px; right: 5px;
+    font-size: 0.5rem; background: #00ff88; color: black;
+    padding: 2px 6px; border-radius: 4px; font-weight: 700;
+    opacity: 0; /* Скрыт по умолчанию */
+}
+
+.method-card.active {
+    background: rgba(0, 255, 136, 0.05);
+    border-color: #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+}
+.method-card.active .m-icon { color: #00ff88; }
+.method-card.active span { color: #fff; }
+.method-card[data-method="card"] .m-badge { opacity: 1; }
+
+/* Форма */
+.deposit-form {
+    background: #0a110a; border: 1px solid #1a2a20;
+    border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.input-group label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 8px; font-weight: 600; }
+.input-wrapper {
+    position: relative; display: flex; align-items: center;
+    background: #050805; border: 1px solid #333; border-radius: 10px;
+    padding: 0 12px; height: 55px;
+}
+.input-wrapper:focus-within { border-color: #00ff88; box-shadow: 0 0 10px rgba(0,255,136,0.1); }
+
+.input-wrapper input {
+    flex-grow: 1; background: transparent; border: none;
+    color: white; font-size: 1.2rem; font-family: 'Orbitron', sans-serif;
+    outline: none; width: 100%; font-weight: 700;
+}
+.currency-tag { color: #00ff88; font-weight: 700; font-size: 1.2rem; }
+
+/* Быстрые кнопки */
+.quick-amounts { display: flex; gap: 8px; flex-wrap: wrap; }
+.quick-amounts button {
+    flex: 1; min-width: 60px;
+    background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2);
+    color: #00ff88; border-radius: 8px; padding: 8px 0;
+    font-size: 0.8rem; font-weight: 700; cursor: pointer;
+}
+.quick-amounts button:active { background: #00ff88; color: black; }
+
+/* Конвертация */
+.conversion-box {
+    margin-top: 10px; padding-top: 15px; border-top: 1px dashed #333;
+}
+.conv-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #888; margin-bottom: 5px; }
+.conv-row.highlight { color: #fff; font-size: 1rem; margin-top: 10px; }
+.conv-row.highlight span:last-child { color: #00ff88; font-weight: 900; font-family: 'Orbitron', sans-serif; }
+
+/* --- FOOTER --- */
+.deposit-footer {
+    background: #050a05; border-top: 1px solid #1a2a20;
+    padding: 20px; z-index: 20; text-align: center;
+}
+.pay-btn {
+    width: 100%; height: 60px;
+    background: linear-gradient(135deg, #00b359, #00ff88);
+    border: none; border-radius: 14px;
+    color: #003319; font-weight: 900; font-size: 1.2rem; letter-spacing: 1px;
+    cursor: pointer; box-shadow:
