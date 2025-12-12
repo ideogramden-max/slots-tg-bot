@@ -1,0 +1,149 @@
+/* =========================================
+   FASTMONEY - TIC TAC TOE STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.tictac-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #050510;
+    color: white;
+}
+
+/* Фон сетка */
+.grid-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridScroll 20s linear infinite;
+}
+@keyframes gridScroll { from { background-position: 0 0; } to { background-position: 40px 40px; } }
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(10, 10, 25, 0.9);
+    border-bottom: 1px solid rgba(0, 200, 255, 0.1);
+    z-index: 10;
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: none;
+    color: #00ffff; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: #00ffff; color: black; }
+
+.balance-container .label { font-size: 0.55rem; color: #5588aa; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: #00ffff; }
+
+/* --- ИГРОВОЕ ПОЛЕ --- */
+.tictac-stage {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    position: relative;
+}
+
+/* Статус */
+.turn-display {
+    background: rgba(0, 255, 255, 0.05);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    padding: 8px 20px; border-radius: 20px;
+    font-family: var(--font-num); font-weight: 700; font-size: 0.9rem;
+    color: #ccc; letter-spacing: 1px;
+}
+
+/* Доска 3x3 */
+.board-wrapper {
+    position: relative;
+    padding: 10px;
+    background: #10101a;
+    border-radius: 20px;
+    border: 2px solid #333;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    grid-template-rows: repeat(3, 80px);
+    gap: 10px;
+    position: relative;
+}
+
+.cell {
+    background: #1a1a25;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+    transition: background 0.2s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+.cell:active { background: #222; transform: scale(0.95); }
+
+/* Стили символов */
+.cell.x { color: #00ffff; text-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
+.cell.o { color: #ff00ff; text-shadow: 0 0 15px rgba(255, 0, 255, 0.6); }
+
+/* Запрет клика */
+.cell.taken, .board.disabled .cell { cursor: default; pointer-events: none; }
+
+/* Линия победы */
+.win-line {
+    position: absolute;
+    background: #ffd700;
+    box-shadow: 0 0 15px #ffd700;
+    border-radius: 5px;
+    z-index: 5;
+    transform-origin: center;
+    display: none; /* JS включит и настроит */
+}
+
+/* Счет */
+.score-board {
+    display: flex; gap: 20px;
+    background: #111; padding: 10px 20px; border-radius: 15px;
+    border: 1px solid #333;
+}
+.score-item { display: flex; flex-direction: column; align-items: center; }
+.sc-label { font-size: 0.6rem; color: #666; font-weight: 700; }
+.sc-val { font-family: var(--font-num); font-weight: 700; font-size: 1.2rem; color: white; }
+
+/* --- CONTROLS --- */
+.tictac-controls {
+    background: #080812;
+    border-top: 1px solid #222;
+    padding: 20px;
+    z-index: 20;
+    min-height: 150px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+
+.setup-panel.hidden { display: none; }
+.setup-panel { display: flex; flex-direction: column; gap: 15px; }
+
+/* Выбор стороны */
+.side-selector { display: flex; flex-direction: column; gap: 5px; }
+.label-tiny { font-size: 0.6rem; color: #555; font-weight: 700; }
+
+.side-options { display: flex; gap: 10px; }
+.side-btn {
+    flex: 1; background: #1a1a25; border: 1px solid #333;
+    color: #888; padding: 10px; border-radius: 10px;
+    font-weight: 700; cursor: pointer; transition: 0.2s;
+    display: flex; align-it
