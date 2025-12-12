@@ -1,0 +1,110 @@
+/* =========================================
+   FASTMONEY - REFERRAL STYLES
+   ========================================= */
+
+/* --- ФОН --- */
+.ref-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #080810;
+    color: white;
+}
+
+/* Фон: Сеть */
+.network-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.2), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.2), transparent 25%);
+}
+.network-bg::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("https://www.transparenttextures.com/patterns/connected.png");
+    opacity: 0.1;
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 20px;
+    background: rgba(8, 8, 16, 0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    z-index: 10;
+}
+.header-title {
+    font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 1px;
+    background: linear-gradient(to right, #a78bfa, #60a5fa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #ccc; width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+/* --- CONTENT --- */
+.ref-content {
+    flex-grow: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+.ref-content::-webkit-scrollbar { display: none; }
+
+/* Баннер */
+.hero-banner {
+    background: linear-gradient(135deg, #4c1d95, #2563eb);
+    border-radius: 20px; padding: 20px;
+    display: flex; align-items: center; gap: 15px;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+.hero-icon { font-size: 2.5rem; color: white; opacity: 0.9; }
+.hero-text h2 { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 1.1rem; }
+.hero-text p { margin: 5px 0 0; font-size: 0.8rem; opacity: 0.9; }
+.highlight { font-weight: 900; color: #ffd700; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; }
+
+/* Ссылка */
+.link-section { display: flex; flex-direction: column; gap: 8px; }
+.lbl { font-size: 0.7rem; color: #888; font-weight: 700; margin-left: 5px; }
+
+.link-box {
+    display: flex; background: #151520; border: 1px solid #333;
+    border-radius: 12px; padding: 5px;
+}
+#ref-link {
+    flex-grow: 1; background: transparent; border: none;
+    color: #a78bfa; padding: 10px; font-family: monospace;
+    font-size: 0.9rem; outline: none;
+}
+.copy-btn {
+    width: 44px; background: #252530; border: none; border-radius: 8px;
+    color: white; cursor: pointer; transition: 0.2s;
+}
+.copy-btn:active { background: #4c1d95; }
+
+/* Статистика */
+.ref-stats-grid { display: flex; gap: 15px; }
+.rs-card {
+    flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px; padding: 15px;
+    display: flex; flex-direction: column; align-items: center;
+}
+.rs-val { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+.rs-val.gold { color: #ffd700; }
+.rs-lbl { font-size: 0.6rem; color: #666; font-weight: 700; text-align: center; }
+
+/* Блок Вывода */
+.claim-card {
+    background: #111; border: 1px solid #333;
+    border-radius: 20px; padding: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.claim-info span { font-size: 0.7rem; color: #888; font-weight: 700; }
+.claim-info h1 { margin: 5px 0 0; font-family: 'Orbitron', sans-serif; color: #00ff88; }
+
+.claim-btn {
+    background: linear-gradient(135deg, #00ff88, #00cc6a);
+    border: none; border-radius: 12px; padding: 12px 25px;
+    font-weight: 900; color: #003319; cursor: pointer;
+    box-shadow: 0
