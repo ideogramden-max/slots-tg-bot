@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Profile</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">       <!-- Глобальный -->
+    <link rel="stylesheet" href="profile.css">     <!-- Уникальный для профиля -->
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="profile-body">
+
+    <!-- Фон: Абстрактные волны -->
+    <div class="waves-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- Верхняя панель -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">
+            <i class="fa-solid fa-house"></i>
+        </button>
+        <span class="header-title">ПРОФИЛЬ</span>
+        <button class="icon-btn" onclick="openSettings()">
+            <i class="fa-solid fa-gear"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="profile-content">
+        
+        <!-- Карточка игрока -->
+        <div class="profile-card">
+            <div class="avatar-section">
+                <div class="avatar-circle" onclick="openAvatarModal()">
+                    <img id="user-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Avatar">
+                    <div class="edit-badge"><i class="fa-solid fa-pen"></i></div>
+                </div>
+                <div class="user-details">
+                    <h2 id="username">Loading...</h2>
+                    <span class="user-id">ID: <span id="userid">---</span></span>
+                </div>
+            </div>
+
+            <!-- Уровень и Прогресс -->
+            <div class="level-section">
+                <div class="level-info">
+                    <span class="lvl-name" id="level-name">Новичок</span>
+                    <span class="lvl-num">LVL <span id="level-num">1</span></span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="xp-bar" style="width: 0%"></div>
+                </div>
+                <span class="xp-text"><span id="current-xp">0</span> / <span id="next-xp">1000</span> XP</span>
+            </div>
+        </div>
+
+        <!-- Сетка статистики -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <i class="fa-solid fa-gamepad"></i>
+                <span class="s-val" id="stat-games">0</span>
+                <span class="s-lbl">ИГР</span>
+            </div>
+            <div class="stat-box">
+                <i class="fa-solid fa-trophy"></i>
+                <span class="s-val" id="stat-wins">0</span>
+                <span class="s-lbl">ПОБЕД</span>
+            </div>
+            <div class="stat-box highlight">
+                <i class="fa-solid fa-coins"></i>
+                <span class="s-val" id="stat-wagered">0</span>
+                <span class="s-lbl">ОБОРОТ ($)</span>
+            </div>
+        </div>
+
+        <!-- История активности -->
+        <div class="history-section">
+            <h3>ИСТОРИЯ ТРАНЗАКЦИЙ</h3>
+            <div class="history-list" id="history-list">
+                <!-- Генерируется JS -->
+                <!-- <div class="hist-item win">
+                    <div class="h-icon"><i class="fa-solid fa-gamepad"></i></div>
+                    <div class="h-info">
+                        <span class="h-name">Slots</span>
+                        <span class="h-date">12:30</span>
+                    </div>
+                    <div class="h-amount">+200 $</div>
+                </div> -->
+                <div class="empty-msg">История пуста</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Выбор аватара -->
+    <div id="modal-avatar" class="modal-overlay hidden">
+        <div class="avatar-picker-card">
+            <div class="modal-header">
+                <h3>ВЫБЕРИ АВАТАР</h3>
+                <button onclick="closeModal('modal-avatar')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="avatars-grid">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png" onclick="setAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png" onclick="setAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140047.png" onclick="setAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140051.png" onclick="setAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/924/924915.png" onclick="setAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/1999/1999625.png" onclick="setAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140061.png" onclick="setAvatar(this.src)">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140040.png" onclick="setAvatar(this.src)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Настройки -->
+    <div id="modal-settings" class="modal-overlay hidden">
+        <div class="settings-card">
+            <div class="modal-header">
+                <h3>НАСТРОЙКИ</h3>
+                <button onclick="closeModal('modal-settings')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="setting-row">
+                <span>Звуки</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-sound" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>Вибрация</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-haptic" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            
+            <hr class="divider">
+            
+            <button class="menu-btn danger" onclick="clearData()">
+                <i class="fa-solid fa-trash"></i> Сброс данных (Demo)
+            </button>
+            <button class="menu-btn" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/support')">
+                <i class="fa-solid fa-headset"></i> Поддержка
+            </button>
+        </div>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+              </html>
