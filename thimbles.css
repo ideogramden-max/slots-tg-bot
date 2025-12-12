@@ -1,0 +1,254 @@
+/* =========================================
+   FASTMONEY - THIMBLES STYLES
+   ========================================= */
+
+/* --- ФОН И СТРУКТУРА --- */
+.thimbles-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0a0a12;
+    color: white;
+}
+
+/* Фон: Кибер-стол */
+.table-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: 
+        radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050508 100%),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 20px);
+    box-shadow: inset 0 0 100px #000;
+}
+
+/* --- HEADER --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(10, 10, 18, 0.9);
+    border-bottom: 1px solid rgba(100, 100, 255, 0.1);
+    z-index: 10;
+}
+
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #88a; width: 38px; height: 38px;
+    border-radius: 12px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active, .icon-btn:active { background: white; color: black; }
+
+.balance-container .label { font-size: 0.55rem; color: #668; font-weight: 700; letter-spacing: 1px; text-align: right; display: block; }
+.balance-val { font-family: var(--font-num); font-weight: 700; color: white; font-size: 1rem; }
+#currency-display { color: var(--accent-purple, #bc13fe); }
+
+/* --- ИГРОВАЯ СЦЕНА --- */
+.thimbles-stage {
+    flex-grow: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    perspective: 800px; /* Для 3D */
+}
+
+/* Статус */
+.game-status {
+    position: absolute; top: 20%;
+    font-family: var(--font-num); font-weight: 900; font-size: 1.2rem;
+    color: #88a; text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    letter-spacing: 2px;
+}
+
+/* КОНТЕЙНЕР СТАКАНОВ */
+.cups-container {
+    position: relative;
+    width: 320px; height: 150px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 50px;
+}
+
+/* ШАРИК (BALL) */
+.ball {
+    position: absolute;
+    width: 30px; height: 30px;
+    background: radial-gradient(circle at 30% 30%, #fff, #00ff88 40%, #008844 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 15px #00ff88;
+    z-index: 1; /* Под стаканом */
+    /* Центрирование относительно слотов */
+    /* top: 60px; (Вычисляется в JS или CSS) */
+    bottom: 40px; 
+    transform: translateX(-50%);
+}
+.ball.hidden { display: none; }
+
+/* Позиции шариков под стаканами (static CSS fallback) */
+#ball-0 { left: 16%; } /* 320px / 6 ~ 53px center of first cup */
+#ball-1 { left: 50%; }
+#ball-2 { left: 84%; }
+
+/* ОБЕРТКА СТАКАНА (Движущийся элемент) */
+.cup-wrapper {
+    position: relative;
+    width: 80px; height: 100px;
+    cursor: pointer;
+    z-index: 10; /* Над шариком */
+    transition: transform 0.5s ease-in-out; /* Плавное перемещение */
+}
+
+/* Эффект нажатия (если кликабелен) */
+.cup-wrapper:active .cup-model { transform: scale(0.95) translateY(2px); }
+
+/* Поднятие стакана */
+.cup-wrapper.lifted .cup-model {
+    transform: translateY(-70px);
+}
+.cup-wrapper.lifted .cup-shadow {
+    opacity: 0.3; transform: scale(0.6);
+}
+
+/* 3D СТАКАН (MODEL) */
+.cup-model {
+    position: relative;
+    width: 100%; height: 100%;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Тело стакана (Конус) */
+.cup-body {
+    position: absolute; top: 10px; left: 5px; right: 5px; bottom: 0;
+    background: linear-gradient(90deg, #222, #444 30%, #666 50%, #444 70%, #222);
+    /* Трапеция через clip-path */
+    clip-path: polygon(15% 0, 85% 0, 100% 100%, 0% 100%);
+    z-index: 2;
+}
+
+/* Верх (Крышка) */
+.cup-top {
+    position: absolute; top: 10px; left: 15px; right: 15px; height: 12px;
+    background: radial-gradient(circle, #555, #222);
+    border-radius: 50%;
+    z-index: 3;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.5);
+}
+
+/* Ободок внизу */
+.cup-rim {
+    position: absolute; bottom: -5px; left: 0; width: 100%; height: 12px;
+    background: linear-gradient(90deg, #333, #777, #333);
+    border-radius: 50%;
+    z-index: 4;
+}
+
+/* Тень на столе */
+.cup-shadow {
+    position: absolute; bottom: -10px; left: 5%; width: 90%; height: 15px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    filter: blur(5px);
+    z-index: 0;
+    transition: all 0.3s;
+}
+
+/* --- CONTROLS (FOOTER) --- */
+.thimbles-controls {
+    background: #0d0d15;
+    border-top: 1px solid #2a2a35;
+    padding: 15px 15px 25px 15px;
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    min-height: 160px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+
+.shuffling-msg {
+    text-align: center; color: #bc13fe; font-weight: 900; letter-spacing: 2px;
+    animation: blink 0.5s infinite;
+}
+.shuffling-msg.hidden { display: none; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.game-options { display: flex; flex-direction: column; gap: 15px; }
+.game-options.hidden { display: none; } /* Скрывать при игре */
+
+/* Выбор кол-ва шаров */
+.balls-selector { display: flex; flex-direction: column; gap: 5px; }
+.label-tiny { font-size: 0.6rem; color: #668; font-weight: 700; }
+
+.balls-opts { display: flex; gap: 10px; }
+.b-opt {
+    flex: 1;
+    background: #1a1a25; border: 1px solid #334;
+    color: #88a; padding: 12px; border-radius: 12px;
+    font-weight: 700; cursor: pointer; transition: 0.2s;
+    display: flex; flex-direction: column; align-items: center; line-height: 1.2;
+}
+.b-opt span { font-size: 0.7rem; opacity: 0.7; }
+
+.b-opt.active {
+    background: #222; border-color: #bc13fe; color: white;
+    box-shadow: 0 0 15px rgba(188, 19, 254, 0.2);
+}
+
+/* Ставка */
+.bet-row { display: flex; gap: 10px; height: 44px; }
+.stepper-box {
+    flex: 1.5; display: flex; align-items: center;
+    background: #1a1a25; border: 1px solid #334; border-radius: 10px;
+}
+.step-btn {
+    width: 40px; height: 100%; background: transparent; border: none; color: #88a;
+    font-size: 1.2rem; cursor: pointer;
+}
+.step-btn:active { color: white; background: #2a2a35; }
+#bet-amount { flex: 1; text-align: center; font-family: var(--font-num); font-weight: 700; }
+
+.quick-btns { flex: 1; display: flex; gap: 5px; }
+.quick-btns button {
+    flex: 1; background: #1a1a25; border: none; color: #88a;
+    border-radius: 8px; font-weight: 700; font-size: 0.7rem; cursor: pointer;
+}
+.quick-btns button:active { background: #334; color: white; }
+
+/* КНОПКА PLAY */
+.play-btn {
+    width: 100%; height: 50px;
+    background: linear-gradient(135deg, #bc13fe, #8e44ad);
+    border: none; border-radius: 12px;
+    font-weight: 900; font-size: 1.1rem; color: white;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(188, 19, 254, 0.3);
+}
+.play-btn:active { transform: scale(0.98); }
+
+/* --- МОДАЛКИ --- */
+.win-card {
+    background: #151520; width: 80%; padding: 30px; border-radius: 20px;
+    text-align: center; border: 1px solid #00ff88;
+    position: relative; animation: zoomIn 0.3s;
+}
+.loss-card {
+    background: #1a1010; width: 80%; padding: 30px; border-radius: 20px;
+    text-align: center; border: 1px solid #ff4444; animation: zoomIn 0.3s;
+}
+
+.sparkles {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(0,255,136,0.2), transparent 70%);
+    z-index: -1;
+}
+
+.win-icon { font-size: 3rem; color: #00ff88; margin-bottom: 10px; }
+.loss-icon { font-size: 3rem; color: #ff4444; margin-bottom: 10px; }
+
+.win-val { font-size: 2rem; font-weight: 900; color: #00ff88; margin: 10px 0; font-family: var(--font-num); }
+.claim-btn { width: 100%; padding: 12px; background: #00ff88; border: none; border-radius: 10px; font-weight: 800; color: black; }
+.retry-btn { width: 100%; padding: 12px; background: #333; border: none; border-radius: 10px; font-weight: 800; color: white; }
+
+.info-card { background: #151520; padding: 20px; border-radius: 16px; width: 85%; border: 1px solid #bc13fe; }
+.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.card-body p { font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
+
+@keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
