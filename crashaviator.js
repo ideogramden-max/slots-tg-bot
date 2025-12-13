@@ -1,5 +1,5 @@
 /**
- * FASTMONEY - CRASH ENGINE (Server-Side Logic)
+ * FASTMONEY - CRASH ENGINE (Client-Server Version)
  * Frontend connects to Python Backend via API
  */
 
@@ -7,12 +7,19 @@ const tg = window.Telegram.WebApp;
 
 // === 1. КОНФИГУРАЦИЯ ===
 const CONFIG = {
-    // Адрес твоего сервера (из main.py)
+    // Твоя актуальная ссылка на сервер
     SERVER_URL: "https://alpha-firms-electronics-return.trycloudflare.com", 
-    growthSpeed: 0.0006, // Скорость должна совпадать с Python
+    growthSpeed: 0.0006, // Скорость роста (должна совпадать с Python)
 };
 
 // === 2. СОСТОЯНИЕ (STATE) ===
+
+// Загружаем глобальное состояние приложения
+let appState = JSON.parse(localStorage.getItem('fastMoneyState')) || {
+    balance: { RUB: { real: 0, demo: 10000 }, USDT: { real: 0, demo: 1000 } },
+    currency: 'USDT',
+    mode: 'demo'
+};
 
 let game = {
     status: 'IDLE', // IDLE, WAITING_SERVER, FLYING, CRASHED, CASHED_OUT
@@ -110,6 +117,10 @@ async function startRound() {
     if (game.status !== 'IDLE') return;
     
     const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
+    
+    // Если запускаем не из Телеграм (для тестов в браузере), можно раскомментировать:
+    // const userId = 12345678; 
+
     if (!userId) { alert("Запустите через Telegram"); return; }
 
     game.status = 'WAITING_SERVER';
@@ -119,13 +130,26 @@ async function startRound() {
         const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/bet`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId, amount: game.betAmount })
+            body: JSON.stringify({ 
+                user_id: userId, 
+                amount: game.betAmount,
+                mode: appState.mode // Отправляем текущий режим (real/demo)
+            })
         });
         
         const data = await response.json();
 
         if (data.error) {
-            alert("Ошибка: " + data.error);
+            // Красивый алерт для ошибки баланса
+            if (data.error === "Insufficient funds") {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: 'Недостаточно средств на балансе!',
+                    buttons: [{type: 'ok'}]
+                });
+            } else {
+                alert("Ошибка: " + data.error);
+            }
             resetGame();
             return;
         }
@@ -149,7 +173,8 @@ async function startRound() {
 
     } catch (e) {
         console.error(e);
-        alert("Ошибка сети");
+        // Если совсем нет связи
+        tg.showPopup({title: 'Ошибка сети', message: 'Не удалось соединиться с сервером.'});
         resetGame();
     }
 }
@@ -162,7 +187,7 @@ async function cashOut() {
     const btn = document.getElementById('main-btn');
     btn.disabled = true;
 
-    const userId = tg.initDataUnsafe.user.id;
+    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
 
     try {
         const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
@@ -175,9 +200,12 @@ async function cashOut() {
 
         if (data.status === 'won') {
             // УСПЕХ
-            game.status = 'CASHED_OUT'; // Игрок вышел, но самолет летит дальше визуально (или останавливается, тут как решить)
-            // Обычно в краше самолет летит дальше, но для простоты остановим игру
-            // Но красивее остановить игру для игрока, показав выигрыш.
+            game.status = 'CASHED_OUT'; 
+            
+            // Обновляем баланс (сервер прислал новый)
+            if (data.balance !== undefined) {
+                updateBalanceUI(data.balance);
+            }
             
             finishGame(true, data.win_amount, data.multiplier);
             
@@ -188,7 +216,7 @@ async function cashOut() {
 
     } catch (e) {
         console.error(e);
-        // Если ошибка сети, продолжаем поллинг, он скажет результат
+        // Если ошибка сети при выводе, продолжаем поллинг, он скажет результат
     }
 }
 
@@ -265,12 +293,6 @@ function finishGame(win, amount, mult) {
     
     showWinToast(amount);
     tg.HapticFeedback.notificationOccurred('success');
-    
-    // Получаем баланс (можно отдельным запросом, но мы просто прибавим локально для скорости)
-    // В реале лучше запросить /api/user/balance
-    const balEl = document.getElementById('balance-display');
-    const currentBal = parseFloat(balEl.innerText.replace(/,/g, ''));
-    updateBalanceUI(currentBal + amount);
 
     updateButtonState();
     setTimeout(resetGame, 3000);
@@ -383,11 +405,23 @@ function showWinToast(amount) {
 }
 
 function updateBalanceUI(balance) {
+    const balEl = document.getElementById('balance-display');
+    
+    // Если передали баланс - сохраняем и показываем
     if (balance !== undefined) {
-        document.getElementById('balance-display').innerText = balance.toLocaleString();
+        appState.balance[appState.mode] = balance;
+        localStorage.setItem('fastMoneyState', JSON.stringify(appState));
+        balEl.innerText = Math.floor(balance).toLocaleString();
     } else {
-        // Если баланс не передан, берем из HTML (или можно сделать fetch /api/user)
+        // Иначе читаем из стейта
+        const currBal = appState.balance[appState.mode];
+        balEl.innerText = Math.floor(currBal).toLocaleString();
     }
+    
+    // Валюта
+    const map = { 'RUB': '₽', 'USDT': '$', 'STARS': '★' };
+    const symEl = document.getElementById('currency-display');
+    if(symEl) symEl.innerText = map[appState.currency] || '$';
 }
 
 // Модалки
