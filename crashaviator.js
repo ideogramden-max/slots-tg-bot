@@ -8,7 +8,7 @@ const tg = window.Telegram.WebApp;
 // === 1. КОНФИГУРАЦИЯ ===
 const CONFIG = {
     // Адрес твоего сервера (из main.py)
-    SERVER_URL: "http://83.136.235.72:8000", 
+    SERVER_URL: "https://villages-vegetables-impacts-contemporary.trycloudflare.com", 
     growthSpeed: 0.0006, // Скорость должна совпадать с Python
 };
 
