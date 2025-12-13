@@ -7,7 +7,7 @@ const tg = window.Telegram.WebApp;
 
 // Адрес твоего Python-бота (Backend)
 // Замени на реальный IP или домен!
-const BACKEND_URL = "http://83.136.235.72:8000/api/create_payment";
+const BACKEND_URL = "https://villages-vegetables-impacts-contemporary.trycloudflare.com/api/create_payment";
 
 // Курс (примерный, для отображения)
 const EXCHANGE_RATE = 95; // 1$ = 95 RUB
