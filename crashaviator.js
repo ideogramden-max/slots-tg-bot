@@ -1,37 +1,27 @@
 /**
- * FASTMONEY - CRASH ENGINE (AVIATOR STYLE)
- * Real-time canvas rendering & game logic
+ * FASTMONEY - CRASH ENGINE (Server-Side Logic)
+ * Frontend connects to Python Backend via API
  */
 
 const tg = window.Telegram.WebApp;
 
-// === 1. ГЛОБАЛЬНЫЕ НАСТРОЙКИ ===
+// === 1. КОНФИГУРАЦИЯ ===
 const CONFIG = {
-    minBet: 100,
-    maxBet: 10000,
-    growthSpeed: 0.0006, // Скорость роста кривой
-    updateInterval: 16,  // ~60 FPS
+    // Адрес твоего сервера (из main.py)
+    SERVER_URL: "http://83.136.235.72:8000", 
+    growthSpeed: 0.0006, // Скорость должна совпадать с Python
 };
 
 // === 2. СОСТОЯНИЕ (STATE) ===
 
-// Глобальное (Баланс)
-let appState = JSON.parse(localStorage.getItem('fastMoneyState')) || {
-    balance: { RUB: { real: 0, demo: 10000 }, USDT: { real: 0, demo: 1000 } },
-    currency: 'USDT',
-    mode: 'demo'
-};
-
-// Локальное состояние игры
 let game = {
-    status: 'IDLE', // IDLE, BETTING, FLYING, CRASHED
+    status: 'IDLE', // IDLE, WAITING_SERVER, FLYING, CRASHED, CASHED_OUT
     multiplier: 1.00,
-    crashPoint: 0,
     startTime: 0,
     betAmount: 100,
-    userHasBet: false,
-    userCashedOut: false,
-    history: []
+    pollInterval: null, // Интервал проверки статуса
+    width: 0,
+    height: 0
 };
 
 // === 3. CANVAS ENGINE (ГРАФИКА) ===
@@ -39,7 +29,6 @@ const canvas = document.getElementById('crash-canvas');
 const ctx = canvas.getContext('2d');
 let animationFrameId;
 
-// Настройка размеров Canvas (Retina ready)
 function resizeCanvas() {
     const container = document.querySelector('.graph-container');
     const dpr = window.devicePixelRatio || 1;
@@ -47,346 +36,320 @@ function resizeCanvas() {
     
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    
     ctx.scale(dpr, dpr);
     
-    // Сохраняем логические размеры для расчетов
     game.width = rect.width;
     game.height = rect.height;
 }
 
-// Отрисовка кадра
 function drawFrame() {
-    if (game.status !== 'FLYING' && game.status !== 'CRASHED') return;
+    if (game.status !== 'FLYING' && game.status !== 'CRASHED' && game.status !== 'CASHED_OUT') return;
 
-    // Очистка
     ctx.clearRect(0, 0, game.width, game.height);
 
-    // Вычисляем время полета
+    // Считаем время от старта сервера
     const elapsed = Date.now() - game.startTime;
     
-    // Масштабирование (Zoom Out), если множитель большой
-    // Чем больше время, тем больше масштаб "сжимает" график
+    // Масштабирование графика (Zoom Out)
     let scaleX = 1;
     let scaleY = 1;
-    
     if (elapsed > 4000) {
         const factor = elapsed / 4000;
         scaleX = 1 / Math.pow(factor, 0.5);
         scaleY = 1 / Math.pow(factor, 0.7);
     }
 
-    // Рисуем кривую
     ctx.beginPath();
     ctx.moveTo(0, game.height);
     
-    // Рисуем точки графика
-    // Формула: x = t, y = t^2 (упрощенно)
     const steps = 50;
     let currentX = 0;
     let currentY = game.height;
 
     for (let t = 0; t <= elapsed; t += elapsed / steps) {
-        const x = (t / 5000) * game.width * 0.8 * scaleX; // 5 сек до края по X
-        
-        // Экспоненциальный рост Y
+        const x = (t / 5000) * game.width * 0.8 * scaleX; 
         const growth = (Math.exp(t * CONFIG.growthSpeed) - 1);
         const y = game.height - (growth * 100 * scaleY);
-
         ctx.lineTo(x, y);
-        
-        // Запоминаем последнюю точку для ракеты
-        if (t + (elapsed/steps) > elapsed) {
-            currentX = x;
-            currentY = y;
-        }
+        if (t + (elapsed/steps) > elapsed) { currentX = x; currentY = y; }
     }
 
     ctx.lineWidth = 4;
-    ctx.strokeStyle = '#00f3ff'; // Неоновый голубой
+    ctx.strokeStyle = '#00f3ff';
     ctx.shadowBlur = 10;
     ctx.shadowColor = '#00f3ff';
     ctx.stroke();
-    ctx.shadowBlur = 0; // Сброс тени
+    ctx.shadowBlur = 0;
 
-    // Заливка под графиком
     ctx.lineTo(currentX, game.height);
     ctx.lineTo(0, game.height);
     ctx.fillStyle = 'rgba(0, 243, 255, 0.1)';
     ctx.fill();
 
-    // Обновляем позицию ракеты (DOM элемент)
     updateRocketPosition(currentX, currentY);
 
-    if (game.status === 'FLYING') {
+    if (game.status === 'FLYING' || game.status === 'CASHED_OUT') {
         animationFrameId = requestAnimationFrame(drawFrame);
     }
 }
 
 function updateRocketPosition(x, y) {
     const rocket = document.getElementById('rocket-element');
-    // Смещаем относительно контейнера
-    // x и y - координаты внутри canvas (логические)
-    
-    // Ограничиваем, чтобы не улетела за экран (визуально)
     const safeX = Math.min(x, game.width - 40);
     const safeY = Math.max(y, 40);
-
-    rocket.style.transform = `translate(${safeX}px, ${safeY - game.height}px)`; // -height т.к. CSS bottom:0
+    rocket.style.transform = `translate(${safeX}px, ${safeY - game.height}px)`;
     
-    // Поворот ракеты (вычисляем угол наклона)
-    // Чем выше летит, тем вертикальнее (до 80 градусов)
     const angle = Math.min(15 + (game.multiplier * 5), 80);
-    rocket.querySelector('i').style.transform = `rotate(${angle - 45}deg)`; // -45 т.к. иконка исходно 45
+    rocket.querySelector('i').style.transform = `rotate(${angle - 45}deg)`;
 }
 
-// === 4. ЛОГИКА ИГРЫ ===
+// === 4. ЛОГИКА ИГРЫ (API) ===
 
-// Генерация точки краша (Честная математика)
-function generateCrashPoint() {
-    // E = 0.99 / (1 - random)
-    // Это стандартный алгоритм для Crash игр
-    const r = Math.random();
-    let crash = 0.99 / (1 - r);
-    
-    // Округляем до сотых
-    crash = Math.floor(crash * 100) / 100;
-    
-    // Иногда крашится сразу (1.00x)
-    if (crash < 1.01) crash = 1.00;
-    
-    // Ограничим макс выигрыш для демо (чтобы не сломать JS)
-    if (crash > 100) crash = 100; 
-
-    return crash;
-}
-
-// Старт раунда
-function startRound() {
+// 1. СТАРТ РАУНДА (Запрос к серверу)
+async function startRound() {
     if (game.status !== 'IDLE') return;
     
-    // Списание ставки (если поставил)
-    if (game.userHasBet) {
-        const curr = appState.currency;
-        const mode = appState.mode;
-        if (appState.balance[curr][mode] < game.betAmount) {
-            alert('Недостаточно средств!');
-            game.userHasBet = false;
-            updateButtonState();
+    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
+    if (!userId) { alert("Запустите через Telegram"); return; }
+
+    game.status = 'WAITING_SERVER';
+    updateButtonState();
+
+    try {
+        const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/bet`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, amount: game.betAmount })
+        });
+        
+        const data = await response.json();
+
+        if (data.error) {
+            alert("Ошибка: " + data.error);
+            resetGame();
             return;
         }
-        appState.balance[curr][mode] -= game.betAmount;
-        saveState();
-        UI.updateBalance();
+
+        // Успешный старт
+        game.status = 'FLYING';
+        // Python шлет timestamp в секундах (float), JS нужно мс
+        game.startTime = data.server_time * 1000; 
+        game.multiplier = 1.00;
+        
+        // Обновляем баланс UI сразу (сервер уже списал)
+        updateBalanceUI(data.balance);
+
+        // UI
+        prepareUIForFlight();
+        
+        // Запуск циклов
+        drawFrame();
+        gameLoop();
+        startStatusPolling(userId); // Следим, не крашнулось ли
+
+    } catch (e) {
+        console.error(e);
+        alert("Ошибка сети");
+        resetGame();
     }
-
-    game.status = 'FLYING';
-    game.crashPoint = generateCrashPoint();
-    game.startTime = Date.now();
-    game.multiplier = 1.00;
-    game.userCashedOut = false;
-
-    // UI обновления
-    document.getElementById('game-message').classList.add('hidden');
-    document.getElementById('crash-msg').classList.add('hidden');
-    document.getElementById('current-multiplier').classList.remove('hidden');
-    
-    const rocket = document.getElementById('rocket-element');
-    rocket.classList.remove('boom');
-    rocket.classList.add('flying');
-
-    updateButtonState();
-    tg.HapticFeedback.impactOccurred('medium'); // Вибрация старта
-
-    // Запуск цикла
-    gameLoop();
-    drawFrame();
 }
 
-// Основной цикл
+// 2. ЗАБРАТЬ ВЫИГРЫШ (CASHOUT)
+async function cashOut() {
+    if (game.status !== 'FLYING') return;
+    
+    // Блокируем кнопку, чтобы не нажать дважды
+    const btn = document.getElementById('main-btn');
+    btn.disabled = true;
+
+    const userId = tg.initDataUnsafe.user.id;
+
+    try {
+        const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        });
+        
+        const data = await response.json();
+
+        if (data.status === 'won') {
+            // УСПЕХ
+            game.status = 'CASHED_OUT'; // Игрок вышел, но самолет летит дальше визуально (или останавливается, тут как решить)
+            // Обычно в краше самолет летит дальше, но для простоты остановим игру
+            // Но красивее остановить игру для игрока, показав выигрыш.
+            
+            finishGame(true, data.win_amount, data.multiplier);
+            
+        } else if (data.status === 'crashed') {
+            // НЕ УСПЕЛ (Пинг или краш на сервере раньше)
+            crash(data.crash_point);
+        }
+
+    } catch (e) {
+        console.error(e);
+        // Если ошибка сети, продолжаем поллинг, он скажет результат
+    }
+}
+
+// 3. ПРОВЕРКА СТАТУСА (POLLING)
+// Каждую секунду спрашиваем сервер: "Мы еще летим?"
+function startStatusPolling(userId) {
+    if (game.pollInterval) clearInterval(game.pollInterval);
+    
+    game.pollInterval = setInterval(async () => {
+        if (game.status !== 'FLYING') {
+            clearInterval(game.pollInterval);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await response.json();
+
+            if (data.status === 'crashed') {
+                crash(data.crash_point);
+            }
+            // Если flying, всё ок, продолжаем
+
+        } catch (e) { console.error("Poll error", e); }
+    }, 1000);
+}
+
+// === 5. ВИЗУАЛЬНАЯ ЛОГИКА ===
+
 function gameLoop() {
     if (game.status !== 'FLYING') return;
 
     const elapsed = Date.now() - game.startTime;
-    
-    // Рост множителя (Экспонента)
-    // 1.00 -> ...
     game.multiplier = 1 + (Math.exp(elapsed * CONFIG.growthSpeed) - 1);
     
     // Обновляем текст
     document.getElementById('current-multiplier').innerText = game.multiplier.toFixed(2) + 'x';
-    document.getElementById('current-multiplier').style.color = 'white';
 
-    // Проверка краша
-    if (game.multiplier >= game.crashPoint) {
-        crash();
-    } else {
-        // Проверка авто-вывода (если бы он был)
-        requestAnimationFrame(gameLoop);
-    }
+    requestAnimationFrame(gameLoop);
 }
 
-// Краш (Конец раунда)
-function crash() {
+function crash(finalMult) {
     game.status = 'CRASHED';
-    cancelAnimationFrame(animationFrameId);
+    clearInterval(game.pollInterval);
+    cancelAnimationFrame(animationFrameId); // Стоп график
 
-    // UI Эффекты
+    // Показываем точную цифру краша от сервера
+    document.getElementById('current-multiplier').innerText = finalMult.toFixed(2) + 'x';
     document.getElementById('current-multiplier').style.color = '#ff0055';
+    
+    // UI
     document.getElementById('crash-msg').classList.remove('hidden');
-    document.getElementById('game-message').classList.add('hidden');
-
-    const rocket = document.getElementById('rocket-element');
-    rocket.classList.remove('flying');
-    rocket.classList.add('boom'); // Взрыв
-    rocket.innerHTML = '<i class="fa-solid fa-burst"></i>'; // Иконка взрыва
-
-    // Звук
+    document.getElementById('rocket-element').classList.add('boom');
+    document.getElementById('rocket-element').innerHTML = '<i class="fa-solid fa-burst"></i>';
+    
     tg.HapticFeedback.notificationOccurred('error');
-
-    // Добавляем в историю
-    addToHistory(game.crashPoint);
-
-    // Сброс кнопки
+    addToHistory(finalMult);
     updateButtonState();
 
-    // Авто-рестарт через 3 сек
     setTimeout(resetGame, 3000);
 }
 
-// Сброс к началу
+function finishGame(win, amount, mult) {
+    // Остановка для игрока
+    game.status = 'IDLE'; 
+    clearInterval(game.pollInterval);
+    // Не сбрасываем график сразу, даем насладиться цифрой
+    
+    document.getElementById('current-multiplier').style.color = '#00ff88';
+    
+    showWinToast(amount);
+    tg.HapticFeedback.notificationOccurred('success');
+    
+    // Получаем баланс (можно отдельным запросом, но мы просто прибавим локально для скорости)
+    // В реале лучше запросить /api/user/balance
+    const balEl = document.getElementById('balance-display');
+    const currentBal = parseFloat(balEl.innerText.replace(/,/g, ''));
+    updateBalanceUI(currentBal + amount);
+
+    updateButtonState();
+    setTimeout(resetGame, 3000);
+}
+
+function prepareUIForFlight() {
+    document.getElementById('game-message').classList.add('hidden');
+    document.getElementById('crash-msg').classList.add('hidden');
+    document.getElementById('current-multiplier').classList.remove('hidden');
+    document.getElementById('current-multiplier').style.color = 'white';
+    
+    const rocket = document.getElementById('rocket-element');
+    rocket.classList.remove('boom');
+    rocket.classList.add('flying');
+    
+    updateButtonState();
+    tg.HapticFeedback.impactOccurred('medium');
+}
+
 function resetGame() {
     game.status = 'IDLE';
+    clearInterval(game.pollInterval);
     
-    // Сброс UI
     document.getElementById('rocket-element').innerHTML = '<i class="fa-solid fa-jet-fighter-up"></i><div class="rocket-trail"></div>';
     document.getElementById('rocket-element').classList.remove('boom');
     document.getElementById('rocket-element').style.transform = 'translate(10px, 0)';
     
     document.getElementById('crash-msg').classList.add('hidden');
-    document.getElementById('game-message').innerText = "ОЖИДАНИЕ...";
+    document.getElementById('game-message').innerText = "ГОТОВ К ВЗЛЕТУ";
     document.getElementById('game-message').classList.remove('hidden');
     document.getElementById('current-multiplier').innerText = "1.00x";
     
     ctx.clearRect(0, 0, game.width, game.height);
-    
-    // Если пользователь ставил, нужно сбросить флаг для следующего раунда,
-    // НО если он хочет авто-ставку, можно оставить. 
-    // Для демо сбрасываем ставку.
-    game.userHasBet = false;
     updateButtonState();
-
-    // Запуск таймера нового раунда
-    let countdown = 3;
-    const interval = setInterval(() => {
-        document.getElementById('game-message').innerText = `СТАРТ ЧЕРЕЗ ${countdown}...`;
-        countdown--;
-        if (countdown < 0) {
-            clearInterval(interval);
-            startRound();
-        }
-    }, 1000);
 }
 
-// Забрать выигрыш
-function cashOut() {
-    if (game.status !== 'FLYING' || !game.userHasBet || game.userCashedOut) return;
-
-    game.userCashedOut = true;
-    const winAmount = Math.floor(game.betAmount * game.multiplier);
-    
-    // Начисление
-    const curr = appState.currency;
-    const mode = appState.mode;
-    appState.balance[curr][mode] += winAmount;
-    saveState();
-    UI.updateBalance();
-
-    // UI
-    updateButtonState();
-    showWinToast(winAmount);
-    
-    // Звук
-    tg.HapticFeedback.notificationOccurred('success');
-}
-
-// === 5. UI КОНТРОЛЛЕР ===
-const UI = {
-    balance: document.getElementById('balance-display'),
-    currency: document.getElementById('currency-display'),
-    
-    updateBalance() {
-        const curr = appState.currency;
-        const mode = appState.mode;
-        const symMap = { 'RUB': '₽', 'USDT': '$', 'STARS': '★' };
-        
-        this.balance.innerText = appState.balance[curr][mode].toLocaleString();
-        this.currency.innerText = symMap[curr];
-    }
-};
+// === 6. UI КОНТРОЛЛЕР ===
 
 function updateButtonState() {
     const btn = document.getElementById('main-btn');
     const title = btn.querySelector('.btn-title');
     const sub = btn.querySelector('.btn-sub');
 
-    // Сброс классов
-    btn.className = 'action-button';
+    btn.className = 'action-button'; // сброс
 
     if (game.status === 'IDLE') {
-        if (game.userHasBet) {
-            btn.classList.add('btn-cancel');
-            title.innerText = "ОТМЕНИТЬ";
-            sub.innerText = "Ожидание старта...";
-        } else {
-            btn.classList.add('btn-bet');
-            title.innerText = "ПОСТАВИТЬ";
-            sub.innerText = "На следующий раунд";
-        }
+        btn.classList.add('btn-bet');
+        title.innerText = "ПОСТАВИТЬ";
+        sub.innerText = "Начать раунд";
+        btn.disabled = false;
+    } else if (game.status === 'WAITING_SERVER') {
+        btn.classList.add('btn-bet');
+        title.innerText = "ЗАГРУЗКА...";
+        btn.disabled = true;
     } else if (game.status === 'FLYING') {
-        if (game.userHasBet && !game.userCashedOut) {
-            btn.classList.add('btn-cashout');
-            title.innerText = "ЗАБРАТЬ";
-            // Показываем текущий выигрыш на кнопке
-            const currentWin = Math.floor(game.betAmount * game.multiplier);
-            sub.innerText = `+${currentWin}`; 
-        } else if (game.userCashedOut) {
-            btn.classList.add('btn-bet'); // Блокирована визуально
-            btn.style.opacity = '0.5';
-            title.innerText = "ВЫВЕДЕНО";
-            sub.innerText = "Ждите конца раунда";
-        } else {
-            btn.classList.add('btn-bet');
-            btn.style.opacity = '0.5';
-            title.innerText = "ИДЕТ ИГРА";
-            sub.innerText = "Ждите новый раунд";
-        }
+        btn.classList.add('btn-cashout');
+        title.innerText = "ЗАБРАТЬ";
+        // Динамический выигрыш
+        sub.innerText = "Пока не поздно!";
+        btn.disabled = false;
     } else if (game.status === 'CRASHED') {
          btn.classList.add('btn-bet');
          btn.style.opacity = '0.5';
          title.innerText = "КРАШ";
          sub.innerText = "Раунд окончен";
+         btn.disabled = true;
     }
 }
 
-// Логика кнопки
+// Обработчик кнопки
 document.getElementById('main-btn').addEventListener('click', () => {
     tg.HapticFeedback.selectionChanged();
-
-    if (game.status === 'IDLE') {
-        // Тогл ставки
-        game.userHasBet = !game.userHasBet;
-        updateButtonState();
-    } else if (game.status === 'FLYING') {
-        // Вывод
-        if (game.userHasBet && !game.userCashedOut) {
-            cashOut();
-        }
-    }
+    if (game.status === 'IDLE') startRound();
+    else if (game.status === 'FLYING') cashOut();
 });
 
 // Ставки
 window.setBet = (val) => {
+    if (game.status !== 'IDLE') return;
     if (val === 'max') game.betAmount = 5000;
     else game.betAmount = val;
     document.getElementById('bet-amount').innerText = game.betAmount;
@@ -402,25 +365,14 @@ document.getElementById('btn-dec').addEventListener('click', () => {
     document.getElementById('bet-amount').innerText = game.betAmount;
 });
 
-// История
+// История и Утилиты
 function addToHistory(multiplier) {
     const container = document.getElementById('history-container');
     const div = document.createElement('div');
-    
-    let colorClass = 'blue';
-    if (multiplier < 1.10) colorClass = 'red';
-    else if (multiplier >= 2.00 && multiplier < 10) colorClass = 'green';
-    else if (multiplier >= 10.00) colorClass = 'gold';
-
+    let colorClass = multiplier < 1.10 ? 'red' : (multiplier >= 10 ? 'gold' : (multiplier >= 2 ? 'green' : 'blue'));
     div.className = `badge ${colorClass}`;
     div.innerText = multiplier.toFixed(2) + 'x';
-    
-    container.prepend(div); // Добавляем в начало
-    
-    // Удаляем старые, если больше 20
-    if (container.children.length > 20) {
-        container.removeChild(container.lastChild);
-    }
+    container.prepend(div);
 }
 
 function showWinToast(amount) {
@@ -430,28 +382,22 @@ function showWinToast(amount) {
     setTimeout(() => toast.classList.add('hidden'), 2000);
 }
 
-// === 6. UTILS ===
-function saveState() {
-    localStorage.setItem('fastMoneyState', JSON.stringify(appState));
+function updateBalanceUI(balance) {
+    if (balance !== undefined) {
+        document.getElementById('balance-display').innerText = balance.toLocaleString();
+    } else {
+        // Если баланс не передан, берем из HTML (или можно сделать fetch /api/user)
+    }
 }
 
-// Управление модалками
+// Модалки
 window.openInfoModal = () => document.getElementById('modal-info').classList.remove('hidden');
 window.closeInfoModal = () => document.getElementById('modal-info').classList.add('hidden');
 
-// === 7. INIT ===
+// Инит Canvas
 document.addEventListener('DOMContentLoaded', () => {
-    tg.ready();
-    tg.expand();
-    
+    tg.ready(); tg.expand();
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
-    UI.updateBalance();
-    
-    // Генерируем фейковую историю
-    for(let i=0; i<10; i++) addToHistory(generateCrashPoint());
-    
-    // Запускаем первый цикл подготовки
     resetGame();
 });
