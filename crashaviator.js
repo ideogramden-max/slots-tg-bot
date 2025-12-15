@@ -560,43 +560,55 @@ function prepareUIForFlight() {
 }
 
 // 5.5. СБРОС ИГРЫ (RESET)
+
 function resetGame() {
     game.status = 'IDLE';
     game.userHasBet = false;
     game.userCashedOut = false;
     
     // Очистка таймеров
-    clearInterval(game.timers.pollInterval);
+    if (game.timers.pollInterval) clearInterval(game.timers.pollInterval);
     
-    // Сброс ракеты в начальную позицию
+    // Сброс ракеты
     const rocket = document.getElementById('rocket-element');
-    rocket.innerHTML = '<i class="fa-solid fa-jet-fighter-up"></i><div class="rocket-trail"></div>';
-    rocket.classList.remove('boom', 'flying');
-    rocket.style.transform = 'translate(10px, 0)'; // Левый нижний угол
+    if (rocket) {
+        rocket.innerHTML = '<i class="fa-solid fa-jet-fighter-up"></i><div class="rocket-trail"></div>';
+        rocket.classList.remove('boom', 'flying');
+        rocket.style.transform = 'translate(10px, 0)';
+    }
     
     // Сброс текстов
-    document.getElementById('crash-msg').classList.add('hidden');
-    document.getElementById('game-message').innerText = "ОЖИДАНИЕ...";
-    document.getElementById('game-message').classList.remove('hidden');
-    document.getElementById('current-multiplier').innerText = "1.00x";
-    document.getElementById('current-multiplier').style.color = '#fff';
+    const crashMsg = document.getElementById('crash-msg');
+    const gameMsg = document.getElementById('game-message');
+    const multEl = document.getElementById('current-multiplier');
+
+    if(crashMsg) crashMsg.classList.add('hidden');
+    if(gameMsg) {
+        gameMsg.innerText = "ГОТОВ К ВЗЛЕТУ";
+        gameMsg.classList.remove('hidden');
+    }
+    if(multEl) {
+        multEl.innerText = "1.00x";
+        multEl.style.color = '#fff';
+    }
     
     // Очистка Canvas
-    ctx.clearRect(0, 0, game.width, game.height);
+    if (ctx) ctx.clearRect(0, 0, game.width, game.height);
     
-    // Обновление кнопок
-    updateButtonState();
+    // === ПРИНУДИТЕЛЬНЫЙ СБРОС КНОПКИ ===
+    const btn = document.getElementById('main-btn');
+    if (btn) {
+        btn.className = 'action-button btn-bet'; // Возвращаем зеленый класс
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        
+        const title = btn.querySelector('.btn-title');
+        const sub = btn.querySelector('.btn-sub');
+        
+        if(title) title.innerText = "ПОСТАВИТЬ";
+        if(sub) sub.innerText = "На следующий раунд";
+    }
 }
-
-
-document.getElementById('btn-inc').addEventListener('click', () => {
-    if (game.betAmount < 10000) game.betAmount += 100;
-    document.getElementById('bet-amount').innerText = game.betAmount;
-});
-document.getElementById('btn-dec').addEventListener('click', () => {
-    if (game.betAmount > 100) game.betAmount -= 100;
-    document.getElementById('bet-amount').innerText = game.betAmount;
-});
 
 // История и Утилиты
 function addToHistory(multiplier) {
