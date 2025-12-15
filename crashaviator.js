@@ -135,82 +135,154 @@ function saveState() {
 }
 
 // === 3. CANVAS ENGINE (ГРАФИКА) ===
-const canvas = document.getElementById('crash-canvas');
-const ctx = canvas.getContext('2d');
-let animationFrameId;
 
+const canvas = document.getElementById('crash-canvas');
+const ctx = canvas.getContext('2d', { alpha: true }); // Включаем прозрачность
+
+// 3.1. НАСТРОЙКА РАЗМЕРОВ (RETINA FIX)
+// Вызывается при загрузке и при повороте экрана
 function resizeCanvas() {
     const container = document.querySelector('.graph-container');
     const dpr = window.devicePixelRatio || 1;
     const rect = container.getBoundingClientRect();
     
+    // Физический размер (пиксели устройства)
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
     
+    // Логический размер (CSS пиксели)
     game.width = rect.width;
     game.height = rect.height;
+    
+    // Масштабируем контекст
+    ctx.scale(dpr, dpr);
 }
 
+// 3.2. ОСНОВНОЙ ЦИКЛ ОТРИСОВКИ
 function drawFrame() {
-    if (game.status !== 'FLYING' && game.status !== 'CRASHED' && game.status !== 'CASHED_OUT') return;
+    // Рисуем только если игра активна (или только что закончилась, чтобы показать итог)
+    if (game.status === 'IDLE' || game.status === 'WAITING_SERVER') {
+        // Очищаем и выходим
+        ctx.clearRect(0, 0, game.width, game.height);
+        return;
+    }
 
+    // 1. Очистка
     ctx.clearRect(0, 0, game.width, game.height);
 
-    // Считаем время от старта сервера
+    // 2. Расчет времени и масштаба
     const elapsed = Date.now() - game.startTime;
     
-    // Масштабирование графика (Zoom Out)
+    // Логика "Камеры": если летим долго, отдаляем график
     let scaleX = 1;
     let scaleY = 1;
-    if (elapsed > 4000) {
-        const factor = elapsed / 4000;
-        scaleX = 1 / Math.pow(factor, 0.5);
-        scaleY = 1 / Math.pow(factor, 0.7);
+    
+    if (elapsed > CONFIG.zoomThreshold) {
+        const factor = elapsed / CONFIG.zoomThreshold;
+        // Нелинейное масштабирование для красоты
+        scaleX = 1 / Math.pow(factor, 0.6); 
+        scaleY = 1 / Math.pow(factor, 0.8);
     }
 
+    // 3. Отрисовка линии графика
     ctx.beginPath();
-    ctx.moveTo(0, game.height);
+    ctx.moveTo(0, game.height); // Старт из левого нижнего угла
     
-    const steps = 50;
-    let currentX = 0;
-    let currentY = game.height;
+    // Рисуем кривую от 0 до текущего момента
+    // Делим время на шаги (например, 50 точек для плавности)
+    const steps = 60;
+    let currentCanvasX = 0;
+    let currentCanvasY = game.height;
+    let lastX = 0, lastY = 0; // Для вычисления угла
 
     for (let t = 0; t <= elapsed; t += elapsed / steps) {
-        const x = (t / 5000) * game.width * 0.8 * scaleX; 
+        // X линейно зависит от времени (5 сек экрана по дефолту)
+        const x = (t / 5000) * game.width * 0.85 * scaleX; 
+        
+        // Y растет экспоненциально: e^(t * speed)
+        // Вычитаем 1, чтобы стартовать с 0
         const growth = (Math.exp(t * CONFIG.growthSpeed) - 1);
-        const y = game.height - (growth * 100 * scaleY);
+        
+        // Переводим рост в пиксели (1.00x -> 100px высоты)
+        const y = game.height - (growth * 150 * scaleY);
+
         ctx.lineTo(x, y);
-        if (t + (elapsed/steps) > elapsed) { currentX = x; currentY = y; }
+
+        // Запоминаем координаты последней точки (где сейчас ракета)
+        if (t + (elapsed/steps) > elapsed) {
+            lastX = currentCanvasX;
+            lastY = currentCanvasY;
+            currentCanvasX = x;
+            currentCanvasY = y;
+        }
     }
 
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#00f3ff';
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = '#00f3ff';
+    // Стилизация линии
+    ctx.lineWidth = CONFIG.graphics.lineWidth;
+    ctx.strokeStyle = CONFIG.graphics.lineColor;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Эффект свечения (Neon Glow)
+    ctx.shadowBlur = CONFIG.graphics.lineShadowBlur;
+    ctx.shadowColor = CONFIG.graphics.lineShadow;
+    
     ctx.stroke();
+    
+    // Сброс тени для заливки (оптимизация)
     ctx.shadowBlur = 0;
 
-    ctx.lineTo(currentX, game.height);
-    ctx.lineTo(0, game.height);
-    ctx.fillStyle = 'rgba(0, 243, 255, 0.1)';
+    // 4. Заливка под графиком
+    ctx.lineTo(currentCanvasX, game.height); // Опускаем линию вниз
+    ctx.lineTo(0, game.height); // Возвращаем влево
+    ctx.fillStyle = CONFIG.graphics.fillColor;
     ctx.fill();
 
-    updateRocketPosition(currentX, currentY);
+    // 5. Обновление HTML-элемента Ракеты
+    updateRocketVisuals(currentCanvasX, currentCanvasY, lastX, lastY);
 
+    // Рекурсивный вызов следующего кадра
     if (game.status === 'FLYING' || game.status === 'CASHED_OUT') {
-        animationFrameId = requestAnimationFrame(drawFrame);
+        game.timers.animationFrame = requestAnimationFrame(drawFrame);
     }
 }
 
-function updateRocketPosition(x, y) {
+// 3.3. ПОЗИЦИОНИРОВАНИЕ РАКЕТЫ
+function updateRocketVisuals(x, y, prevX, prevY) {
     const rocket = document.getElementById('rocket-element');
-    const safeX = Math.min(x, game.width - 40);
-    const safeY = Math.max(y, 40);
+    if (!rocket) return;
+
+    // Ограничиваем, чтобы ракета не улетела за границы div-контейнера
+    // x и y - это координаты внутри canvas
+    const safeX = Math.max(0, Math.min(x, game.width - 50));
+    const safeY = Math.min(game.height, Math.max(y, 50)); 
+
+    // Смещение через CSS Transform (GPU accelerated)
+    // Вычитаем height, так как в CSS bottom: 0, а y на canvas идет сверху вниз
     rocket.style.transform = `translate(${safeX}px, ${safeY - game.height}px)`;
     
-    const angle = Math.min(15 + (game.multiplier * 5), 80);
-    rocket.querySelector('i').style.transform = `rotate(${angle - 45}deg)`;
+    // Расчет угла наклона (Rotation)
+    // Тангенс угла = противолежащий (dy) / прилежащий (dx)
+    // Но для простоты привяжем угол к текущему множителю или времени
+    // Чем круче график, тем больше угол (до 90 градусов)
+    
+    // Вычисляем угол на основе вектора движения (более точно)
+    const dx = x - prevX;
+    const dy = prevY - y; // инверсия Y для математики
+    let angleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+    
+    // Сглаживание угла (чтобы не дергалось)
+    if (angleDeg < 0) angleDeg = 0;
+    if (angleDeg > 85) angleDeg = 85;
+
+    // Корректировка иконки (иконка fa-plane исходно может быть под 45 град)
+    const icon = rocket.querySelector('i');
+    if (icon) {
+        // Иконка fa-jet-fighter-up обычно смотрит вверх (90 deg). 
+        // Нам нужно повернуть её вправо (0 deg) и добавить angleDeg.
+        // Подгоняем визуально:
+        icon.style.transform = `rotate(${angleDeg + 45}deg)`;
+    }
 }
 
 // === 4. ЛОГИКА ИГРЫ (API) ===
