@@ -283,28 +283,26 @@
 /* Исправленный Тост (Уведомление) */
 .toast-overlay {
     position: fixed; 
-    /* Поднимаем выше, сразу под хедер и историю (примерно 110px от верха) */
-    top: 110px; 
+    top: 70px; /* Поднимаем под самый хедер */
     left: 0; 
     width: 100%;
     display: flex; 
     justify-content: center;
-    /* Самое важное: пропускаем клики сквозь уведомление */
-    pointer-events: none; 
+    pointer-events: none; /* Клики проходят сквозь него */
     z-index: 90;
 }
 
 .toast-box {
-    background: rgba(39, 174, 96, 0.95); /* Более насыщенный зеленый */
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.8); /* Более темный фон для контраста */
+    backdrop-filter: blur(8px);
     padding: 8px 16px; 
-    border-radius: 50px; /* Более округлый */
+    border-radius: 30px;
     display: flex; 
     align-items: center; 
     gap: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    border: 1px solid #00ff88;
+    box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
     animation: slideDown 0.3s ease-out;
-    border: 1px solid #2ecc71;
 }
 
 /* Иконка внутри тоста */
