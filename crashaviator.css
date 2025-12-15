@@ -327,46 +327,40 @@
     background: #1a1a20; 
     width: 90%; 
     max-width: 350px;
-    /* Ограничиваем высоту, чтобы не вылезала за экран */
-    max-height: 80vh; 
+    /* Максимальная высота - 70% экрана, остальное скроллится */
+    max-height: 70vh; 
+    display: flex;
+    flex-direction: column;
     border-radius: 16px; 
     padding: 20px;
     border: 1px solid #444;
-    /* Делаем гибкий контейнер */
-    display: flex;
-    flex-direction: column;
-    z-index: 101; /* Поверх всего */
+    position: relative;
+    /* ОЧЕНЬ ВАЖНО: Делаем его выше всех слоев */
+    z-index: 2000; 
 }
 
+/* Исправленный крестик */
 .card-header { 
     display: flex; 
     justify-content: space-between; 
+    align-items: center;
     margin-bottom: 15px; 
-    /* Чтобы заголовок не сжимался */
-    flex-shrink: 0; 
+    flex-shrink: 0; /* Заголовок не сжимается */
 }
 
-/* Кнопка закрытия (крестик) - увеличим зону нажатия */
 .card-header button { 
-    background: none; 
+    background: rgba(255,255,255,0.1); 
     border: none; 
     color: white; 
-    font-size: 1.5rem; /* Чуть больше */
-    padding: 5px;      /* Удобнее нажимать */
+    font-size: 1.2rem; 
+    width: 30px; height: 30px;
+    border-radius: 50%;
     cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
 }
 
-/* Тело с текстом - добавляем скролл */
+/* Скролл для текста */
 .card-body {
-    overflow-y: auto; /* Включаем вертикальный скролл */
-    padding-right: 5px; /* Отступ для скроллбара */
-}
-
-/* Стилизация текста */
-.card-body ol { 
-    margin: 0; 
-    padding-left: 20px; 
-    font-size: 0.9rem; /* Чуть крупнее шрифт */
-    color: #ccc; 
-    line-height: 1.6; 
+    overflow-y: auto; /* Включаем прокрутку */
+    padding-right: 5px;
 }
