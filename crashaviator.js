@@ -5,11 +5,62 @@
 
 const tg = window.Telegram.WebApp;
 
-// === 1. КОНФИГУРАЦИЯ ===
+// === 1. КОНФИГУРАЦИЯ (SETTINGS) ===
 const CONFIG = {
-    // Твоя актуальная ссылка на сервер
-    SERVER_URL: "https://alpha-firms-electronics-return.trycloudflare.com", 
-    growthSpeed: 0.0006, // Скорость роста (должна совпадать с Python)
+    // --- СЕТЬ И СЕРВЕР ---
+    // Твоя вечная ссылка на бэкенд (Cloudflare Tunnel)
+    SERVER_URL: "https://alpha-firms-electronics-return.trycloudflare.com",
+    
+    // Частота опроса сервера (Polling) в миллисекундах
+    // Чем меньше, тем точнее синхронизация, но выше нагрузка
+    pollInterval: 1000, 
+
+    // --- ФИЗИКА И МАТЕМАТИКА ---
+    // Скорость роста графика (Экспонента). 
+    // ВАЖНО: Должна строго совпадать с GROWTH_SPEED в Python (crashaviator.py)
+    growthSpeed: 0.0006, 
+    
+    // Максимальное время полета для масштабирования графика (в мс)
+    // После этого времени график начинает "сжиматься" (Zoom Out)
+    zoomThreshold: 4000,
+
+    // --- ЛИМИТЫ СТАВОК (Client Side Validation) ---
+    betting: {
+        min: 100,           // Минимальная ставка
+        max: 500000,        // Максимальная ставка
+        default: 100,       // Ставка по умолчанию
+        maxWin: 10000000    // Максимальный выигрыш (визуальное ограничение)
+    },
+
+    // --- ВИЗУАЛЬНЫЕ НАСТРОЙКИ (CANVAS) ---
+    graphics: {
+        fps: 60,                // Целевой FPS анимации
+        lineWidth: 4,           // Толщина линии графика
+        lineColor: '#00f3ff',   // Цвет линии (Неоновый голубой)
+        lineShadow: '#00f3ff',  // Цвет свечения линии
+        lineShadowBlur: 15,     // Сила свечения
+        
+        fillColor: 'rgba(0, 243, 255, 0.1)', // Цвет заливки под графиком
+        
+        // Цвета текста множителя в центре
+        textColorFlying: '#ffffff',
+        textColorCashed: '#00ff88', // Зеленый (когда забрал)
+        textColorCrash: '#ff0055',  // Красный (при краше)
+        
+        // Сетка координат
+        gridColor: 'rgba(255, 255, 255, 0.05)',
+        showGrid: true
+    },
+
+    // --- ТАЙМИНГИ И ЗАДЕРЖКИ ---
+    timings: {
+        resetDelay: 3000,       // Сколько висит надпись CRASHED до перезапуска (мс)
+        animationDuration: 16,  // ~60 FPS (1000ms / 60)
+        toastDuration: 2000     // Сколько висит уведомление о выигрыше
+    },
+
+    // --- ОТЛАДКА ---
+    debug: false // Включить логи в консоль браузера
 };
 
 // === 2. СОСТОЯНИЕ (STATE) ===
