@@ -65,22 +65,74 @@ const CONFIG = {
 
 // === 2. СОСТОЯНИЕ (STATE) ===
 
-// Загружаем глобальное состояние приложения
-let appState = JSON.parse(localStorage.getItem('fastMoneyState')) || {
-    balance: { RUB: { real: 0, demo: 10000 }, USDT: { real: 0, demo: 1000 } },
-    currency: 'USDT',
-    mode: 'demo'
+// 2.1. ГЛОБАЛЬНОЕ СОСТОЯНИЕ (APP STATE)
+// Данные, которые синхронизируются между всеми страницами через localStorage
+let appState = (() => {
+    const saved = localStorage.getItem('fastMoneyState');
+    const defaults = {
+        user: { 
+            id: 0, 
+            name: "Guest", 
+            avatar: null, 
+            xp: 0 
+        },
+        balance: { 
+            real: 0, 
+            demo: 10000 // Начальный демо-баланс
+        },
+        currency: 'USDT', // Текущая валюта отображения
+        mode: 'demo',     // Текущий режим ('real' или 'demo')
+        settings: {
+            sound: true,
+            haptic: true
+        }
+    };
+    
+    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+})();
+
+// 2.2. ЛОКАЛЬНОЕ СОСТОЯНИЕ ИГРЫ (GAME STATE)
+// Переменные, которые меняются в реальном времени внутри раунда
+let game = {
+    // Статус текущего процесса
+    // IDLE: Ожидание ставки
+    // WAITING_SERVER: Отправили ставку, ждем ответа сервера
+    // WAITING_START: Ставка принята, ждем начала раунда (серверного таймера)
+    // FLYING: Раунд идет, график растет
+    // CASHED_OUT: Игрок забрал деньги, но раунд еще идет
+    // CRASHED: Раунд окончен взрывом
+    status: 'IDLE',
+
+    // Логика полета
+    multiplier: 1.00,       // Текущий отображаемый коэффициент
+    startTime: 0,           // Timestamp начала раунда (от сервера)
+    serverCrashPoint: 0,    // (Для отладки) Точка краша, если сервер её прислал в конце
+    
+    // Данные игрока в текущем раунде
+    betAmount: CONFIG.betting.default, // Текущая выбранная ставка
+    currentWin: 0,          // Сколько игрок выиграет, если нажмет сейчас
+    userHasBet: false,      // Сделана ли ставка в текущем раунде
+    userCashedOut: false,   // Успел ли забрать
+    
+    // Параметры отрисовки Canvas
+    width: 0,               // Ширина холста (динамическая)
+    height: 0,              // Высота холста (динамическая)
+    
+    // История множителей (локальный кэш для ленты сверху)
+    history: [],
+
+    // Управление таймерами (чтобы корректно очищать память)
+    timers: {
+        animationFrame: null, // ID анимации графика
+        pollInterval: null,   // ID опроса сервера
+        countdown: null       // ID таймера обратного отсчета
+    }
 };
 
-let game = {
-    status: 'IDLE', // IDLE, WAITING_SERVER, FLYING, CRASHED, CASHED_OUT
-    multiplier: 1.00,
-    startTime: 0,
-    betAmount: 100,
-    pollInterval: null, // Интервал проверки статуса
-    width: 0,
-    height: 0
-};
+// Функция для сохранения глобального состояния (вызывать при изменении баланса/режима)
+function saveState() {
+    localStorage.setItem('fastMoneyState', JSON.stringify(appState));
+}
 
 // === 3. CANVAS ENGINE (ГРАФИКА) ===
 const canvas = document.getElementById('crash-canvas');
