@@ -181,10 +181,16 @@ function initBackground() {
     animate();
 }
 
+// ... в конце файла ...
+
 window.navigateTo = (url) => {
-    tg.HapticFeedback.impactOccurred('medium');
-    setTimeout(() => { window.location.href = url; }, 100);
+    // Используем SPA движок
+    SPA.navigate(url);
 };
 
-window.openDepositModal = () => window.location.href = 'deposit.html';
-window.openWalletModal = () => window.location.href = 'withdraw.html';
+// Обновляем и другие кнопки
+window.openDepositModal = () => SPA.navigate('deposit.html');
+window.openWalletModal = () => SPA.navigate('withdraw.html');
+
+// Если где-то используется onclick="window.location.href='...'" в HTML, 
+// лучше заменить на onclick="SPA.navigate('...')"
