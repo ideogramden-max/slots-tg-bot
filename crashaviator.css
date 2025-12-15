@@ -1,476 +1,170 @@
 /* =========================================
-   FASTMONEY - CRASH AVIATOR (MODERN UI)
+   1WIN GRADE - CRASH STYLES
    ========================================= */
 
-/* --- 1. ОСНОВНОЙ КАРКАС --- */
 .crash-game-body {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh; /* Полная высота экрана */
-    overflow: hidden; /* Запрет скролла всей страницы */
-    background-color: #0b0b10;
-    color: white;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+    background-color: #0b0b10; color: white;
     font-family: 'Montserrat', sans-serif;
-    user-select: none; /* Запрет выделения текста */
-    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* --- 2. ФОНОВЫЕ ЭФФЕКТЫ --- */
+/* ФОН */
 .space-background {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: -3;
-    background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #050505 100%);
 }
-
-/* Звезды на CSS (без картинок) */
 .stars {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background-image: 
-        radial-gradient(1px 1px at 10% 10%, #fff, transparent),
-        radial-gradient(1px 1px at 20% 40%, #fff, transparent),
-        radial-gradient(2px 2px at 30% 70%, #aaa, transparent),
-        radial-gradient(1px 1px at 60% 20%, #fff, transparent),
-        radial-gradient(2px 2px at 80% 80%, #fff, transparent);
-    background-size: 400px 400px;
-    opacity: 0.7;
+    position: absolute; width: 100%; height: 100%;
+    background-image: radial-gradient(white 1px, transparent 1px);
+    background-size: 50px 50px; opacity: 0.1;
 }
 
-/* Виньетка (затемнение углов) */
-.screen-vignette {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle, transparent 40%, black 140%);
-    z-index: -1;
-    pointer-events: none;
+/* ХЕДЕР */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; background: rgba(20, 20, 30, 0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 50;
+    height: 60px; box-sizing: border-box;
 }
-
-/* --- 3. ВЕРХНЯЯ ПАНЕЛЬ (HUD) --- */
-.game-hud {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: rgba(15, 15, 20, 0.9);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 50;
-    height: 60px;
-    flex-shrink: 0;
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #ccc; width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
 }
+.balance-val { font-family: 'Orbitron', monospace; font-weight: 700; font-size: 1.1rem; }
+#currency-display { color: #ffd700; margin-left: 4px; }
 
-.hud-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ccc;
-    width: 40px; height: 40px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.hud-btn:active { background: white; color: black; }
-
-.balance-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.bal-label {
-    font-size: 0.6rem;
-    color: #888;
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-.bal-value {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: white;
-}
-
-.currency-symbol { color: #ffd700; margin-left: 2px; }
-
-/* --- 4. ЛЕНТА ИСТОРИИ --- */
+/* ИСТОРИЯ */
 .history-bar {
-    height: 34px;
-    background: rgba(255, 255, 255, 0.03);
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    z-index: 40;
-    flex-shrink: 0;
+    height: 40px; background: #0e0e12; display: flex; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
 }
-
-.history-icon {
-    width: 40px;
-    display: flex; align-items: center; justify-content: center;
-    color: #555;
-    font-size: 0.9rem;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
-
 .history-track {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    overflow-x: auto; /* Горизонтальный скролл */
-    padding: 0 10px;
-    flex-direction: row-reverse; /* Новые результаты слева */
-    scrollbar-width: none; /* Скрыть скроллбар */
+    flex-grow: 1; display: flex; align-items: center; gap: 8px;
+    overflow-x: auto; padding: 0 10px; flex-direction: row-reverse;
 }
-.history-track::-webkit-scrollbar { display: none; }
-
-/* Бейджи истории */
 .badge {
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    white-space: nowrap;
+    padding: 4px 8px; border-radius: 6px; font-family: 'Orbitron', monospace;
+    font-size: 0.75rem; font-weight: 700; background: #222; color: #fff;
 }
-.badge.blue { background: rgba(0, 243, 255, 0.15); color: #00f3ff; }
-.badge.green { background: rgba(0, 255, 136, 0.15); color: #00ff88; }
-.badge.gold { background: rgba(255, 215, 0, 0.15); color: #ffd700; box-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
-.badge.red { background: rgba(255, 0, 85, 0.15); color: #ff0055; }
+.badge.high { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+.badge.med { color: #00ff88; background: rgba(0, 255, 136, 0.1); }
+.badge.low { color: #00f3ff; background: rgba(0, 243, 255, 0.1); }
+.badge.crash { color: #ff4444; background: rgba(255, 68, 68, 0.1); }
 
-/* --- 5. ИГРОВАЯ СЦЕНА (CANVAS) --- */
+/* СЦЕНА */
 .game-stage {
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden;
-    /* Сетка координат на фоне */
-    background-image: 
+    flex-grow: 1; position: relative; overflow: hidden;
+    background: 
         linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-size: 60px 60px;
 }
+.canvas-container { width: 100%; height: 100%; position: relative; }
+canvas { display: block; width: 100%; height: 100%; }
 
-.canvas-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-#crash-graph {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
-
-/* ОВЕРЛЕЙ С ЦИФРАМИ */
+/* ЦИФРЫ В ЦЕНТРЕ */
 .center-display {
-    position: absolute;
-    top: 35%; /* Чуть выше центра */
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    pointer-events: none; /* Чтобы клики проходили сквозь цифры */
-    z-index: 10;
-    width: 100%;
+    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none; z-index: 10; width: 100%;
 }
-
-.status-text {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #888;
-    letter-spacing: 2px;
-    animation: blinkText 2s infinite;
-}
-@keyframes blinkText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-
 .multiplier-text {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 4rem;
-    font-weight: 900;
-    color: white;
-    text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+    font-family: 'Orbitron', monospace; /* Monospace важен чтобы цифры не прыгали */
+    font-size: 4.5rem; font-weight: 900; color: white;
+    text-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
+    font-variant-numeric: tabular-nums;
 }
-
+.status-text { font-size: 1.2rem; font-weight: 800; color: #888; letter-spacing: 2px; }
 .crash-text {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3rem;
-    font-weight: 900;
-    color: #ff0055;
-    text-shadow: 0 0 30px rgba(255, 0, 85, 0.5);
-    animation: crashShake 0.4s ease-in-out;
-}
-@keyframes crashShake {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1) rotate(2deg); }
+    font-family: 'Orbitron', sans-serif; font-size: 3rem; font-weight: 900; color: #ff0055;
+    text-shadow: 0 0 30px rgba(255, 0, 85, 0.6);
 }
 
-.hidden { display: none !important; }
-
-/* РАКЕТА */
+/* РАКЕТА (GPU Optimized) */
 .rocket-wrapper {
-    position: absolute;
-    width: 50px; height: 50px;
-    /* Начальная позиция */
-    left: 20px; bottom: 20px; 
+    position: absolute; width: 60px; height: 60px;
+    left: 0; bottom: 0; /* Стартовая точка */
     z-index: 20;
-    transition: transform 0.1s linear; /* Плавное движение */
+    will-change: transform; /* Подсказка браузеру рендерить через GPU */
     display: flex; align-items: center; justify-content: center;
-    color: #ff0055; /* Цвет ракеты */
-    font-size: 2.5rem;
-    filter: drop-shadow(0 0 10px #ff0055);
+    color: #ff0055; font-size: 2.5rem;
+    filter: drop-shadow(0 0 15px rgba(255, 0, 85, 0.5));
 }
+.rocket-wrapper.boom { color: #ffaa00; transform: scale(1.5) !important; transition: transform 0.2s; }
 
-.rocket-icon {
-    transform: rotate(45deg); /* Носом вверх */
-    display: block;
-}
-
-/* Огонь (появляется при полете) */
-.rocket-wrapper.flying .rocket-fire {
-    position: absolute;
-    bottom: -10px; left: 10px;
-    width: 20px; height: 40px;
-    background: linear-gradient(to bottom, #00f3ff, transparent);
-    filter: blur(5px);
-    transform: rotate(45deg);
-    opacity: 0.8;
-}
-
-/* Взрыв */
-.rocket-wrapper.boom {
-    font-size: 4rem;
-    color: orange;
-    filter: drop-shadow(0 0 20px orange);
-    transform: scale(1.5) !important; /* Увеличиваем при взрыве */
-    transition: transform 0.2s;
-}
-
-/* --- 6. ПАНЕЛЬ УПРАВЛЕНИЯ (НИЗ) --- */
+/* УПРАВЛЕНИЕ */
 .control-panel {
-    background: #121217;
-    border-top: 1px solid #333;
-    padding: 15px;
-    padding-bottom: 25px; /* Для iPhone Home Bar */
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 60;
-    flex-shrink: 0;
+    background: #15151a; border-top: 1px solid #333;
+    padding: 15px; padding-bottom: 30px;
+    display: flex; flex-direction: column; gap: 12px; z-index: 60;
 }
-
-/* Настройки ставки */
-.bet-controls {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-}
-
-.bet-input-box {
-    flex-grow: 1;
-}
-
-.bet-input-box label {
-    font-size: 0.6rem;
-    color: #888;
-    font-weight: 700;
-    margin-bottom: 4px;
-    display: block;
-    margin-left: 5px;
-}
+.bet-controls { display: flex; gap: 10px; align-items: flex-end; }
+.bet-input-box { flex-grow: 1; }
+.bet-input-box label { font-size: 0.65rem; color: #666; font-weight: 700; margin-left: 5px; }
 
 .stepper {
-    display: flex;
-    align-items: center;
-    background: #08080a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    height: 44px;
-    overflow: hidden;
+    display: flex; background: #08080a; border: 1px solid #333;
+    border-radius: 12px; height: 48px; overflow: hidden;
 }
-
 .step-btn {
-    width: 44px;
-    height: 100%;
-    background: #1a1a20;
-    border: none;
-    color: #ccc;
-    font-size: 1rem;
-    cursor: pointer;
+    width: 50px; background: #1a1a20; border: none; color: #ccc; font-size: 1.2rem;
 }
-.step-btn:active { background: #333; color: white; }
-
+.step-btn:active { background: #333; }
 #current-bet {
-    flex-grow: 1;
-    text-align: center;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    color: white;
+    flex-grow: 1; display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', monospace; font-weight: 700; font-size: 1.1rem;
 }
 
-/* Быстрые кнопки */
-.quick-bets {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px;
-    width: 120px;
-}
-
+.quick-bets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 130px; }
 .quick-bets button {
-    background: #1a1a20;
-    border: 1px solid #333;
-    color: #888;
-    border-radius: 8px;
-    height: 20px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    cursor: pointer;
-}
-.quick-bets button:active { background: white; color: black; }
-
-/* ГЛАВНАЯ КНОПКА (Action) */
-.action-btn-wrapper {
-    width: 100%;
+    background: #1a1a20; border: 1px solid #333; color: #888;
+    border-radius: 8px; height: 21px; font-size: 0.7rem; font-weight: 700;
 }
 
+/* КНОПКА */
 .big-btn {
-    width: 100%;
-    height: 60px;
-    border: none;
-    border-radius: 16px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
+    width: 100%; height: 64px; border: none; border-radius: 16px;
+    cursor: pointer; position: relative; overflow: hidden;
     transition: transform 0.1s;
 }
 .big-btn:active { transform: scale(0.98); }
+.btn-title { font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; display: block; }
+.btn-subtitle { font-size: 0.75rem; font-weight: 600; opacity: 0.8; display: block; margin-top: 2px; }
 
-.btn-content {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.2;
-}
+.btn-bet { background: linear-gradient(135deg, #00b09b, #96c93d); color: #003300; }
+.btn-cashout { background: linear-gradient(135deg, #f2994a, #f2c94c); color: #442200; box-shadow: 0 0 20px rgba(242, 153, 74, 0.4); }
+.btn-loading { background: #333; color: #666; cursor: wait; }
+.btn-disabled { background: #222; color: #555; cursor: default; }
 
-.btn-title { font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; }
-.btn-subtitle { font-size: 0.7rem; font-weight: 600; opacity: 0.9; }
-
-/* Состояния кнопки */
-.btn-bet {
-    background: linear-gradient(135deg, #00b09b, #96c93d); /* Зеленый градиент */
-    color: #003300;
-    box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
-}
-
-.btn-cashout {
-    background: linear-gradient(135deg, #f2994a, #f2c94c); /* Золотой градиент */
-    color: #442200;
-    box-shadow: 0 4px 15px rgba(242, 153, 74, 0.4);
-    animation: pulseBtn 0.8s infinite alternate;
-}
-@keyframes pulseBtn { from { transform: scale(1); } to { transform: scale(1.02); } }
-
-.btn-loading {
-    background: #333;
-    color: #888;
-    cursor: not-allowed;
-}
-
-/* --- 7. МОДАЛЬНЫЕ ОКНА И УВЕДОМЛЕНИЯ --- */
-
-/* Тост (Выигрыш) - ВЕРХУ, ЧТОБЫ НЕ МЕШАТЬ */
+/* УВЕДОМЛЕНИЕ (ТОСТ) - НЕ ПЕРЕКРЫВАЕТ */
 .toast-notification {
-    position: fixed;
-    top: 70px; /* Сразу под хедером */
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    pointer-events: none; /* Пропускает клики! */
-    z-index: 200;
+    position: fixed; top: 80px; left: 0; width: 100%;
+    display: flex; justify-content: center;
+    pointer-events: none; /* Пропускает клики */
+    z-index: 100;
 }
-
 .toast-content {
-    background: rgba(0, 200, 83, 0.95);
-    backdrop-filter: blur(8px);
-    padding: 8px 20px;
-    border-radius: 30px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    background: rgba(0, 200, 83, 0.95); padding: 8px 24px;
+    border-radius: 50px; display: flex; align-items: center; gap: 10px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-    border: 1px solid #69f0ae;
     animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
-.toast-icon { font-size: 1.2rem; color: #004d40; }
-.toast-info { display: flex; flex-direction: column; }
-.toast-title { font-size: 0.6rem; font-weight: 800; color: #004d40; }
-.toast-val { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.1rem; color: white; }
-
+.toast-val { font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.1rem; }
+.hidden { display: none !important; }
 @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-/* Модалка Инфо (с подложкой) */
+/* МОДАЛКА ИНФО */
 .modal-backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 2000; /* Самый верхний слой */
+    background: rgba(0,0,0,0.85); z-index: 2000;
     display: flex; justify-content: center; align-items: center;
     backdrop-filter: blur(5px);
 }
-
 .modal-card {
-    background: #15151a;
-    width: 90%;
-    max-width: 350px;
-    max-height: 80vh; /* Ограничение высоты */
-    border-radius: 20px;
-    border: 1px solid #444;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    animation: popIn 0.3s;
+    background: #1a1a20; width: 90%; max-width: 350px; max-height: 80vh;
+    border-radius: 20px; border: 1px solid #444;
+    display: flex; flex-direction: column; padding: 20px;
 }
-@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-.modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid #333;
-    flex-shrink: 0;
-}
-.modal-header h3 { margin: 0; font-size: 1.1rem; color: white; }
-.close-modal {
-    background: none; border: none; color: #888; font-size: 1.5rem;
-    padding: 5px; cursor: pointer;
-}
-
-.modal-body {
-    padding: 20px;
-    overflow-y: auto; /* Скролл */
-}
-
-.rule-step {
-    display: flex; gap: 15px; margin-bottom: 15px;
-}
-.step-num {
-    background: #333; color: white; width: 24px; height: 24px;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
-}
-.rule-step p { margin: 0; font-size: 0.9rem; color: #ccc; line-height: 1.4; }
-
-.fair-badge {
-    margin-top: 10px;
-    background: rgba(0, 255, 136, 0.1);
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    color: #00ff88;
-    padding: 10px;
-    border-radius: 10px;
-    text-align: center;
-    font-size: 0.8rem;
-    font-weight: 700;
-       }
+.modal-body { overflow-y: auto; color: #ccc; line-height: 1.5; }
