@@ -573,54 +573,6 @@ function resetGame() {
     updateButtonState();
 }
 
-// === 6. UI КОНТРОЛЛЕР ===
-
-function updateButtonState() {
-    const btn = document.getElementById('main-btn');
-    const title = btn.querySelector('.btn-title');
-    const sub = btn.querySelector('.btn-sub');
-
-    btn.className = 'action-button'; // сброс
-
-    if (game.status === 'IDLE') {
-        btn.classList.add('btn-bet');
-        title.innerText = "ПОСТАВИТЬ";
-        sub.innerText = "Начать раунд";
-        btn.disabled = false;
-    } else if (game.status === 'WAITING_SERVER') {
-        btn.classList.add('btn-bet');
-        title.innerText = "ЗАГРУЗКА...";
-        btn.disabled = true;
-    } else if (game.status === 'FLYING') {
-        btn.classList.add('btn-cashout');
-        title.innerText = "ЗАБРАТЬ";
-        // Динамический выигрыш
-        sub.innerText = "Пока не поздно!";
-        btn.disabled = false;
-    } else if (game.status === 'CRASHED') {
-         btn.classList.add('btn-bet');
-         btn.style.opacity = '0.5';
-         title.innerText = "КРАШ";
-         sub.innerText = "Раунд окончен";
-         btn.disabled = true;
-    }
-}
-
-// Обработчик кнопки
-document.getElementById('main-btn').addEventListener('click', () => {
-    tg.HapticFeedback.selectionChanged();
-    if (game.status === 'IDLE') startRound();
-    else if (game.status === 'FLYING') cashOut();
-});
-
-// Ставки
-window.setBet = (val) => {
-    if (game.status !== 'IDLE') return;
-    if (val === 'max') game.betAmount = 5000;
-    else game.betAmount = val;
-    document.getElementById('bet-amount').innerText = game.betAmount;
-    tg.HapticFeedback.selectionChanged();
-};
 
 document.getElementById('btn-inc').addEventListener('click', () => {
     if (game.betAmount < 10000) game.betAmount += 100;
@@ -678,4 +630,204 @@ document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     resetGame();
+});
+
+// === 6. UI КОНТРОЛЛЕР (ИНТЕРФЕЙС) ===
+
+// 6.1. ОБНОВЛЕНИЕ СОСТОЯНИЯ КНОПКИ
+function updateButtonState() {
+    const btn = document.getElementById('main-btn');
+    const title = btn.querySelector('.btn-title');
+    const sub = btn.querySelector('.btn-sub');
+
+    // Сброс классов
+    btn.className = 'action-button';
+
+    switch (game.status) {
+        case 'IDLE':
+            btn.classList.add('btn-bet');
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            title.innerText = "ПОСТАВИТЬ";
+            sub.innerText = "На следующий раунд";
+            break;
+
+        case 'WAITING_SERVER':
+            btn.classList.add('btn-bet');
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            title.innerText = "ЗАГРУЗКА...";
+            sub.innerText = "Связь с центром...";
+            break;
+
+        case 'FLYING':
+            if (game.userHasBet && !game.userCashedOut) {
+                // Игрок в игре: Кнопка "Забрать"
+                btn.classList.add('btn-cashout');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                title.innerText = "ЗАБРАТЬ";
+                sub.innerText = "Пока не крашнулось!";
+            } else if (game.userCashedOut) {
+                // Игрок уже вышел
+                btn.classList.add('btn-bet');
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                title.innerText = "ВЫВЕДЕНО";
+                sub.innerText = "Ждите окончания";
+            } else {
+                // Игрок не ставил (зритель)
+                btn.classList.add('btn-bet');
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                title.innerText = "ИДЕТ ИГРА";
+                sub.innerText = "Ждите новый раунд";
+            }
+            break;
+
+        case 'CRASHED':
+            btn.classList.add('btn-bet');
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            title.innerText = "КРАШ";
+            sub.innerText = "Раунд окончен";
+            break;
+    }
+}
+
+// 6.2. ОБРАБОТЧИКИ СОБЫТИЙ (КНОПКИ)
+
+// Главная кнопка
+document.getElementById('main-btn').addEventListener('click', () => {
+    tg.HapticFeedback.selectionChanged();
+    
+    if (game.status === 'IDLE') {
+        startRound();
+    } else if (game.status === 'FLYING') {
+        cashOut();
+    }
+});
+
+// Быстрые ставки
+window.setBet = (val) => {
+    if (game.status !== 'IDLE') return; // Нельзя менять ставку во время игры
+    
+    if (val === 'max') {
+        game.betAmount = CONFIG.betting.max;
+    } else {
+        game.betAmount = val;
+    }
+    
+    // Проверка лимитов
+    if (game.betAmount > CONFIG.betting.max) game.betAmount = CONFIG.betting.max;
+    if (game.betAmount < CONFIG.betting.min) game.betAmount = CONFIG.betting.min;
+
+    document.getElementById('bet-amount').innerText = game.betAmount;
+    tg.HapticFeedback.selectionChanged();
+};
+
+// Кнопки +/-
+document.getElementById('btn-inc').addEventListener('click', () => {
+    if (game.status !== 'IDLE') return;
+    if (game.betAmount < CONFIG.betting.max) {
+        game.betAmount += 100;
+        document.getElementById('bet-amount').innerText = game.betAmount;
+        tg.HapticFeedback.impactOccurred('light');
+    }
+});
+
+document.getElementById('btn-dec').addEventListener('click', () => {
+    if (game.status !== 'IDLE') return;
+    if (game.betAmount > CONFIG.betting.min) {
+        game.betAmount -= 100;
+        document.getElementById('bet-amount').innerText = game.betAmount;
+        tg.HapticFeedback.impactOccurred('light');
+    }
+});
+
+// 6.3. ИСТОРИЯ (ЛЕНТА СВЕРХУ)
+function addToHistory(multiplier) {
+    const container = document.getElementById('history-container');
+    const div = document.createElement('div');
+    
+    // Цветовая кодировка
+    let colorClass = 'blue'; // < 2x
+    if (multiplier < 1.10) colorClass = 'red';   // Мгновенный краш
+    else if (multiplier >= 10.00) colorClass = 'gold'; // Джекпот
+    else if (multiplier >= 2.00) colorClass = 'green'; // Норм выигрыш
+
+    div.className = `badge ${colorClass}`;
+    div.innerText = multiplier.toFixed(2) + 'x';
+    
+    // Добавляем в начало списка
+    container.prepend(div);
+    
+    // Удаляем лишние (храним 20 последних)
+    if (container.children.length > 20) {
+        container.removeChild(container.lastChild);
+    }
+}
+
+// 6.4. УВЕДОМЛЕНИЯ И БАЛАНС
+
+function showWinToast(amount) {
+    const toast = document.getElementById('modal-win');
+    document.getElementById('win-display-amount').innerText = amount.toLocaleString();
+    
+    toast.classList.remove('hidden');
+    
+    // Скрываем через 2 секунды
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, CONFIG.timings.toastDuration);
+}
+
+function updateBalanceUI(serverBalance) {
+    // Если сервер прислал баланс, обновляем стейт
+    if (serverBalance !== undefined) {
+        appState.balance[appState.mode] = serverBalance;
+        saveState(); // Сохраняем в localStorage
+    }
+
+    const balEl = document.getElementById('balance-display');
+    const currSymEl = document.getElementById('currency-display');
+    
+    // Форматирование
+    const currentBal = appState.balance[appState.mode];
+    balEl.innerText = Math.floor(currentBal).toLocaleString();
+    
+    const map = { 'RUB': '₽', 'USDT': '$', 'STARS': '★' };
+    currSymEl.innerText = map[appState.currency] || '$';
+}
+
+// Модальное окно Инфо
+window.openInfoModal = () => {
+    document.getElementById('modal-info').classList.remove('hidden');
+    tg.HapticFeedback.impactOccurred('light');
+};
+
+window.closeInfoModal = () => {
+    document.getElementById('modal-info').classList.add('hidden');
+};
+
+// 6.5. ТОЧКА ВХОДА (INIT)
+document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация Telegram SDK
+    tg.ready();
+    tg.expand(); // На весь экран
+    
+    // Настройка Canvas
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Инициализация UI
+    updateBalanceUI();
+    resetGame(); // Сброс в IDLE
+    
+    // Генерация фейковой истории для красоты при первом входе
+    // (Чтобы лента не была пустой)
+    if (document.getElementById('history-container').children.length === 0) {
+        const fakeHistory = [1.05, 2.45, 1.10, 15.00, 1.95, 3.20];
+        fakeHistory.forEach(m => addToHistory(m));
+    }
 });
