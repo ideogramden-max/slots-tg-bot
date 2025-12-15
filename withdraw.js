@@ -147,42 +147,66 @@ function updateSummary(fee, total) {
     }
 }
 
-function processWithdraw() {
-    const balance = getBalance();
+async function processWithdraw() {
+    const balance = getBalance(); // Это визуальный баланс, реальный проверит сервер
     const addr = document.getElementById('addr-input').value;
     
+    // Предварительная валидация (UX)
     if (form.amount > balance) { alert("Недостаточно средств!"); return; }
+    if (form.amount < 10) { alert("Минимальная сумма 10$"); return; }
     if (addr.length < 5) { alert("Введите корректные реквизиты!"); return; }
     
-    // Списание (Виртуальное)
-    const curr = appState.currency;
-    const mode = appState.mode;
-    appState.balance[curr][mode] -= form.amount;
-    
-    // Добавление в историю (опционально, если есть страница истории)
-    if(!appState.history) appState.history = [];
-    appState.history.push({
-        game: 'Withdraw', 
-        amount: form.amount, 
-        type: 'loss', // списание
-        time: Date.now() 
-    });
-    
-    saveState();
-    updateBalanceUI();
-    
-    // Модалка успеха
-    document.getElementById('modal-success').classList.remove('hidden');
-    tg.HapticFeedback.notificationOccurred('success');
-    
-    // Симуляция процесса
-    setTimeout(() => {
-        document.querySelector('.loader-ring').style.display = 'none';
-        document.querySelector('.check-icon').classList.remove('hidden');
-        document.getElementById('status-title').innerText = "УСПЕШНО!";
-        document.getElementById('status-text').innerText = "Средства поступят в течение 15 минут.";
-        document.getElementById('finish-btn').classList.remove('hidden');
-    }, 2000);
+    const btn = document.getElementById('withdraw-btn');
+    btn.disabled = true;
+    btn.innerText = "ОТПРАВКА...";
+
+    try {
+        // Отправляем запрос на сервер
+        const response = await fetch(`${CONFIG.SERVER_URL || ''}/api/withdraw/request`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Data': tg.initData // <--- ОБЯЗАТЕЛЬНО АВТОРИЗАЦИЯ
+            },
+            body: JSON.stringify({
+                amount: form.amount,
+                method: form.method,
+                requisites: addr
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // Успех
+        // Обновляем локальный баланс
+        if (appState.mode === 'real') {
+            appState.balance.real = data.balance; // Сервер вернул новый баланс
+        }
+        saveState();
+        updateBalanceUI();
+        
+        // Модалка успеха
+        document.getElementById('modal-success').classList.remove('hidden');
+        tg.HapticFeedback.notificationOccurred('success');
+        
+        // Анимация в модалке
+        setTimeout(() => {
+            document.querySelector('.loader-ring').style.display = 'none';
+            document.querySelector('.check-icon').classList.remove('hidden');
+            document.getElementById('status-title').innerText = "ЗАЯВКА ПРИНЯТА!";
+            document.getElementById('status-text').innerText = "Ожидайте подтверждения администратора.";
+            document.getElementById('finish-btn').classList.remove('hidden');
+        }, 1000);
+
+    } catch (e) {
+        alert("Ошибка: " + e.message);
+        btn.disabled = false;
+        btn.innerText = "ВЫВЕСТИ СРЕДСТВА";
+    }
 }
 
 // === 5. УТИЛИТЫ ===
