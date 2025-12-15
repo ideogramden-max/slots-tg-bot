@@ -1,270 +1,240 @@
 /**
- * FASTMONEY - CRASH AVIATOR (FINAL STABLE VERSION)
- * Полная синхронизация с сервером, защита от багов UI.
+ * FASTMONEY - CRASH ENGINE (1WIN GRADE)
+ * Strict Server Sync, Interpolated Animation, Hard Limits.
  */
 
 const tg = window.Telegram.WebApp;
 
-// === 1. КОНФИГУРАЦИЯ ===
+// === CONFIG ===
 const CONFIG = {
-    // Твоя ссылка на туннель
-    SERVER_URL: "https://alpha-firms-electronics-return.trycloudflare.com",
-    
-    // Физика (должна совпадать с Python)
-    growthSpeed: 0.0006, 
-
-    betting: {
-        min: 10,        // <--- ТЕПЕРЬ 10
-        max: 500000,
-        default: 10     // <--- По умолчанию 10
-    },
-    
-    // Тайминги
-    resetDelay: 3000,       // Время показа "CRASHED" перед новым раундом
-    animationDuration: 16,
-    pollInterval: 1000      // Как часто проверять статус на сервере
+    SERVER_URL: "https://alpha-firms-electronics-return.trycloudflare.com", // ТВОЯ ССЫЛКА
+    GROWTH_SPEED: 0.0006, 
+    MAX_MULT: 1000.00, // Жесткий лимит визуала
+    POLL_INTERVAL: 1000
 };
 
-// === 2. СОСТОЯНИЕ (STATE) ===
-let appState = JSON.parse(localStorage.getItem('fastMoneyState')) || {
-    balance: { real: 0, demo: 10000 },
-    currency: 'USDT',
-    mode: 'demo'
+// === STATE ===
+let appState = JSON.parse(localStorage.getItem('fastMoneyState')) || { 
+    balance: { real: 0, demo: 10000 }, mode: 'demo' 
 };
 
 let game = {
-    status: 'IDLE',         // IDLE, BETTING, FLYING, CRASHED, CASHED
-    betAmount: 10,
-    startTime: 0,           // Время начала раунда (от сервера)
-    multiplier: 1.00,       // Текущий икс
-    userHasBet: false,      // Участвует ли игрок в раунде
-    userCashedOut: false,   // Забрал ли деньги
-    
-    // Таймеры (для очистки)
-    timers: {
-        loop: null,         // Анимация кадров
-        poll: null,         // Опрос сервера
-        restart: null       // Таймер перезапуска
-    },
-    
-    // Размеры холста
-    width: 0,
-    height: 0
+    status: 'IDLE',   // IDLE, CONNECTING, FLYING, CASHED, CRASHED
+    bet: 100,
+    startTime: 0,     // Серверное время старта (ms)
+    multiplier: 1.00,
+    isBetting: false, // Флаг: мы в игре?
+    isCashed: false,  // Флаг: мы вышли?
+    width: 0, height: 0,
+    timers: { frame: null, poll: null, reset: null }
 };
 
-// === 3. ГРАФИЧЕСКИЙ ДВИЖОК (CANVAS) ===
-const canvas = document.getElementById('crash-graph');
-const ctx = canvas.getContext('2d');
+// === DOM ELEMENTS ===
+const els = {
+    canvas: document.getElementById('crash-graph'),
+    ctx: document.getElementById('crash-graph').getContext('2d'),
+    rocket: document.getElementById('rocket-object'),
+    multText: document.getElementById('multiplier-display'),
+    statusText: document.getElementById('status-message'),
+    crashText: document.getElementById('crash-message'),
+    btn: document.getElementById('main-action-btn'),
+    btnTitle: document.querySelector('.btn-title'),
+    btnSub: document.querySelector('.btn-subtitle'),
+    balance: document.getElementById('balance-amount'),
+    toast: document.getElementById('win-toast'),
+    history: document.getElementById('history-track')
+};
 
-// Адаптация под размер экрана
+// === INITIALIZATION ===
+document.addEventListener('DOMContentLoaded', () => {
+    tg.ready(); tg.expand();
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    updateBalanceUI();
+    resetGameUI(); // Сброс в исходное
+    
+    // Бинды ставок
+    document.getElementById('btn-plus').onclick = () => changeBet(100);
+    document.getElementById('btn-minus').onclick = () => changeBet(-100);
+});
+
+// === GRAPHICS ENGINE ===
+
 function resizeCanvas() {
-    const container = document.querySelector('.canvas-container');
-    if (!container) return;
-    
+    const box = document.querySelector('.canvas-container').getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const rect = container.getBoundingClientRect();
-    
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    
-    // Нормализуем масштаб
-    ctx.scale(dpr, dpr);
-    
-    game.width = rect.width;
-    game.height = rect.height;
+    els.canvas.width = box.width * dpr;
+    els.canvas.height = box.height * dpr;
+    els.ctx.scale(dpr, dpr);
+    game.width = box.width;
+    game.height = box.height;
 }
 
-// Главная функция рисования (60 FPS)
-function drawLoop() {
-    // Если игра не идет - не рисуем (экономим батарею)
-    if (game.status === 'IDLE') return;
+// Главный рендер-луп (60fps)
+function render() {
+    if (game.status === 'IDLE' || game.status === 'CONNECTING') return;
 
-    ctx.clearRect(0, 0, game.width, game.height);
+    els.ctx.clearRect(0, 0, game.width, game.height);
 
-    if (game.status === 'BETTING') return; // Пока ждем сервер - пусто
-
-    // Расчет времени полета
+    // 1. Расчет времени и множителя
     const elapsed = Date.now() - game.startTime;
     
-    // Логика "Камеры" (Zoom Out)
-    // Если летим долго (>4 сек), график сжимается, чтобы влезать в экран
-    let scaleX = 1, scaleY = 1;
-    if (elapsed > 4000) {
-        const factor = elapsed / 4000;
-        scaleX = 1 / Math.pow(factor, 0.6);
-        scaleY = 1 / Math.pow(factor, 0.7);
-    }
-
-    // Рисуем линию
-    ctx.beginPath();
-    ctx.moveTo(0, game.height); // Старт (левый нижний угол)
-
-    let currentX = 0;
-    let currentY = game.height;
+    // E^(t*k)
+    let mult = Math.exp(elapsed * CONFIG.GROWTH_SPEED);
     
-    // Рисуем график по точкам (шаг 50мс для плавности)
-    for (let t = 0; t <= elapsed; t += 50) {
-        // X = Линейное время (5 секунд во всю ширину экрана)
-        const x = (t / 5000) * game.width * 0.85 * scaleX;
-        
-        // Y = Экспонента (e^t)
-        // 150px высоты = 1.00x прироста
-        const growth = Math.exp(t * CONFIG.growthSpeed) - 1;
-        const y = game.height - (growth * 150 * scaleY);
-        
-        ctx.lineTo(x, y);
-        
-        // Запоминаем последнюю точку для ракеты
-        if (t + 50 > elapsed) { currentX = x; currentY = y; }
-    }
+    // ЖЕСТКИЙ ЛИМИТ: Не рисовать больше 1000x
+    if (mult > CONFIG.MAX_MULT) mult = CONFIG.MAX_MULT;
+    
+    game.multiplier = mult;
 
-    // Стилизация линии (Неон)
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#00f3ff';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#00f3ff';
-    ctx.stroke();
-    ctx.shadowBlur = 0; // Сброс тени для заливки
-
-    // Заливка под графиком
-    ctx.lineTo(currentX, game.height);
-    ctx.lineTo(0, game.height);
-    ctx.fillStyle = 'rgba(0, 243, 255, 0.1)';
-    ctx.fill();
-
-    // Двигаем ракету (HTML элемент поверх канваса)
-    updateRocketPosition(currentX, currentY);
-
-    // Продолжаем цикл, если летим или только что забрали (но еще не краш)
+    // Обновляем текст (ТОЛЬКО ЕСЛИ НЕ КРАШ)
     if (game.status === 'FLYING' || game.status === 'CASHED') {
-        game.timers.loop = requestAnimationFrame(drawLoop);
-    }
-}
-
-function updateRocketPosition(x, y) {
-    const rocket = document.getElementById('rocket-object');
-    // Ограничиваем координаты, чтобы не вылезала за пределы
-    const safeX = Math.min(x, game.width - 50);
-    const safeY = Math.max(y, 50);
-    
-    // CSS Transform (Аппаратное ускорение)
-    rocket.style.transform = `translate(${safeX}px, ${safeY - game.height}px)`;
-    
-    // Поворот носа ракеты
-    // Чем выше множитель, тем вертикальнее (до 80 градусов)
-    const angle = Math.min(10 + (game.multiplier * 3), 80);
-    rocket.querySelector('.rocket-icon').style.transform = `rotate(${angle - 45}deg)`;
-}
-
-// === 4. ИГРОВАЯ ЛОГИКА (API) ===
-
-// 4.1. Нажатие кнопки "ПОСТАВИТЬ"
-async function placeBet() {
-    if (game.status !== 'IDLE') return;
-
-    // Валидация баланса
-    if (appState.balance[appState.mode] < game.betAmount) {
-        showErrorToast("Недостаточно средств!");
-        return;
+        els.multText.innerText = mult.toFixed(2) + 'x';
     }
 
-    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
-    if (!userId) { showErrorToast("Запустите через Telegram"); return; }
+    // 2. Координаты Графика
+    // Zoom Out логика: после 4 сек график сжимается
+    let scale = 1;
+    if (elapsed > 4000) scale = 1 / Math.pow(elapsed / 4000, 0.6);
 
-    // UI: Блокируем кнопку
-    setButtonState('LOADING', 'ЗАГРУЗКА...', 'Связь с сервером');
-    game.status = 'BETTING';
+    els.ctx.beginPath();
+    els.ctx.moveTo(0, game.height);
 
-    try {
-        const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/bet`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: userId,
-                amount: game.betAmount,
-                mode: appState.mode
-            })
-        });
-        const data = await res.json();
+    let tipX = 0, tipY = game.height;
 
-        if (data.error) throw new Error(data.error);
-
-        // --- ИГРА НАЧАЛАСЬ ---
+    // Рисуем хвост (оптимизировано: шаг 50мс)
+    for (let t = 0; t <= elapsed; t += 50) {
+        const x = (t / 5000) * game.width * 0.85 * scale; // 5 сек = 85% ширины
+        const h = (Math.exp(t * CONFIG.GROWTH_SPEED) - 1) * 150 * scale; // Высота
+        const y = game.height - h;
         
-        // 1. Обновляем баланс (сервер уже списал)
-        updateBalanceUI(data.balance);
+        els.ctx.lineTo(x, y);
         
-        // 2. Инициализируем раунд
-        game.status = 'FLYING';
-        game.startTime = data.server_time * 1000; // Конверт в мс
-        game.multiplier = 1.00;
-        game.userHasBet = true;
-        game.userCashedOut = false;
+        // Запоминаем кончик
+        if (t + 50 > elapsed) { tipX = x; tipY = y; }
+    }
 
-        // 3. UI
-        prepareUIForFly();
-        setButtonState('CASHOUT', 'ЗАБРАТЬ', 'Пока не упало!');
+    // Стили
+    els.ctx.lineWidth = 4;
+    els.ctx.strokeStyle = '#00f3ff';
+    els.ctx.stroke();
 
-        // 4. Запуск процессов
-        runMathLoop();      // Считаем цифры
-        drawLoop();         // Рисуем графику
-        startPolling(userId); // Следим за сервером
+    // Заливка
+    els.ctx.lineTo(tipX, game.height);
+    els.ctx.lineTo(0, game.height);
+    els.ctx.fillStyle = 'rgba(0, 243, 255, 0.1)';
+    els.ctx.fill();
 
-    } catch (e) {
-        console.error(e);
-        showErrorToast("Ошибка сети");
-        forceReset(); // Сброс, чтобы кнопка отлипла
+    // 3. Движение Ракеты (CSS Transform для плавности)
+    // Ограничиваем координаты, чтобы не вылетела за div
+    const safeX = Math.min(tipX, game.width - 40);
+    const safeY = Math.max(tipY, 40);
+    
+    // Угол наклона: от 10 до 80 градусов в зависимости от роста
+    const angle = Math.min(10 + (mult * 2), 80);
+    
+    els.rocket.style.transform = `translate(${safeX}px, ${safeY - game.height}px)`;
+    els.rocket.querySelector('i').style.transform = `rotate(${angle - 45}deg)`;
+
+    if (game.status === 'FLYING' || game.status === 'CASHED') {
+        game.timers.frame = requestAnimationFrame(render);
     }
 }
 
-// 4.2. Нажатие кнопки "ЗАБРАТЬ"
-async function cashOut() {
-    if (game.status !== 'FLYING' || game.userCashedOut) return;
-    
-    // Визуальный фидбек мгновенно
-    setButtonState('LOADING', 'ЗАПРОС...', 'Фиксация...');
-    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
+// === NETWORK LOGIC (API) ===
 
-    try {
-        const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId })
-        });
-        const data = await res.json();
+// 1. СТАРТ (BET)
+els.btn.onclick = async () => {
+    if (game.status === 'IDLE') {
+        // --- BET ---
+        if (appState.balance[appState.mode] < game.bet) {
+            alert("Недостаточно средств");
+            return;
+        }
 
-        if (data.status === 'won') {
-            // --- ПОБЕДА ---
-            game.status = 'CASHED'; // Спец статус: игрок вышел, но раунд идет
-            game.userCashedOut = true;
-            
-            // Баланс
+        setBtn('LOADING', 'ЗАГРУЗКА...', 'Связь с центром');
+        game.status = 'CONNECTING';
+
+        try {
+            const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/bet`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    user_id: getUserID(), 
+                    amount: game.bet, 
+                    mode: appState.mode 
+                })
+            });
+            const data = await res.json();
+
+            if (data.error) throw new Error(data.error);
+
+            // START GAME
+            game.status = 'FLYING';
+            game.startTime = data.server_time * 1000;
+            game.multiplier = 1.00;
+            game.isBetting = true;
+            game.isCashed = false;
+
             updateBalanceUI(data.balance);
             
             // UI
-            showWinToast(data.win_amount); // Показываем зеленый тост
-            setButtonState('DISABLED', 'ВЫВЕДЕНО', `+${data.win_amount} $`);
+            els.multText.classList.remove('hidden');
+            els.statusText.classList.add('hidden');
+            els.rocket.classList.remove('boom');
+            els.rocket.classList.add('flying');
             
-            // Меняем цвет цифр на зеленый
-            document.getElementById('multiplier-display').style.color = '#00ff88';
+            setBtn('CASHOUT', 'ЗАБРАТЬ', 'Пока не упало!');
 
-        } else if (data.status === 'crashed') {
-            // --- ОПОЗДАЛ ---
-            crashGame(data.crash_point);
+            render();
+            startPolling();
+
+        } catch (e) {
+            console.error(e);
+            resetGameUI(); // Откат при ошибке
+            alert("Ошибка сети. Попробуйте еще раз.");
         }
 
-    } catch (e) {
-        // Если ошибка сети - возвращаем кнопку, чтобы можно было нажать еще раз
-        setButtonState('CASHOUT', 'ЗАБРАТЬ', 'Ошибка сети, жми!');
-    }
-}
+    } else if (game.status === 'FLYING' && game.isBetting && !game.isCashed) {
+        // --- CASHOUT ---
+        // Блокируем кнопку мгновенно (Anti-double-click)
+        setBtn('LOADING', 'ЗАПРОС...', 'Фиксация...');
+        
+        try {
+            const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: getUserID() })
+            });
+            const data = await res.json();
 
-// 4.3. Опрос сервера (Polling)
-function startPolling(userId) {
+            if (data.status === 'won') {
+                game.status = 'CASHED';
+                game.isCashed = true;
+                
+                updateBalanceUI(data.balance);
+                showWin(data.win_amount);
+                
+                setBtn('DISABLED', 'ВЫВЕДЕНО', 'Ждем финала');
+                els.multText.style.color = '#00ff88'; // Зеленый текст
+
+            } else if (data.status === 'crashed') {
+                // Опоздал
+                doCrash(data.crash_point);
+            }
+        } catch (e) {
+            // Если сеть лаганула - возвращаем кнопку
+            setBtn('CASHOUT', 'ЗАБРАТЬ', 'Повторите!');
+        }
+    }
+};
+
+// 2. POLLING (Проверка статуса)
+function startPolling() {
     if (game.timers.poll) clearInterval(game.timers.poll);
     
     game.timers.poll = setInterval(async () => {
-        // Если мы уже крашнулись, опрос не нужен
         if (game.status === 'CRASHED' || game.status === 'IDLE') {
             clearInterval(game.timers.poll);
             return;
@@ -272,220 +242,124 @@ function startPolling(userId) {
 
         try {
             const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/status`, {
-                method: 'POST', body: JSON.stringify({user_id: userId})
+                method: 'POST', body: JSON.stringify({user_id: getUserID()})
             });
             const data = await res.json();
-            
+
             if (data.status === 'crashed') {
-                crashGame(data.crash_point);
+                doCrash(data.crash_point);
             }
-        } catch (e) { /* Игнорируем ошибки сети при поллинге */ }
-    }, CONFIG.pollInterval);
+        } catch (e) {}
+    }, CONFIG.POLL_INTERVAL);
 }
 
-// 4.4. Математический цикл (Цифры на экране)
-function runMathLoop() {
-    if (game.status !== 'FLYING' && game.status !== 'CASHED') return;
-
-    const elapsed = Date.now() - game.startTime;
-    // Формула: e^(t * speed)
-    game.multiplier = Math.exp(elapsed * CONFIG.growthSpeed);
-    
-    // Обновляем текст в центре
-    const el = document.getElementById('multiplier-display');
-    if (el) el.innerText = game.multiplier.toFixed(2) + 'x';
-
-    requestAnimationFrame(runMathLoop);
-}
-
-// === 5. СОБЫТИЯ ИГРЫ ===
-
-// Краш (Взрыв)
-function crashGame(finalValue) {
-    // Останавливаем все циклы
+// 3. CRASH EVENT
+function doCrash(finalVal) {
     game.status = 'CRASHED';
     clearInterval(game.timers.poll);
+    cancelAnimationFrame(game.timers.frame);
     
-    // Финальные цифры (Красные)
-    const el = document.getElementById('multiplier-display');
-    el.innerText = finalValue.toFixed(2) + 'x';
-    el.style.color = '#ff0055'; // Красный
+    // UI Краша
+    els.multText.innerText = finalVal.toFixed(2) + 'x';
+    els.multText.style.color = '#ff0055'; // Красный
     
-    // Показываем надпись CRASHED
-    document.getElementById('crash-message').classList.remove('hidden');
-    document.getElementById('multiplier-display').classList.remove('hidden'); // На всякий случай
-    document.getElementById('status-message').classList.add('hidden');
-
-    // Взрыв ракеты
-    const rocket = document.getElementById('rocket-object');
-    rocket.classList.add('boom');
-    rocket.innerHTML = '<i class="fa-solid fa-burst"></i>';
+    els.crashText.classList.remove('hidden');
+    els.rocket.classList.add('boom');
+    els.rocket.innerHTML = '<i class="fa-solid fa-burst"></i>';
     
     tg.HapticFeedback.notificationOccurred('error');
-    
-    // Добавляем в историю
-    addToHistory(finalValue);
-    
-    // Блокируем кнопку
-    setButtonState('DISABLED', 'КРАШ', 'Раунд окончен');
+    addHistory(finalVal);
 
-    // Таймер перезапуска
-    if (game.timers.restart) clearTimeout(game.timers.restart);
-    game.timers.restart = setTimeout(forceReset, CONFIG.resetDelay);
+    setBtn('DISABLED', 'КРАШ', 'Раунд окончен');
+
+    // Рестарт через 3 сек
+    if (game.timers.reset) clearTimeout(game.timers.reset);
+    game.timers.reset = setTimeout(resetGameUI, 3000);
 }
 
-// Полный сброс (Рестарт)
-function forceReset() {
+// === UI MANAGERS ===
+
+function resetGameUI() {
     game.status = 'IDLE';
-    game.userHasBet = false;
-    game.userCashedOut = false;
+    game.isBetting = false;
+    game.isCashed = false;
     
-    // Очистка таймеров
-    cancelAnimationFrame(game.timers.loop);
-    clearInterval(game.timers.poll);
-
-    // Сброс UI
-    document.getElementById('crash-message').classList.add('hidden');
-    document.getElementById('multiplier-display').classList.add('hidden');
-    document.getElementById('multiplier-display').style.color = 'white'; // Возвращаем белый
+    els.crashText.classList.add('hidden');
+    els.multText.classList.add('hidden');
+    els.multText.style.color = 'white';
     
-    const statusMsg = document.getElementById('status-message');
-    statusMsg.innerText = "ГОТОВ К ВЗЛЕТУ";
-    statusMsg.classList.remove('hidden');
+    els.statusText.classList.remove('hidden');
+    els.statusText.innerText = "ГОТОВ К ВЗЛЕТУ";
 
-    // Сброс ракеты
-    const rocket = document.getElementById('rocket-object');
-    rocket.classList.remove('boom', 'flying');
-    rocket.innerHTML = '<i class="fa-solid fa-jet-fighter-up rocket-icon"></i><div class="rocket-fire"></div>';
-    rocket.style.transform = 'translate(0, 0)';
-
-    // Очистка Канваса
-    ctx.clearRect(0, 0, game.width, game.height);
+    els.rocket.classList.remove('boom', 'flying');
+    els.rocket.innerHTML = '<i class="fa-solid fa-jet-fighter-up rocket-icon"></i><div class="rocket-fire"></div>';
+    els.rocket.style.transform = `translate(0, 0)`;
     
-    // Кнопка снова зеленая
-    setButtonState('BET', 'ПОСТАВИТЬ', 'Начать раунд');
+    els.ctx.clearRect(0, 0, game.width, game.height);
+    
+    setBtn('BET', 'ПОСТАВИТЬ', 'Начать раунд');
 }
 
-function prepareUIForFly() {
-    document.getElementById('status-message').classList.add('hidden');
-    document.getElementById('multiplier-display').classList.remove('hidden');
-    document.getElementById('rocket-object').classList.add('flying');
+function setBtn(state, title, sub) {
+    const b = els.btn;
+    b.className = 'big-btn'; // Сброс
+    b.disabled = false;
+    
+    if (state === 'BET') b.classList.add('btn-bet');
+    else if (state === 'CASHOUT') b.classList.add('btn-cashout');
+    else if (state === 'LOADING') { b.classList.add('btn-loading'); b.disabled = true; }
+    else if (state === 'DISABLED') { b.classList.add('btn-disabled'); b.disabled = true; }
+    
+    els.btnTitle.innerText = title;
+    els.btnSub.innerText = sub;
 }
 
-// === 6. UI HELPER FUNCTIONS ===
-
-// Универсальное управление кнопкой
-function setButtonState(state, title, sub) {
-    const btn = document.getElementById('main-action-btn');
-    const tEl = btn.querySelector('.btn-title');
-    const sEl = btn.querySelector('.btn-subtitle');
-    
-    // Сброс классов
-    btn.className = 'big-btn';
-    btn.disabled = false;
-
-    if (state === 'BET') {
-        btn.classList.add('btn-bet'); // Зеленая
-        btn.onclick = placeBet;
-    } else if (state === 'CASHOUT') {
-        btn.classList.add('btn-cashout'); // Желтая/Оранжевая
-        btn.onclick = cashOut;
-    } else if (state === 'LOADING') {
-        btn.classList.add('btn-loading'); // Серая
-        btn.disabled = true;
-    } else if (state === 'DISABLED') {
-        btn.classList.add('btn-bet'); // Оставляем цвет, но затемняем
-        btn.style.opacity = '0.5';
-        btn.disabled = true;
-    }
-    
-    if (title) tEl.innerText = title;
-    if (sub) sEl.innerText = sub;
-}
-
-// Уведомление о победе (Тост)
-function showWinToast(amount) {
-    const toast = document.getElementById('win-toast');
-    document.getElementById('win-val-display').innerText = amount.toLocaleString();
-    
-    toast.classList.remove('hidden');
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 2000);
-}
-
-function showErrorToast(msg) {
-    tg.showAlert(msg);
-}
-
-// История (Лента)
-function addToHistory(val) {
-    const track = document.getElementById('history-track');
-    const badge = document.createElement('div');
-    
-    let color = 'blue';
-    if (val < 1.1) color = 'red';
-    else if (val >= 10) color = 'gold';
-    else if (val >= 2) color = 'green';
-    
-    badge.className = `badge ${color}`;
-    badge.innerText = val.toFixed(2) + 'x';
-    
-    track.prepend(badge);
-    if (track.children.length > 15) track.lastChild.remove();
-}
-
-// Баланс
-function updateBalanceUI(serverBal) {
-    if (serverBal !== undefined) {
-        appState.balance[appState.mode] = serverBal;
+function updateBalanceUI(bal) {
+    if (bal !== undefined) {
+        appState.balance[appState.mode] = bal;
         localStorage.setItem('fastMoneyState', JSON.stringify(appState));
     }
-    const balEl = document.getElementById('balance-amount');
-    if (balEl) balEl.innerText = Math.floor(appState.balance[appState.mode]).toLocaleString();
+    document.getElementById('balance-amount').innerText = Math.floor(appState.balance[appState.mode]).toLocaleString();
 }
 
-// Ставки
-function updateBet(val) {
+// Хелперы
+function changeBet(delta) {
     if (game.status !== 'IDLE') return;
-    
-    if (val === 'max') game.betAmount = 5000;
-    else game.betAmount = val;
-    
-    document.getElementById('current-bet').innerText = game.betAmount;
+    let newBet = game.bet + delta;
+    if (newBet < 10) newBet = 10;
+    if (newBet > 500000) newBet = 500000;
+    game.bet = newBet;
+    document.getElementById('current-bet').innerText = game.bet;
     tg.HapticFeedback.selectionChanged();
 }
 
-// Управление ставкой +/-
-document.getElementById('btn-plus').onclick = () => {
+window.updateBet = (val) => {
     if (game.status !== 'IDLE') return;
-    game.betAmount += 100;
-    updateBet(game.betAmount);
-};
-document.getElementById('btn-minus').onclick = () => {
-    if (game.status !== 'IDLE') return;
-    if (game.betAmount > 100) game.betAmount -= 100;
-    updateBet(game.betAmount);
+    game.bet = (val === 'max') ? 5000 : val;
+    document.getElementById('current-bet').innerText = game.bet;
+    tg.HapticFeedback.selectionChanged();
 };
 
-// Модалка Инфо
+function getUserID() {
+    return tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 12345;
+}
+
+function showWin(amount) {
+    document.getElementById('win-val-display').innerText = amount;
+    els.toast.classList.remove('hidden');
+    setTimeout(() => els.toast.classList.add('hidden'), 2000);
+    tg.HapticFeedback.notificationOccurred('success');
+}
+
+function addHistory(val) {
+    const div = document.createElement('div');
+    div.className = `badge ${val < 1.2 ? 'crash' : (val > 2 ? 'med' : 'low')}`;
+    div.innerText = val.toFixed(2) + 'x';
+    els.history.prepend(div);
+}
+
+// Модалки
 window.toggleModal = (id, show) => {
     const el = document.getElementById(id);
-    if (show) el.classList.remove('hidden');
-    else el.classList.add('hidden');
+    show ? el.classList.remove('hidden') : el.classList.add('hidden');
 };
-
-// === 7. STARTUP ===
-document.addEventListener('DOMContentLoaded', () => {
-    tg.ready(); tg.expand();
-    
-    // Инит канваса
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    // Инит баланса
-    updateBalanceUI();
-    
-    // Сброс в начало
-    forceReset();
-});
