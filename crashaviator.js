@@ -12,9 +12,16 @@ const CONFIG = {
     
     // Физика (должна совпадать с Python)
     growthSpeed: 0.0006, 
+
+    betting: {
+        min: 10,        // <--- ТЕПЕРЬ 10
+        max: 500000,
+        default: 10     // <--- По умолчанию 10
+    },
     
     // Тайминги
     resetDelay: 3000,       // Время показа "CRASHED" перед новым раундом
+    animationDuration: 16,
     pollInterval: 1000      // Как часто проверять статус на сервере
 };
 
