@@ -448,82 +448,128 @@ function startStatusPolling(userId) {
 
 // === 5. ВИЗУАЛЬНАЯ ЛОГИКА ===
 
+// 5.1. ЦИКЛ ОБНОВЛЕНИЯ МНОЖИТЕЛЯ
+// Работает параллельно с графикой, обновляет цифры
 function gameLoop() {
-    if (game.status !== 'FLYING') return;
+    // Если игра остановлена, выходим
+    if (game.status !== 'FLYING' && game.status !== 'CASHED_OUT') return;
 
+    // Рассчитываем текущее время полета
     const elapsed = Date.now() - game.startTime;
+    
+    // Формула роста (должна совпадать с Python)
     game.multiplier = 1 + (Math.exp(elapsed * CONFIG.growthSpeed) - 1);
     
-    // Обновляем текст
-    document.getElementById('current-multiplier').innerText = game.multiplier.toFixed(2) + 'x';
+    // Обновляем текст на экране
+    const multElement = document.getElementById('current-multiplier');
+    if (multElement) {
+        multElement.innerText = game.multiplier.toFixed(2) + 'x';
+    }
 
+    // Запускаем следующий кадр
     requestAnimationFrame(gameLoop);
 }
 
+// 5.2. ОБРАБОТКА КРАША (ВЗРЫВ)
 function crash(finalMult) {
     game.status = 'CRASHED';
-    clearInterval(game.pollInterval);
-    cancelAnimationFrame(animationFrameId); // Стоп график
+    
+    // Останавливаем таймеры
+    clearInterval(game.timers.pollInterval);
+    cancelAnimationFrame(game.timers.animationFrame); // Останавливаем Canvas
 
-    // Показываем точную цифру краша от сервера
-    document.getElementById('current-multiplier').innerText = finalMult.toFixed(2) + 'x';
-    document.getElementById('current-multiplier').style.color = '#ff0055';
+    // 1. Показываем финальный множитель (точный от сервера)
+    const multElement = document.getElementById('current-multiplier');
+    multElement.innerText = finalMult.toFixed(2) + 'x';
+    multElement.style.color = CONFIG.graphics.textColorCrash; // Красный
     
-    // UI
+    // 2. Визуальные эффекты взрыва
     document.getElementById('crash-msg').classList.remove('hidden');
-    document.getElementById('rocket-element').classList.add('boom');
-    document.getElementById('rocket-element').innerHTML = '<i class="fa-solid fa-burst"></i>';
     
+    const rocket = document.getElementById('rocket-element');
+    rocket.classList.remove('flying');
+    rocket.classList.add('boom');
+    rocket.innerHTML = '<i class="fa-solid fa-burst"></i>'; // Иконка взрыва
+    
+    // 3. Вибрация ошибки
     tg.HapticFeedback.notificationOccurred('error');
+    
+    // 4. Добавляем в ленту истории
     addToHistory(finalMult);
+    
+    // 5. Обновляем кнопку
     updateButtonState();
 
-    setTimeout(resetGame, 3000);
+    // 6. Таймер перезапуска игры
+    setTimeout(resetGame, CONFIG.timings.resetDelay);
 }
 
+// 5.3. ОБРАБОТКА ПОБЕДЫ (Игрок забрал деньги)
 function finishGame(win, amount, mult) {
-    // Остановка для игрока
-    game.status = 'IDLE'; 
-    clearInterval(game.pollInterval);
-    // Не сбрасываем график сразу, даем насладиться цифрой
+    // Статус уже CASHED_OUT, анимация полета продолжается, 
+    // но мы даем визуальный фидбек игроку
     
-    document.getElementById('current-multiplier').style.color = '#00ff88';
+    const multElement = document.getElementById('current-multiplier');
+    multElement.style.color = CONFIG.graphics.textColorCashed; // Зеленый
     
+    // Показываем тост с выигрышем
     showWinToast(amount);
+    
+    // Вибрация успеха
     tg.HapticFeedback.notificationOccurred('success');
 
+    // Обновляем кнопку (она станет неактивной "ВЫВЕДЕНО")
     updateButtonState();
-    setTimeout(resetGame, 3000);
 }
 
+// 5.4. ПОДГОТОВКА ИНТЕРФЕЙСА К ПОЛЕТУ
 function prepareUIForFlight() {
+    // Скрываем сообщения ожидания
     document.getElementById('game-message').classList.add('hidden');
     document.getElementById('crash-msg').classList.add('hidden');
-    document.getElementById('current-multiplier').classList.remove('hidden');
-    document.getElementById('current-multiplier').style.color = 'white';
     
+    // Показываем множитель
+    const multElement = document.getElementById('current-multiplier');
+    multElement.classList.remove('hidden');
+    multElement.innerText = "1.00x";
+    multElement.style.color = CONFIG.graphics.textColorFlying;
+    
+    // Настраиваем ракету
     const rocket = document.getElementById('rocket-element');
     rocket.classList.remove('boom');
     rocket.classList.add('flying');
+    rocket.innerHTML = '<i class="fa-solid fa-jet-fighter-up"></i><div class="rocket-trail"></div>';
     
-    updateButtonState();
+    // Вибрация старта
     tg.HapticFeedback.impactOccurred('medium');
 }
 
+// 5.5. СБРОС ИГРЫ (RESET)
 function resetGame() {
     game.status = 'IDLE';
-    clearInterval(game.pollInterval);
+    game.userHasBet = false;
+    game.userCashedOut = false;
     
-    document.getElementById('rocket-element').innerHTML = '<i class="fa-solid fa-jet-fighter-up"></i><div class="rocket-trail"></div>';
-    document.getElementById('rocket-element').classList.remove('boom');
-    document.getElementById('rocket-element').style.transform = 'translate(10px, 0)';
+    // Очистка таймеров
+    clearInterval(game.timers.pollInterval);
     
+    // Сброс ракеты в начальную позицию
+    const rocket = document.getElementById('rocket-element');
+    rocket.innerHTML = '<i class="fa-solid fa-jet-fighter-up"></i><div class="rocket-trail"></div>';
+    rocket.classList.remove('boom', 'flying');
+    rocket.style.transform = 'translate(10px, 0)'; // Левый нижний угол
+    
+    // Сброс текстов
     document.getElementById('crash-msg').classList.add('hidden');
-    document.getElementById('game-message').innerText = "ГОТОВ К ВЗЛЕТУ";
+    document.getElementById('game-message').innerText = "ОЖИДАНИЕ...";
     document.getElementById('game-message').classList.remove('hidden');
     document.getElementById('current-multiplier').innerText = "1.00x";
+    document.getElementById('current-multiplier').style.color = '#fff';
     
+    // Очистка Canvas
     ctx.clearRect(0, 0, game.width, game.height);
+    
+    // Обновление кнопок
     updateButtonState();
 }
 
