@@ -1,309 +1,142 @@
-/**
- * FASTMONEY - CRASH ENGINE V2 (FIXED)
- */
+/* =========================================
+   CRASH V2 STYLES (FIXED)
+   ========================================= */
 
-const tg = window.Telegram.WebApp;
-
-const CONFIG = {
-    // 👇 ВСТАВЬ СВОЮ АКТУАЛЬНУЮ ССЫЛКУ CLOUDFLARE
-    SERVER_URL: "https://alpha-firms-electronics-return.trycloudflare.com", 
-    growthSpeed: 0.0006, 
-    pollInterval: 1000
-};
-
-let appState = JSON.parse(localStorage.getItem('fastMoneyState')) || { 
-    balance: { real: 0, demo: 10000 }, currency: 'USDT', mode: 'demo' 
-};
-
-let game = {
-    status: 'IDLE', // IDLE, FLYING, CRASHED
-    multiplier: 1.00,
-    startTime: 0,
-    betAmount: 100,
-    userHasBet: false,
-    userCashedOut: false,
-    width: 0, height: 0,
-    timers: { animation: null, poll: null, toast: null }
-};
-
-// --- CANVAS ---
-const canvas = document.getElementById('crash-canvas');
-const ctx = canvas.getContext('2d');
-
-function resizeCanvas() {
-    const box = document.querySelector('.graph-container').getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = box.width * dpr;
-    canvas.height = box.height * dpr;
-    ctx.scale(dpr, dpr);
-    game.width = box.width;
-    game.height = box.height;
+.crash-body {
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+    background-color: #0b0b10; color: white; font-family: 'Montserrat', sans-serif;
 }
 
-function drawFrame() {
-    if (game.status !== 'FLYING' && game.status !== 'CRASHED' && game.status !== 'CASHED') return;
-    
-    ctx.clearRect(0, 0, game.width, game.height);
-    const elapsed = Date.now() - game.startTime;
-
-    // Zoom logic
-    let scale = 1;
-    if (elapsed > 4000) scale = 1 / Math.pow(elapsed / 4000, 0.6);
-
-    ctx.beginPath();
-    ctx.moveTo(0, game.height);
-    
-    let curX = 0, curY = game.height;
-    
-    for (let t = 0; t <= elapsed; t += 16) {
-        const x = (t / 5000) * game.width * 0.85 * scale;
-        const y = game.height - ((Math.exp(t * CONFIG.growthSpeed) - 1) * 150 * scale);
-        ctx.lineTo(x, y);
-        curX = x; curY = y;
-    }
-    
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#00f3ff';
-    ctx.stroke();
-    
-    // Ракета
-    const rocket = document.getElementById('rocket-element');
-    const rX = Math.min(curX, game.width - 40);
-    const rY = Math.max(curY, 40);
-    rocket.style.transform = `translate(${rX}px, ${rY - game.height}px)`;
-    
-    if (game.status === 'FLYING') {
-        game.timers.animation = requestAnimationFrame(drawFrame);
-    }
+/* Фон */
+.stars-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+    background: radial-gradient(1px 1px at 10% 10%, #fff, transparent), radial-gradient(2px 2px at 40% 40%, #fff, transparent);
+    background-size: 550px 550px; opacity: 0.6;
 }
 
-// --- LOGIC ---
-
-// 1. СТАРТ
-async function startRound() {
-    if (game.status !== 'IDLE') return;
-    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
-    
-    // UI: Загрузка
-    setButton('loading', 'ЗАГРУЗКА...', 'Связь с сервером');
-
-    try {
-        const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/bet`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: userId, amount: game.betAmount, mode: appState.mode })
-        });
-        const data = await res.json();
-
-        if (data.error) {
-            alert(data.error);
-            forceReset();
-            return;
-        }
-
-        // УСПЕХ
-        game.status = 'FLYING';
-        game.userHasBet = true;
-        game.userCashedOut = false;
-        game.startTime = data.server_time * 1000;
-        
-        updateBalanceUI(data.balance);
-        prepareVisuals();
-        
-        // Кнопка: ЗАБРАТЬ
-        setButton('cashout', 'ЗАБРАТЬ', 'Пока не поздно!');
-        
-        // Запуск
-        drawFrame();
-        gameLoop();
-        startPolling(userId);
-
-    } catch (e) {
-        console.error(e);
-        forceReset();
-    }
+/* Header */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px; background: rgba(11, 11, 16, 0.9);
+    border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 10;
 }
-
-// 2. ЗАБРАТЬ
-async function cashOut() {
-    if (game.status !== 'FLYING' || game.userCashedOut) return;
-    
-    setButton('loading', 'ЗАПРОС...', 'Фиксация...');
-    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
-
-    try {
-        const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: userId })
-        });
-        const data = await res.json();
-
-        if (data.status === 'won') {
-            game.userCashedOut = true;
-            updateBalanceUI(data.balance);
-            showWinToast(data.win_amount);
-            setButton('disabled', 'ВЫВЕДЕНО', 'Ждем финала');
-        } else {
-            // Опоздал
-            crash(data.crash_point);
-        }
-
-    } catch (e) {
-        // Ошибка сети - возвращаем кнопку
-        setButton('cashout', 'ЗАБРАТЬ', 'Повторите!');
-    }
+.back-btn, .icon-btn {
+    background: rgba(255,255,255,0.1); border: none; color: #ccc;
+    width: 38px; height: 38px; border-radius: 10px; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
+.balance-container { display: flex; flex-direction: column; align-items: flex-end; }
+.balance-val { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1rem; }
+#currency-display { color: #ffd700; }
 
-// 3. ЦИКЛ (Множитель)
-function gameLoop() {
-    if (game.status !== 'FLYING') return;
-    
-    const elapsed = Date.now() - game.startTime;
-    game.multiplier = 1 + (Math.exp(elapsed * CONFIG.growthSpeed) - 1);
-    
-    document.getElementById('current-multiplier').innerText = game.multiplier.toFixed(2) + 'x';
-    
-    requestAnimationFrame(gameLoop);
+/* История */
+.history-bar-wrapper {
+    display: flex; align-items: center; background: rgba(255,255,255,0.03);
+    height: 36px; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-
-// 4. ОПРОС
-function startPolling(userId) {
-    game.timers.poll = setInterval(async () => {
-        if (game.status !== 'FLYING') { clearInterval(game.timers.poll); return; }
-        
-        try {
-            const res = await fetch(`${CONFIG.SERVER_URL}/api/crash/status`, {
-                method: 'POST', body: JSON.stringify({user_id: userId})
-            });
-            const data = await res.json();
-            
-            if (data.status === 'crashed') crash(data.crash_point);
-            
-        } catch(e){}
-    }, CONFIG.pollInterval);
+.history-scroll {
+    flex-grow: 1; display: flex; gap: 6px; overflow-x: auto; padding: 0 10px;
+    flex-direction: row-reverse; scrollbar-width: none;
 }
-
-// 5. КРАШ
-function crash(val) {
-    game.status = 'CRASHED';
-    clearInterval(game.timers.poll);
-    cancelAnimationFrame(game.timers.animation);
-    
-    document.getElementById('current-multiplier').innerText = val.toFixed(2) + 'x';
-    document.getElementById('current-multiplier').style.color = '#ff0055';
-    document.getElementById('crash-msg').classList.remove('hidden');
-    
-    document.getElementById('rocket-element').classList.add('boom');
-    document.getElementById('rocket-element').innerHTML = '<i class="fa-solid fa-burst"></i>';
-    
-    tg.HapticFeedback.notificationOccurred('error');
-    
-    // Кнопка: КРАШ
-    setButton('disabled', 'КРАШ', 'Раунд окончен');
-    
-    // Добавляем в историю
-    const hist = document.getElementById('history-container');
-    const badge = document.createElement('div');
-    badge.className = `badge ${val < 1.2 ? 'red' : 'green'}`;
-    badge.innerText = val.toFixed(2) + 'x';
-    hist.prepend(badge);
-
-    setTimeout(forceReset, 3000);
+.badge {
+    padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;
+    font-family: 'Orbitron', sans-serif; white-space: nowrap;
 }
+.badge.red { color: #ff4444; background: rgba(255,0,0,0.1); }
+.badge.green { color: #00ff88; background: rgba(0,255,0,0.1); }
+.badge.gold { color: #ffd700; background: rgba(255,215,0,0.1); }
+.badge.blue { color: #00f3ff; background: rgba(0,243,255,0.1); }
 
-// 6. СБРОС (UI RESET)
-function forceReset() {
-    game.status = 'IDLE';
-    game.userHasBet = false;
-    game.userCashedOut = false;
-    clearInterval(game.timers.poll);
-    
-    // Сброс визуала
-    document.getElementById('crash-msg').classList.add('hidden');
-    document.getElementById('game-message').classList.remove('hidden');
-    document.getElementById('current-multiplier').innerText = "1.00x";
-    document.getElementById('current-multiplier').style.color = "white";
-    
-    const rocket = document.getElementById('rocket-element');
-    rocket.classList.remove('boom', 'flying');
-    rocket.innerHTML = '<i class="fa-solid fa-jet-fighter-up"></i><div class="rocket-trail"></div>';
-    rocket.style.transform = 'translate(10px, 0)';
-    
-    ctx.clearRect(0, 0, game.width, game.height);
-    
-    // Кнопка: СТАВИТЬ
-    setButton('bet', 'ПОСТАВИТЬ', 'Начать раунд');
+/* График */
+.crash-stage { flex-grow: 1; position: relative; overflow: hidden; }
+.graph-container { width: 100%; height: 100%; position: relative; }
+#crash-canvas { width: 100%; height: 100%; display: block; }
+
+.multiplier-overlay {
+    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none; z-index: 5;
 }
+.main-number { font-family: 'Orbitron', sans-serif; font-size: 3.5rem; font-weight: 900; color: white; }
+.info-msg { font-size: 1rem; color: #888; font-weight: 700; animation: pulse 1.5s infinite; }
+.crash-label { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; color: #ff0055; font-weight: 900; }
+@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-function prepareVisuals() {
-    document.getElementById('game-message').classList.add('hidden');
-    document.getElementById('current-multiplier').classList.remove('hidden');
-    document.getElementById('rocket-element').classList.add('flying');
+/* Ракета */
+.rocket {
+    position: absolute; width: 40px; height: 40px; color: #ff3366; font-size: 2rem;
+    left: 10px; bottom: 10px; transform: translate(0,0); z-index: 10;
+    transition: transform 0.1s linear;
 }
+.rocket.boom { font-size: 3rem; color: orange; transform: scale(1.5) !important; }
 
-// === UI HELPERS ===
-
-function setButton(type, titleText, subText) {
-    const btn = document.getElementById('main-btn');
-    const title = btn.querySelector('.btn-title');
-    const sub = btn.querySelector('.btn-sub');
-    
-    btn.className = 'action-button'; // Сброс
-    btn.disabled = false;
-    
-    if (type === 'bet') {
-        btn.classList.add('btn-bet');
-        btn.onclick = startRound;
-    } else if (type === 'cashout') {
-        btn.classList.add('btn-cashout');
-        btn.onclick = cashOut;
-    } else if (type === 'loading') {
-        btn.classList.add('btn-loading');
-        btn.disabled = true;
-    } else if (type === 'disabled') {
-        btn.classList.add('btn-bet'); // Визуально серая или красная
-        btn.style.opacity = '0.5';
-        btn.disabled = true;
-    }
-    
-    title.innerText = titleText;
-    sub.innerText = subText;
+/* Управление (Футер) */
+.crash-controls {
+    background: #141419; border-top: 1px solid #333; padding: 15px;
+    display: flex; flex-direction: column; gap: 15px; z-index: 20;
 }
-
-function showWinToast(amount) {
-    const toast = document.getElementById('modal-win');
-    document.getElementById('win-display-amount').innerText = amount;
-    
-    toast.classList.remove('hidden');
-    if (game.timers.toast) clearTimeout(game.timers.toast);
-    
-    game.timers.toast = setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 2000);
+.bet-settings { display: flex; gap: 10px; align-items: flex-end; }
+.bet-input-group { flex-grow: 1; }
+.stepper-box {
+    display: flex; align-items: center; background: #000; border: 1px solid #333;
+    border-radius: 12px; height: 44px;
 }
+.step-btn { width: 44px; height: 100%; background: #222; border: none; color: white; font-size: 1.2rem; }
+#bet-amount { flex-grow: 1; text-align: center; font-family: 'Orbitron', sans-serif; font-weight: 700; }
 
-function updateBalanceUI(bal) {
-    if (bal !== undefined) {
-        appState.balance[appState.mode] = bal;
-        localStorage.setItem('fastMoneyState', JSON.stringify(appState));
-    }
-    document.getElementById('balance-display').innerText = Math.floor(appState.balance[appState.mode]).toLocaleString();
+.bet-shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 120px; }
+.bet-shortcuts button { background: #222; border: 1px solid #333; color: #ccc; border-radius: 8px; height: 30px; font-weight: 700; }
+
+/* ГЛАВНАЯ КНОПКА */
+.action-button {
+    width: 100%; height: 60px; border-radius: 16px; border: none;
+    font-family: 'Montserrat', sans-serif; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: 0.1s;
 }
+.action-button:active { transform: scale(0.98); }
 
-// === INIT ===
-document.addEventListener('DOMContentLoaded', () => {
-    tg.ready(); tg.expand();
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    updateBalanceUI();
-    forceReset();
-    
-    // Ставки
-    document.getElementById('btn-inc').onclick = () => { if(game.status === 'IDLE') { game.betAmount+=100; document.getElementById('bet-amount').innerText = game.betAmount; }};
-    document.getElementById('btn-dec').onclick = () => { if(game.status === 'IDLE' && game.betAmount > 100) { game.betAmount-=100; document.getElementById('bet-amount').innerText = game.betAmount; }};
-    
-    // Модалки
-    window.openInfoModal = () => document.getElementById('modal-info').classList.remove('hidden');
-    window.closeInfoModal = () => document.getElementById('modal-info').classList.add('hidden');
-});
+.btn-bet { background: #00ff88; color: #003319; box-shadow: 0 4px #00cc6a; }
+.btn-cashout { background: #ffd700; color: #332200; box-shadow: 0 4px #ffaa00; animation: pulseBtn 0.5s infinite alternate; }
+.btn-cancel { background: #ff4444; color: white; }
+.btn-loading { background: #444; color: #888; cursor: not-allowed; }
+
+.btn-title { font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; }
+.btn-sub { font-size: 0.7rem; font-weight: 600; }
+
+@keyframes pulseBtn { from { transform: scale(1); } to { transform: scale(1.02); } }
+
+/* ИСПРАВЛЕННЫЙ ТОСТ (Уведомление) */
+.toast-overlay {
+    position: fixed; top: 80px; left: 0; width: 100%;
+    display: flex; justify-content: center; pointer-events: none; z-index: 100;
+}
+.toast-box {
+    background: rgba(0, 180, 100, 0.95); backdrop-filter: blur(5px);
+    padding: 10px 20px; border-radius: 30px; border: 1px solid #00ff88;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    animation: slideDown 0.3s;
+}
+.toast-icon { background: white; color: #00b464; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.t-amount { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.1rem; }
+
+/* ИСПРАВЛЕННОЕ ОКНО "КАК ИГРАТЬ" */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 2000; /* Самый верхний слой */
+    display: flex; justify-content: center; align-items: center;
+}
+.hidden { display: none !important; }
+
+.info-card {
+    background: #1a1a20; width: 90%; max-width: 350px; max-height: 80vh;
+    border-radius: 16px; border: 1px solid #444;
+    display: flex; flex-direction: column; padding: 20px;
+}
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
+.card-header button { background: none; border: none; color: white; font-size: 1.5rem; padding: 5px; cursor: pointer; }
+.card-body { overflow-y: auto; padding-right: 5px; font-size: 0.9rem; color: #ccc; line-height: 1.5; }
+.card-body ol { padding-left: 20px; margin: 0; }
+.fairness-badge { margin-top: 15px; background: rgba(0,255,136,0.1); color: #00ff88; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.8rem; }
+
+@keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
