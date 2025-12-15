@@ -368,17 +368,27 @@ async function startRound() {
 }
 
 // 4.2. ЗАБРАТЬ ВЫИГРЫШ (CASHOUT)
+// 2. ЗАБРАТЬ ВЫИГРЫШ (CASHOUT)
 async function cashOut() {
-    // Можно забрать только если летим и ставили
+    // Проверяем: игра должна идти (FLYING), мы должны были сделать ставку (!game.userHasBet)
+    // и мы еще не забрали деньги (!game.userCashedOut)
     if (game.status !== 'FLYING' || !game.userHasBet || game.userCashedOut) return;
     
-    // Блокируем кнопку, чтобы не нажать дважды (Anti-debounce)
+    // 1. Мгновенно блокируем кнопку и меняем текст, чтобы было видно нажатие
     const btn = document.getElementById('main-btn');
-    btn.disabled = true;
+    btn.disabled = true; 
+    // Пытаемся найти текстовый элемент внутри кнопки, если его нет - меняем текст кнопки целиком
+    const btnTitle = btn.querySelector('.btn-title');
+    if (btnTitle) {
+        btnTitle.innerText = "ЗАПРОС...";
+    } else {
+        btn.innerText = "ЗАПРОС...";
+    }
 
     const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
 
     try {
+        // 2. Отправляем запрос на сервер
         const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -387,28 +397,33 @@ async function cashOut() {
         
         const data = await response.json();
 
+        // 3. Обрабатываем ответ
         if (data.status === 'won') {
-            // --- ПОБЕДА ---
-            game.status = 'CASHED_OUT'; 
+            // УСПЕХ: Мы успели!
+            game.status = 'CASHED_OUT';
             game.userCashedOut = true;
             
-            // Сервер вернул новый баланс и точную сумму выигрыша
+            // Обновляем баланс, если сервер его прислал
             if (data.balance !== undefined) updateBalanceUI(data.balance);
             
-            // Завершаем раунд для игрока (но график может лететь дальше визуально)
-            finishGame(true, data.win_amount, data.multiplier); // (Функция из Section 5)
+            // Запускаем анимацию победы
+            finishGame(true, data.win_amount, data.multiplier);
             
         } else if (data.status === 'crashed') {
-            // --- НЕ УСПЕЛ ---
-            // Сервер сказал, что краш случился раньше нажатия
-            game.serverCrashPoint = data.crash_point;
-            crash(data.crash_point); // (Функция из Section 5)
+            // ОПОЗДАЛИ: Сервер сказал, что краш был раньше нажатия
+            // Передаем точку краша в функцию взрыва
+            crash(data.crash_point);
         }
 
     } catch (e) {
         console.error("Cashout Error:", e);
-        // Если сеть упала в момент кэшаута, мы надеемся на Polling или повторное нажатие
-        btn.disabled = false; 
+        // Если ошибка сети - разблокируем кнопку обратно, чтобы можно было нажать еще раз
+        btn.disabled = false;
+        if (btnTitle) {
+            btnTitle.innerText = "ЗАБРАТЬ";
+        } else {
+            btn.innerText = "ЗАБРАТЬ";
+        }
     }
 }
 
