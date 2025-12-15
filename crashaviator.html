@@ -4,69 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>FastMoney - Crash</title>
-    
-    <!-- Шрифты и Иконки -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Стили -->
-    <link rel="stylesheet" href="style.css">          <!-- Глобальный -->
-    <link rel="stylesheet" href="crashaviator.css">   <!-- Уникальный для краша -->
-    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="crashaviator.css"> <!-- Если ты переименовал в v2, поменяй тут -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="crash-body">
-
-    <!-- Фон: Звездное небо -->
     <div class="stars-bg"></div>
     <div class="vignette"></div>
 
-    <!-- Верхняя панель -->
+    <!-- HEADER -->
     <header class="game-header">
-        <button class="back-btn" onclick="window.location.href='gamelist.html'">
-            <i class="fa-solid fa-arrow-left"></i>
-        </button>
-        
+        <button class="back-btn" onclick="window.location.href='gamelist.html'"><i class="fa-solid fa-arrow-left"></i></button>
         <div class="balance-container">
             <span class="label">БАЛАНС</span>
-            <div class="balance-val">
-                <span id="balance-display">Loading...</span>
-                <span id="currency-display">$</span>
-            </div>
+            <div class="balance-val"><span id="balance-display">...</span> <span id="currency-display">$</span></div>
         </div>
-
-        <button class="icon-btn" onclick="openInfoModal()">
-            <i class="fa-solid fa-circle-question"></i>
-        </button>
+        <button class="icon-btn" onclick="openInfoModal()"><i class="fa-solid fa-circle-question"></i></button>
     </header>
 
-    <!-- История последних раундов -->
+    <!-- ИСТОРИЯ -->
     <div class="history-bar-wrapper">
         <div class="history-label"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <div class="history-scroll" id="history-container">
-            <!-- Сюда JS будет добавлять бейджи: <div class="badge red">1.05x</div> -->
-            <div class="badge green">2.45x</div>
-            <div class="badge red">1.10x</div>
-            <div class="badge gold">15.00x</div>
-            <div class="badge blue">1.95x</div>
-        </div>
+        <div class="history-scroll" id="history-container"></div>
     </div>
 
-    <!-- ОСНОВНАЯ СЦЕНА (ГРАФИК) -->
+    <!-- СЦЕНА -->
     <main class="crash-stage">
         <div class="graph-container">
             <canvas id="crash-canvas"></canvas>
-            
-            <!-- Центральный текст (Множитель) -->
             <div class="multiplier-overlay">
-                <!-- Состояния: "LOADING", "1.00x", "CRASHED" -->
-                <div id="game-message" class="info-msg hidden">ОЖИДАНИЕ...</div>
-                <div id="current-multiplier" class="main-number">1.00x</div>
+                <div id="game-message" class="info-msg">ГОТОВ К ВЗЛЕТУ</div>
+                <div id="current-multiplier" class="main-number hidden">1.00x</div>
                 <div id="crash-msg" class="crash-label hidden">CRASHED</div>
             </div>
-
-            <!-- Ракета/Самолет (Двигается по CSS/JS) -->
             <div id="rocket-element" class="rocket">
                 <i class="fa-solid fa-jet-fighter-up"></i>
                 <div class="rocket-trail"></div>
@@ -74,20 +45,16 @@
         </div>
     </main>
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ УПРАВЛЕНИЯ -->
+    <!-- УПРАВЛЕНИЕ -->
     <footer class="crash-controls">
-        
-        <!-- Верхний ряд: Настройка ставки -->
         <div class="bet-settings">
             <div class="bet-input-group">
-                <label>СТАВКА</label>
                 <div class="stepper-box">
                     <button id="btn-dec" class="step-btn">-</button>
                     <span id="bet-amount">100</span>
                     <button id="btn-inc" class="step-btn">+</button>
                 </div>
             </div>
-            
             <div class="bet-shortcuts">
                 <button onclick="setBet(100)">100</button>
                 <button onclick="setBet(500)">500</button>
@@ -96,19 +63,16 @@
             </div>
         </div>
 
-        <!-- Нижний ряд: ГЛАВНАЯ КНОПКА -->
         <div class="action-area">
-            <!-- Кнопка меняет цвет и текст в зависимости от стадии игры -->
+            <!-- ГЛАВНАЯ КНОПКА -->
             <button id="main-btn" class="action-button btn-bet">
                 <span class="btn-title">ПОСТАВИТЬ</span>
-                <span class="btn-sub">След. раунд</span>
+                <span class="btn-sub">Начать раунд</span>
             </button>
         </div>
     </footer>
 
-    <!-- МОДАЛКИ -->
-
-    <!-- Победа (Всплывает при успешном выводе) -->
+    <!-- УВЕДОМЛЕНИЕ О ВЫИГРЫШЕ -->
     <div id="modal-win" class="toast-overlay hidden">
         <div class="toast-box">
             <div class="toast-icon"><i class="fa-solid fa-trophy"></i></div>
@@ -119,32 +83,7 @@
         </div>
     </div>
 
-    <!-- Инфо -->
-    <div id="modal-info" class="modal-overlay hidden">
-        <div class="info-card">
-            <div class="card-header">
-                <h3>КАК ИГРАТЬ?</h3>
-                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="card-body">
-                <ol>
-                    <li>Сделайте ставку до начала раунда.</li>
-                    <li>Самолет начинает взлетать, и множитель растет.</li>
-                    <li>Нажмите <b>ЗАБРАТЬ</b> до того, как самолет улетит!</li>
-                    <li>Если не успеете — ставка сгорит.</li>
-                </ol>
-                <div class="fairness-badge">
-                    <i class="fa-solid fa-shield-halved"></i> Provably Fair
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Аудио -->
-    <div style="display:none;">
-        <audio id="snd-click" src="assets/click.mp3"></audio> <!-- заглушка -->
-    </div>
-
+    <!-- СКРИПТ (Проверь название!) -->
     <script src="crashaviator.js"></script>
 </body>
 </html>
