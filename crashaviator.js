@@ -34,7 +34,7 @@ let appState = JSON.parse(localStorage.getItem('fastMoneyState')) || {
 
 let game = {
     status: 'IDLE',         // IDLE, BETTING, FLYING, CRASHED, CASHED
-    betAmount: 100,
+    betAmount: 10,
     startTime: 0,           // Время начала раунда (от сервера)
     multiplier: 1.00,       // Текущий икс
     userHasBet: false,      // Участвует ли игрок в раунде
