@@ -655,60 +655,58 @@ function updateButtonState() {
     const title = btn.querySelector('.btn-title');
     const sub = btn.querySelector('.btn-sub');
 
-    // Сброс классов
+    // Сброс базовых классов
     btn.className = 'action-button';
 
-    switch (game.status) {
-        case 'IDLE':
-            btn.classList.add('btn-bet');
+    if (game.status === 'IDLE') {
+        btn.classList.add('btn-bet');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        title.innerText = "ПОСТАВИТЬ";
+        sub.innerText = "На следующий раунд";
+        
+    } else if (game.status === 'WAITING_SERVER') {
+        btn.classList.add('btn-bet');
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        title.innerText = "ЗАГРУЗКА...";
+        sub.innerText = "Связь с центром...";
+        
+    } else if (game.status === 'FLYING') {
+        // САМОЕ ВАЖНОЕ: Если мы ставили и еще не забрали -> Кнопка активна
+        if (game.userHasBet && !game.userCashedOut) {
+            btn.classList.add('btn-cashout');
             btn.disabled = false;
             btn.style.opacity = '1';
-            title.innerText = "ПОСТАВИТЬ";
-            sub.innerText = "На следующий раунд";
-            break;
-
-        case 'WAITING_SERVER':
-            btn.classList.add('btn-bet');
-            btn.disabled = true;
-            btn.style.opacity = '0.7';
-            title.innerText = "ЗАГРУЗКА...";
-            sub.innerText = "Связь с центром...";
-            break;
-
-        case 'FLYING':
-            if (game.userHasBet && !game.userCashedOut) {
-                // Игрок в игре: Кнопка "Забрать"
-                btn.classList.add('btn-cashout');
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                title.innerText = "ЗАБРАТЬ";
-                sub.innerText = "Пока не крашнулось!";
-            } else if (game.userCashedOut) {
-                // Игрок уже вышел
-                btn.classList.add('btn-bet');
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                title.innerText = "ВЫВЕДЕНО";
-                sub.innerText = "Ждите окончания";
-            } else {
-                // Игрок не ставил (зритель)
-                btn.classList.add('btn-bet');
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                title.innerText = "ИДЕТ ИГРА";
-                sub.innerText = "Ждите новый раунд";
-            }
-            break;
-
-        case 'CRASHED':
+            title.innerText = "ЗАБРАТЬ";
+            // Тут можно выводить текущий выигрыш, но пока просто текст
+            sub.innerText = "Пока не поздно!";
+        } 
+        // Если уже забрали -> Кнопка неактивна
+        else if (game.userCashedOut) {
             btn.classList.add('btn-bet');
             btn.disabled = true;
             btn.style.opacity = '0.5';
-            title.innerText = "КРАШ";
-            sub.innerText = "Раунд окончен";
-            break;
+            title.innerText = "ВЫВЕДЕНО";
+            sub.innerText = "Ждите конца раунда";
+        } 
+        // Если мы зритель
+        else {
+            btn.classList.add('btn-bet');
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            title.innerText = "ИДЕТ ИГРА";
+            sub.innerText = "Ждите новый раунд";
+        }
+
+    } else if (game.status === 'CRASHED') {
+         btn.classList.add('btn-bet');
+         btn.disabled = true;
+         btn.style.opacity = '0.5';
+         title.innerText = "КРАШ";
+         sub.innerText = "Раунд окончен";
     }
-}
+                           }
 
 // 6.2. ОБРАБОТЧИКИ СОБЫТИЙ (КНОПКИ)
 
