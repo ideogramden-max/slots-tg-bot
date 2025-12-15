@@ -287,98 +287,6 @@ function updateRocketVisuals(x, y, prevX, prevY) {
 
 // === 4. ЛОГИКА ИГРЫ (API) ===
 
-// 1. СТАРТ РАУНДА (Запрос к серверу)
-async function startRound() {
-    if (game.status !== 'IDLE') return;
-    
-    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
-    
-    // Если запускаем не из Телеграм (для тестов в браузере), можно раскомментировать:
-    // const userId = 12345678; 
-
-    if (!userId) { alert("Запустите через Telegram"); return; }
-
-    game.status = 'WAITING_SERVER';
-    updateButtonState();
-
-    try {
-        const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/bet`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                user_id: userId, 
-                amount: game.betAmount,
-                mode: appState.mode // Отправляем текущий режим (real/demo)
-            })
-        });
-        
-        const data = await response.json();
-
-        if (data.error) {
-            // Красивый алерт для ошибки баланса
-            if (data.error === "Insufficient funds") {
-                tg.showPopup({
-                    title: 'Ошибка',
-                    message: 'Недостаточно средств на балансе!',
-                    buttons: [{type: 'ok'}]
-                });
-            } else {
-                alert("Ошибка: " + data.error);
-            }
-            resetGame();
-            return;
-        }
-
-        // Успешный старт
-        game.status = 'FLYING';
-        // Python шлет timestamp в секундах (float), JS нужно мс
-        game.startTime = data.server_time * 1000; 
-        game.multiplier = 1.00;
-        
-        // Обновляем баланс UI сразу (сервер уже списал)
-        updateBalanceUI(data.balance);
-
-        // UI
-        prepareUIForFlight();
-        
-        // Запуск циклов
-        drawFrame();
-        gameLoop();
-        startStatusPolling(userId); // Следим, не крашнулось ли
-
-    } catch (e) {
-        console.error(e);
-        // Если совсем нет связи
-        tg.showPopup({title: 'Ошибка сети', message: 'Не удалось соединиться с сервером.'});
-        resetGame();
-    }
-}
-
-// 2. ЗАБРАТЬ ВЫИГРЫШ (CASHOUT)
-async function cashOut() {
-    if (game.status !== 'FLYING') return;
-    
-    // Блокируем кнопку, чтобы не нажать дважды
-    const btn = document.getElementById('main-btn');
-    btn.disabled = true;
-
-    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
-
-    try {
-        const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId })
-        });
-        
-        const data = await response.json();
-
-        if (data.status === 'won') {
-            // УСПЕХ
-            game.status = 'CASHED_OUT'; 
-            
-// === 4. ЛОГИКА ИГРЫ (API) ===
-
 // 4.1. СТАРТ РАУНДА (Запрос к серверу)
 async function startRound() {
     // Нельзя начать, если игра уже идет
@@ -535,7 +443,8 @@ function startStatusPolling(userId) {
             console.warn("Poll missed packet", e); 
         }
     }, CONFIG.pollInterval);
-}
+        }
+            
 
 // === 5. ВИЗУАЛЬНАЯ ЛОГИКА ===
 
