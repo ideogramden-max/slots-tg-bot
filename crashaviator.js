@@ -491,31 +491,44 @@ function crash(finalMult) {
     
     // Останавливаем таймеры
     clearInterval(game.timers.pollInterval);
-    cancelAnimationFrame(game.timers.animationFrame); // Останавливаем Canvas
+    cancelAnimationFrame(game.timers.animationFrame); 
 
-    // 1. Показываем финальный множитель (точный от сервера)
+    // 1. Показываем финальный множитель
     const multElement = document.getElementById('current-multiplier');
-    multElement.innerText = finalMult.toFixed(2) + 'x';
-    multElement.style.color = CONFIG.graphics.textColorCrash; // Красный
+    if (multElement) {
+        multElement.innerText = finalMult.toFixed(2) + 'x';
+        multElement.style.color = '#ff0055'; // Красный
+    }
     
-    // 2. Визуальные эффекты взрыва
-    document.getElementById('crash-msg').classList.remove('hidden');
+    // 2. Визуальные эффекты
+    const crashMsg = document.getElementById('crash-msg');
+    if (crashMsg) crashMsg.classList.remove('hidden');
     
     const rocket = document.getElementById('rocket-element');
-    rocket.classList.remove('flying');
-    rocket.classList.add('boom');
-    rocket.innerHTML = '<i class="fa-solid fa-burst"></i>'; // Иконка взрыва
+    if (rocket) {
+        rocket.classList.remove('flying');
+        rocket.classList.add('boom');
+        rocket.innerHTML = '<i class="fa-solid fa-burst"></i>';
+    }
     
-    // 3. Вибрация ошибки
     tg.HapticFeedback.notificationOccurred('error');
-    
-    // 4. Добавляем в ленту истории
     addToHistory(finalMult);
     
-    // 5. Обновляем кнопку
-    updateButtonState();
+    // === 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ: ПРИНУДИТЕЛЬНО МЕНЯЕМ КНОПКУ ===
+    const btn = document.getElementById('main-btn');
+    if (btn) {
+        // Делаем её серой и пишем "КРАШ"
+        btn.className = 'action-button btn-bet'; // Возвращаем базовый класс
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        
+        const title = btn.querySelector('.btn-title');
+        const sub = btn.querySelector('.btn-sub');
+        if (title) title.innerText = "КРАШED";
+        if (sub) sub.innerText = "Раунд окончен";
+    }
 
-    // 6. Таймер перезапуска игры
+    // 3. Таймер перезапуска (через 3 секунды снова станет зеленой)
     setTimeout(resetGame, CONFIG.timings.resetDelay);
 }
 
