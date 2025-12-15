@@ -2,88 +2,189 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <!-- Оптимизация для мобилок: запрет зума, адаптация под челку -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>FastMoney - Crash</title>
+    
+    <!-- Иконки и Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Подключаем стили (будут следующим шагом) -->
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="crashaviator.css"> <!-- Если ты переименовал в v2, поменяй тут -->
+    <link rel="stylesheet" href="crashaviator.css">
+    
+    <!-- SDK Телеграма -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<body class="crash-body">
-    <div class="stars-bg"></div>
-    <div class="vignette"></div>
+<body class="crash-game-body">
 
-    <!-- HEADER -->
-    <header class="game-header">
-        <button class="back-btn" onclick="window.location.href='gamelist.html'"><i class="fa-solid fa-arrow-left"></i></button>
-        <div class="balance-container">
-            <span class="label">БАЛАНС</span>
-            <div class="balance-val"><span id="balance-display">...</span> <span id="currency-display">$</span></div>
+    <!-- =========================================
+         СЛОЙ 1: ФОНОВЫЕ ЭФФЕКТЫ
+         ========================================= -->
+    <div class="space-background">
+        <div class="stars"></div>
+        <div class="nebula"></div>
+    </div>
+    
+    <!-- Виньетка для затемнения краев -->
+    <div class="screen-vignette"></div>
+
+    <!-- =========================================
+         СЛОЙ 2: ВЕРХНЯЯ ПАНЕЛЬ (HUD)
+         ========================================= -->
+    <header class="game-hud">
+        <!-- Кнопка назад -->
+        <button class="hud-btn back" onclick="window.location.href='gamelist.html'">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        
+        <!-- Баланс -->
+        <div class="balance-wrapper">
+            <span class="bal-label">ВАШ БАЛАНС</span>
+            <div class="bal-value">
+                <span id="balance-amount">Loading...</span>
+                <span class="currency-symbol">$</span>
+            </div>
         </div>
-        <button class="icon-btn" onclick="openInfoModal()"><i class="fa-solid fa-circle-question"></i></button>
+
+        <!-- Кнопка Инфо -->
+        <button class="hud-btn info" onclick="toggleModal('info-modal', true)">
+            <i class="fa-solid fa-question"></i>
+        </button>
     </header>
 
-    <!-- ИСТОРИЯ -->
-    <div class="history-bar-wrapper">
-        <div class="history-label"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <div class="history-scroll" id="history-container"></div>
+    <!-- =========================================
+         СЛОЙ 3: ЛЕНТА ИСТОРИИ
+         ========================================= -->
+    <div class="history-bar">
+        <div class="history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <div class="history-track" id="history-track">
+            <!-- Сюда JS будет вставлять прошлые множители -->
+            <!-- <div class="badge x2">2.45x</div> -->
+        </div>
     </div>
 
-    <!-- СЦЕНА -->
-    <main class="crash-stage">
-        <div class="graph-container">
-            <canvas id="crash-canvas"></canvas>
-            <div class="multiplier-overlay">
-                <div id="game-message" class="info-msg">ГОТОВ К ВЗЛЕТУ</div>
-                <div id="current-multiplier" class="main-number hidden">1.00x</div>
-                <div id="crash-msg" class="crash-label hidden">CRASHED</div>
+    <!-- =========================================
+         СЛОЙ 4: ИГРОВАЯ СЦЕНА (CANVAS)
+         ========================================= -->
+    <main class="game-stage">
+        <div class="canvas-container">
+            <canvas id="crash-graph"></canvas>
+            
+            <!-- Оверлей с цифрами (поверх канваса) -->
+            <div class="center-display">
+                <!-- Статусные сообщения (Ожидание, Старт) -->
+                <div id="status-message" class="status-text">ПОДКЛЮЧЕНИЕ...</div>
+                
+                <!-- Главный множитель -->
+                <div id="multiplier-display" class="multiplier-text hidden">1.00x</div>
+                
+                <!-- Сообщение о краше -->
+                <div id="crash-message" class="crash-text hidden">CRASHED</div>
             </div>
-            <div id="rocket-element" class="rocket">
-                <i class="fa-solid fa-jet-fighter-up"></i>
-                <div class="rocket-trail"></div>
+
+            <!-- Объект Ракеты (двигается JS) -->
+            <div id="rocket-object" class="rocket-wrapper">
+                <i class="fa-solid fa-jet-fighter-up rocket-icon"></i>
+                <div class="rocket-fire"></div>
             </div>
         </div>
     </main>
 
-    <!-- УПРАВЛЕНИЕ -->
-    <footer class="crash-controls">
-        <div class="bet-settings">
-            <div class="bet-input-group">
-                <div class="stepper-box">
-                    <button id="btn-dec" class="step-btn">-</button>
-                    <span id="bet-amount">100</span>
-                    <button id="btn-inc" class="step-btn">+</button>
+    <!-- =========================================
+         СЛОЙ 5: ПАНЕЛЬ УПРАВЛЕНИЯ
+         ========================================= -->
+    <footer class="control-panel">
+        
+        <!-- Настройки ставки -->
+        <div class="bet-controls">
+            <!-- Ввод суммы -->
+            <div class="bet-input-box">
+                <label>Сумма ставки</label>
+                <div class="stepper">
+                    <button class="step-btn" id="btn-minus"><i class="fa-solid fa-minus"></i></button>
+                    <span id="current-bet">100</span>
+                    <button class="step-btn" id="btn-plus"><i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
-            <div class="bet-shortcuts">
-                <button onclick="setBet(100)">100</button>
-                <button onclick="setBet(500)">500</button>
-                <button onclick="setBet(1000)">1K</button>
-                <button onclick="setBet('max')">MAX</button>
+
+            <!-- Быстрые кнопки -->
+            <div class="quick-bets">
+                <button onclick="updateBet(100)">100</button>
+                <button onclick="updateBet(500)">500</button>
+                <button onclick="updateBet(1000)">1K</button>
+                <button onclick="updateBet('max')">MAX</button>
             </div>
         </div>
 
-        <div class="action-area">
-            <!-- ГЛАВНАЯ КНОПКА -->
-            <button id="main-btn" class="action-button btn-bet">
-                <span class="btn-title">ПОСТАВИТЬ</span>
-                <span class="btn-sub">Начать раунд</span>
+        <!-- ГЛАВНАЯ КНОПКА ДЕЙСТВИЯ -->
+        <!-- Меняет цвет и текст через CSS классы -->
+        <div class="action-btn-wrapper">
+            <button id="main-action-btn" class="big-btn btn-loading" disabled>
+                <div class="btn-content">
+                    <span class="btn-title">ЗАГРУЗКА</span>
+                    <span class="btn-subtitle">Связь с сервером...</span>
+                </div>
             </button>
         </div>
+
     </footer>
 
-    <!-- УВЕДОМЛЕНИЕ О ВЫИГРЫШЕ -->
-    <div id="modal-win" class="toast-overlay hidden">
-        <div class="toast-box">
+    <!-- =========================================
+         СЛОЙ 6: МОДАЛЬНЫЕ ОКНА И УВЕДОМЛЕНИЯ
+         ========================================= -->
+
+    <!-- Тост победы (всплывает сверху) -->
+    <div id="win-toast" class="toast-notification hidden">
+        <div class="toast-content">
             <div class="toast-icon"><i class="fa-solid fa-trophy"></i></div>
-            <div class="toast-text">
-                <span class="t-title">ВЫ ЗАБРАЛИ</span>
-                <span class="t-amount" id="win-display-amount">0</span>
+            <div class="toast-info">
+                <span class="toast-title">ВЫ ЗАБРАЛИ!</span>
+                <span class="toast-val" id="win-val-display">0</span>
             </div>
         </div>
     </div>
 
-    <!-- СКРИПТ (Проверь название!) -->
+    <!-- Модальное окно: Как играть -->
+    <div id="info-modal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>КАК ИГРАТЬ?</h3>
+                <button class="close-modal" onclick="toggleModal('info-modal', false)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="rule-step">
+                    <span class="step-num">1</span>
+                    <p>Сделайте ставку перед началом раунда.</p>
+                </div>
+                <div class="rule-step">
+                    <span class="step-num">2</span>
+                    <p>Следите за ростом множителя.</p>
+                </div>
+                <div class="rule-step">
+                    <span class="step-num">3</span>
+                    <p>Нажмите <b>ЗАБРАТЬ</b> до того, как самолет улетит!</p>
+                </div>
+                
+                <div class="fair-badge">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Честная игра (Provably Fair)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аудио (скрыто) -->
+    <div class="audio-preload">
+        <!-- Звуки будут подключены в JS, здесь плейсхолдер -->
+    </div>
+
+    <!-- Основной скрипт логики -->
     <script src="crashaviator.js"></script>
+
 </body>
 </html>
