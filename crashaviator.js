@@ -579,7 +579,6 @@ function resetGame() {
     game.userHasBet = false;
     game.userCashedOut = false;
     
-    // Очистка таймеров
     if (game.timers.pollInterval) clearInterval(game.timers.pollInterval);
     
     // Сброс ракеты
@@ -605,13 +604,12 @@ function resetGame() {
         multEl.style.color = '#fff';
     }
     
-    // Очистка Canvas
     if (ctx) ctx.clearRect(0, 0, game.width, game.height);
     
-    // === ПРИНУДИТЕЛЬНЫЙ СБРОС КНОПКИ ===
+    // === 🔥 ПРИНУДИТЕЛЬНЫЙ СБРОС КНОПКИ НА ЗЕЛЕНУЮ ===
     const btn = document.getElementById('main-btn');
     if (btn) {
-        btn.className = 'action-button btn-bet'; // Возвращаем зеленый класс
+        btn.className = 'action-button btn-bet'; // Зеленый класс
         btn.disabled = false;
         btn.style.opacity = '1';
         
