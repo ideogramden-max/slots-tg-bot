@@ -783,16 +783,32 @@ function addToHistory(multiplier) {
 
 // 6.4. УВЕДОМЛЕНИЯ И БАЛАНС
 
+// Глобальная переменная для хранения таймера (вставь её ПЕРЕД функцией)
+let toastTimer = null; 
+
 function showWinToast(amount) {
     const toast = document.getElementById('modal-win');
-    document.getElementById('win-display-amount').innerText = amount.toLocaleString();
+    const amountText = document.getElementById('win-display-amount');
     
+    // 1. Устанавливаем текст выигрыша
+    amountText.innerText = amount.toLocaleString();
+    
+    // 2. Показываем уведомление (убираем класс hidden)
     toast.classList.remove('hidden');
     
-    // Скрываем через 2 секунды
-    setTimeout(() => {
+    // 3. СБРОС ПРЕДЫДУЩЕГО ТАЙМЕРА (Важный момент!)
+    // Если уведомление уже висит, мы отменяем команду "спрятаться", 
+    // чтобы оно не исчезло прямо сейчас, а повисело еще 2 секунды.
+    if (toastTimer) {
+        clearTimeout(toastTimer);
+    }
+    
+    // 4. Запускаем таймер на скрытие
+    toastTimer = setTimeout(() => {
+        // Через указанное время добавляем класс hidden обратно
         toast.classList.add('hidden');
-    }, CONFIG.timings.toastDuration);
+        toastTimer = null; // Очищаем переменную
+    }, CONFIG.timings.toastDuration); // Берем время из конфига (2000)
 }
 
 function updateBalanceUI(serverBalance) {
