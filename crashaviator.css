@@ -280,37 +280,95 @@
 }
 
 /* --- MODALS / TOAST --- */
+/* Исправленный Тост (Уведомление) */
 .toast-overlay {
-    position: fixed; top: 80px; left: 0; width: 100%;
-    display: flex; justify-content: center;
-    pointer-events: none; z-index: 100;
+    position: fixed; 
+    /* Поднимаем выше, сразу под хедер и историю (примерно 110px от верха) */
+    top: 110px; 
+    left: 0; 
+    width: 100%;
+    display: flex; 
+    justify-content: center;
+    /* Самое важное: пропускаем клики сквозь уведомление */
+    pointer-events: none; 
+    z-index: 90;
 }
-.toast-box {
-    background: rgba(46, 204, 113, 0.95);
-    backdrop-filter: blur(5px);
-    padding: 10px 20px;
-    border-radius: 30px;
-    display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    animation: slideDown 0.3s ease-out;
-}
-@keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-.toast-icon { background: white; color: #2ecc71; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.toast-text { display: flex; flex-direction: column; }
-.t-title { font-size: 0.6rem; font-weight: 800; color: #004d26; }
+.toast-box {
+    background: rgba(39, 174, 96, 0.95); /* Более насыщенный зеленый */
+    backdrop-filter: blur(5px);
+    padding: 8px 16px; 
+    border-radius: 50px; /* Более округлый */
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    animation: slideDown 0.3s ease-out;
+    border: 1px solid #2ecc71;
+}
+
+/* Иконка внутри тоста */
+.toast-icon { 
+    background: white; 
+    color: #27ae60; 
+    width: 24px; 
+    height: 24px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.t-title { font-size: 0.6rem; font-weight: 800; color: #fff; opacity: 0.9; text-transform: uppercase; }
 .t-amount { font-family: var(--font-num); font-weight: 900; color: white; font-size: 1rem; }
 
 /* Инфо модалка */
+/* Исправленная карточка Инфо */
 .info-card {
-    background: #1a1a20; width: 85%; border-radius: 16px; padding: 20px;
+    background: #1a1a20; 
+    width: 90%; 
+    max-width: 350px;
+    /* Ограничиваем высоту, чтобы не вылезала за экран */
+    max-height: 80vh; 
+    border-radius: 16px; 
+    padding: 20px;
     border: 1px solid #444;
+    /* Делаем гибкий контейнер */
+    display: flex;
+    flex-direction: column;
+    z-index: 101; /* Поверх всего */
 }
-.card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-.card-header button { background: none; border: none; color: white; font-size: 1.2rem; }
-.card-body ol { margin: 0; padding-left: 20px; font-size: 0.85rem; color: #ccc; line-height: 1.6; }
-.fairness-badge {
-    margin-top: 15px; text-align: center;
-    background: rgba(0, 255, 136, 0.1); color: #00ff88;
-    padding: 8px; border-radius: 8px; font-size: 0.8rem; font-weight: bold;
-  }
+
+.card-header { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 15px; 
+    /* Чтобы заголовок не сжимался */
+    flex-shrink: 0; 
+}
+
+/* Кнопка закрытия (крестик) - увеличим зону нажатия */
+.card-header button { 
+    background: none; 
+    border: none; 
+    color: white; 
+    font-size: 1.5rem; /* Чуть больше */
+    padding: 5px;      /* Удобнее нажимать */
+    cursor: pointer;
+}
+
+/* Тело с текстом - добавляем скролл */
+.card-body {
+    overflow-y: auto; /* Включаем вертикальный скролл */
+    padding-right: 5px; /* Отступ для скроллбара */
+}
+
+/* Стилизация текста */
+.card-body ol { 
+    margin: 0; 
+    padding-left: 20px; 
+    font-size: 0.9rem; /* Чуть крупнее шрифт */
+    color: #ccc; 
+    line-height: 1.6; 
+}
