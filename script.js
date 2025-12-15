@@ -45,21 +45,25 @@ async function initUserFromServer(tgUser) {
     }
 
     try {
+        // Берем сырую строку инициализации (она содержит hash и подпись)
+        const initData = tg.initData; 
+
+        if (!initData) {
+            console.error("No initData found. Are you in Telegram?");
+            // Можно раскомментировать для отладки в браузере (но на проде запретить)
+            // return; 
+        }
+
         const response = await fetch(`${CONFIG.SERVER_URL}/api/user/init`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: tgUser.id,
-                username: tgUser.username || tgUser.first_name
-            })
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Telegram-Data': initData // <--- ОТПРАВЛЯЕМ КЛЮЧ
+            },
+            // Body теперь можно вообще не слать, или слать только доп. параметры (mode и т.д.)
+            // user_id и username бэкенд достанет сам из initData
+            body: JSON.stringify({}) 
         });
-
-        const data = await response.json();
-
-        if (data.error) {
-            console.error("Server Error:", data.error);
-            return;
-        }
 
         // Обновляем стейт данными с сервера
         appState.user.id = data.user.id;
