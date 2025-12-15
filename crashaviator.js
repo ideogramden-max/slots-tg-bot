@@ -377,32 +377,143 @@ async function cashOut() {
             // УСПЕХ
             game.status = 'CASHED_OUT'; 
             
-            // Обновляем баланс (сервер прислал новый)
-            if (data.balance !== undefined) {
-                updateBalanceUI(data.balance);
+// === 4. ЛОГИКА ИГРЫ (API) ===
+
+// 4.1. СТАРТ РАУНДА (Запрос к серверу)
+async function startRound() {
+    // Нельзя начать, если игра уже идет
+    if (game.status !== 'IDLE') return;
+    
+    // Получаем ID пользователя из Telegram
+    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
+    
+    if (!userId && !CONFIG.debug) { 
+        tg.showPopup({title: 'Ошибка', message: 'Запустите игру через Telegram'}); 
+        return; 
+    }
+
+    // Блокируем интерфейс, ждем ответа
+    game.status = 'WAITING_SERVER';
+    updateButtonState(); // (Функция из Section 6)
+
+    try {
+        // Отправляем ставку на Python-сервер
+        const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/bet`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                user_id: userId, 
+                amount: game.betAmount,
+                mode: appState.mode // 'real' или 'demo'
+            })
+        });
+        
+        const data = await response.json();
+
+        // Обработка ошибок (например, нет денег)
+        if (data.error) {
+            if (data.error === "Insufficient funds") {
+                tg.showPopup({
+                    title: 'Баланс',
+                    message: 'Недостаточно средств для ставки!',
+                    buttons: [{type: 'ok'}]
+                });
+            } else {
+                tg.showAlert(`Ошибка сервера: ${data.error}`);
             }
-            
-            finishGame(true, data.win_amount, data.multiplier);
-            
-        } else if (data.status === 'crashed') {
-            // НЕ УСПЕЛ (Пинг или краш на сервере раньше)
-            crash(data.crash_point);
+            // Сброс в исходное
+            resetGame(); // (Функция из Section 5)
+            return;
         }
 
+        // --- УСПЕШНЫЙ СТАРТ ---
+        game.status = 'FLYING';
+        game.userHasBet = true;
+        game.userCashedOut = false;
+        
+        // ВАЖНО: Синхронизация времени с сервером
+        // Python time.time() дает секунды (float), JS Date.now() дает миллисекунды (int)
+        // Мы используем серверное время старта, чтобы график был точным
+        // Но так как часы клиента и сервера могут расходиться, лучше использовать performance.now() для локальной дельты
+        // В простой версии: доверяем клиенту и стартуем от "сейчас", корректируя на пинг
+        game.startTime = Date.now(); 
+        game.multiplier = 1.00;
+        
+        // Сервер уже списал деньги, обновляем UI баланса немедленно
+        if (data.balance !== undefined) {
+            updateBalanceUI(data.balance); // (Функция из Utils)
+        }
+
+        // Запуск визуальной части
+        prepareUIForFlight(); // (Функция из Section 5)
+        
+        // Запуск циклов
+        drawFrame();     // Графика (Canvas)
+        gameLoop();      // Математика (Множитель)
+        startStatusPolling(userId); // Страховка (проверка статуса)
+
     } catch (e) {
-        console.error(e);
-        // Если ошибка сети при выводе, продолжаем поллинг, он скажет результат
+        console.error("Bet Error:", e);
+        tg.showPopup({title: 'Сбой сети', message: 'Не удалось сделать ставку. Проверьте интернет.'});
+        resetGame();
     }
 }
 
-// 3. ПРОВЕРКА СТАТУСА (POLLING)
-// Каждую секунду спрашиваем сервер: "Мы еще летим?"
-function startStatusPolling(userId) {
-    if (game.pollInterval) clearInterval(game.pollInterval);
+// 4.2. ЗАБРАТЬ ВЫИГРЫШ (CASHOUT)
+async function cashOut() {
+    // Можно забрать только если летим и ставили
+    if (game.status !== 'FLYING' || !game.userHasBet || game.userCashedOut) return;
     
-    game.pollInterval = setInterval(async () => {
-        if (game.status !== 'FLYING') {
-            clearInterval(game.pollInterval);
+    // Блокируем кнопку, чтобы не нажать дважды (Anti-debounce)
+    const btn = document.getElementById('main-btn');
+    btn.disabled = true;
+
+    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0;
+
+    try {
+        const response = await fetch(`${CONFIG.SERVER_URL}/api/crash/cashout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        });
+        
+        const data = await response.json();
+
+        if (data.status === 'won') {
+            // --- ПОБЕДА ---
+            game.status = 'CASHED_OUT'; 
+            game.userCashedOut = true;
+            
+            // Сервер вернул новый баланс и точную сумму выигрыша
+            if (data.balance !== undefined) updateBalanceUI(data.balance);
+            
+            // Завершаем раунд для игрока (но график может лететь дальше визуально)
+            finishGame(true, data.win_amount, data.multiplier); // (Функция из Section 5)
+            
+        } else if (data.status === 'crashed') {
+            // --- НЕ УСПЕЛ ---
+            // Сервер сказал, что краш случился раньше нажатия
+            game.serverCrashPoint = data.crash_point;
+            crash(data.crash_point); // (Функция из Section 5)
+        }
+
+    } catch (e) {
+        console.error("Cashout Error:", e);
+        // Если сеть упала в момент кэшаута, мы надеемся на Polling или повторное нажатие
+        btn.disabled = false; 
+    }
+}
+
+// 4.3. ПРОВЕРКА СТАТУСА (POLLING)
+// Каждую секунду спрашиваем сервер: "Мы еще летим?"
+// Это нужно, чтобы если вкладка была свернута или сеть лагала, мы узнали о краше
+function startStatusPolling(userId) {
+    if (game.timers.pollInterval) clearInterval(game.timers.pollInterval);
+    
+    game.timers.pollInterval = setInterval(async () => {
+        // Если мы уже не летим (крашнулись или вышли), опрос не нужен
+        if (game.status !== 'FLYING' && game.status !== 'CASHED_OUT') {
+            clearInterval(game.timers.pollInterval);
             return;
         }
 
@@ -414,13 +525,16 @@ function startStatusPolling(userId) {
             });
             const data = await response.json();
 
+            // Если сервер говорит, что игра кончилась (CRASHED)
             if (data.status === 'crashed') {
                 crash(data.crash_point);
             }
-            // Если flying, всё ок, продолжаем
+            // Если flying, всё ок, продолжаем лететь
 
-        } catch (e) { console.error("Poll error", e); }
-    }, 1000);
+        } catch (e) { 
+            console.warn("Poll missed packet", e); 
+        }
+    }, CONFIG.pollInterval);
 }
 
 // === 5. ВИЗУАЛЬНАЯ ЛОГИКА ===
