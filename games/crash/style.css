@@ -1,0 +1,402 @@
+/* =========================================
+   1. GAME CONTAINER & BACKGROUND
+   ========================================= */
+.crash-body {
+    background-color: #0b0b10;
+    overflow: hidden; /* Запрет скролла всего тела */
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Космический фон */
+.space-background {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background: radial-gradient(circle at bottom, #1b2735 0%, #090a0f 100%);
+}
+
+/* Звезды (Анимация параллакса) */
+.stars {
+    position: absolute; width: 100%; height: 100%;
+    background-image: 
+        radial-gradient(1px 1px at 10% 10%, #fff, transparent),
+        radial-gradient(1px 1px at 20% 20%, #fff, transparent),
+        radial-gradient(2px 2px at 30% 30%, #fff, transparent),
+        radial-gradient(1px 1px at 40% 40%, #fff, transparent),
+        radial-gradient(1px 1px at 50% 50%, #fff, transparent),
+        radial-gradient(2px 2px at 60% 60%, #fff, transparent),
+        radial-gradient(1px 1px at 70% 70%, #fff, transparent),
+        radial-gradient(1px 1px at 80% 80%, #fff, transparent),
+        radial-gradient(2px 2px at 90% 90%, #fff, transparent);
+    background-size: 550px 550px;
+    opacity: 0.6;
+    animation: starsMove 100s linear infinite;
+}
+
+.nebula {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+    opacity: 0.3;
+    animation: nebulaMove 60s linear infinite alternate;
+}
+
+@keyframes starsMove { from { transform: translateY(0); } to { transform: translateY(-550px); } }
+@keyframes nebulaMove { from { opacity: 0.2; } to { opacity: 0.4; } }
+
+/* =========================================
+   2. HUD (HEADER & HISTORY)
+   ========================================= */
+/* Хедер (наследует базу, но добавляем прозрачность) */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 15px;
+    background: rgba(11, 11, 16, 0.8);
+    backdrop-filter: blur(5px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    z-index: 20;
+    flex-shrink: 0; /* Не сжиматься */
+}
+
+/* Лента истории */
+.history-bar {
+    height: 36px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; align-items: center;
+    padding: 0 10px;
+    gap: 10px;
+    z-index: 15;
+    flex-shrink: 0;
+}
+.history-icon {
+    font-size: 0.9rem; color: #666;
+}
+.history-track {
+    flex-grow: 1;
+    display: flex;
+    gap: 6px;
+    overflow: hidden; /* Скрываем старые */
+    flex-direction: row-reverse; /* Новые слева */
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+}
+
+/* Баблы истории */
+.badge {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: var(--font-num);
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+    background: #222;
+    color: #ccc;
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+/* Цвета коэффициентов */
+.badge.low { color: #3498db; border-color: rgba(52, 152, 219, 0.3); } /* < 2x */
+.badge.med { color: #2ecc71; border-color: rgba(46, 204, 113, 0.3); } /* 2x - 10x */
+.badge.high { color: #f1c40f; border-color: rgba(241, 196, 15, 0.3); box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); } /* > 10x */
+.badge.crash { color: #e74c3c; border-color: rgba(231, 76, 60, 0.3); } /* < 1.1x (мгновенный краш) */
+
+/* =========================================
+   3. GAME STAGE (CANVAS)
+   ========================================= */
+.game-stage {
+    flex-grow: 1; /* Занимает все место между хедером и футером */
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.canvas-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Оверлей по центру */
+.center-display {
+    position: absolute;
+    top: 35%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 10;
+    width: 100%;
+}
+
+.status-text {
+    font-family: var(--font-num);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 2px;
+    animation: pulseText 2s infinite;
+}
+
+.multiplier-text {
+    font-family: var(--font-num);
+    font-size: 4.5rem;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+    font-variant-numeric: tabular-nums; /* Чтобы цифры не прыгали */
+}
+
+.crash-text {
+    font-family: var(--font-num);
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #ff4444;
+    text-shadow: 0 0 40px rgba(255, 68, 68, 0.5);
+    animation: shakeCrash 0.4s ease-in-out;
+}
+
+/* РАКЕТА */
+.rocket-wrapper {
+    position: absolute;
+    width: 60px; height: 60px;
+    left: 20px; bottom: 20px; /* Стартовая точка */
+    z-index: 5;
+    will-change: transform; /* Оптимизация GPU */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s linear; /* Плавность для JS обновлений */
+}
+
+.rocket-icon {
+    font-size: 2.5rem;
+    color: #ff3366; /* Красный корпус */
+    filter: drop-shadow(0 0 10px rgba(255, 51, 102, 0.6));
+    transform: rotate(45deg); /* Поворот иконки носом вверх */
+    z-index: 2;
+}
+
+/* Хвост ракеты (Огонь) */
+.rocket-trail {
+    position: absolute;
+    bottom: -15px; left: 50%;
+    transform: translateX(-50%) rotate(180deg);
+    width: 10px; height: 30px;
+    background: linear-gradient(to bottom, #ff9900, transparent);
+    border-radius: 50%;
+    filter: blur(4px);
+    animation: thrust 0.1s infinite alternate;
+    z-index: 1;
+    opacity: 0; /* Скрыт пока не летим */
+}
+
+/* Состояния ракеты */
+.rocket-wrapper.flying .rocket-trail { opacity: 1; }
+.rocket-wrapper.boom {
+    transform: scale(1.5) !important;
+    transition: transform 0.3s;
+}
+.rocket-wrapper.boom .rocket-icon { color: #ffaa00; } /* Взрыв цвет */
+.rocket-wrapper.boom .rocket-trail { display: none; }
+
+@keyframes thrust { from { height: 30px; opacity: 0.8; } to { height: 40px; opacity: 1; } }
+@keyframes pulseText { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+@keyframes shakeCrash { 
+    0% { transform: translate(0,0); } 
+    25% { transform: translate(-5px, 5px); } 
+    50% { transform: translate(5px, -5px); } 
+    75% { transform: translate(-5px, -5px); } 
+    100% { transform: translate(0,0); } 
+}
+
+/* =========================================
+   4. CONTROL PANEL (FOOTER)
+   ========================================= */
+.control-panel {
+    background: #15151a;
+    border-top: 1px solid #333;
+    padding: 15px 15px 30px 15px; /* Учет SafeArea снизу */
+    border-radius: 20px 20px 0 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+}
+
+/* Блок ставки */
+.bet-controls {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.bet-input-box {
+    flex-grow: 1;
+}
+.bet-input-box label {
+    display: block;
+    font-size: 0.6rem;
+    color: #666;
+    font-weight: 700;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
+.stepper {
+    display: flex;
+    align-items: center;
+    background: #0b0b10;
+    border: 1px solid #333;
+    border-radius: 12px;
+    height: 48px;
+    padding: 2px;
+}
+.step-btn {
+    width: 44px; height: 100%;
+    background: #1a1a20;
+    border: none; border-radius: 10px;
+    color: #888; font-size: 1rem;
+    cursor: pointer;
+}
+.step-btn:active { background: #333; color: white; }
+
+#bet-amount {
+    flex-grow: 1;
+    text-align: center;
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: white;
+}
+
+/* Быстрые кнопки */
+.quick-bets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 120px;
+}
+.quick-bets button {
+    background: #1a1a20;
+    border: 1px solid #333;
+    color: #777;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    height: 22px;
+    cursor: pointer;
+    transition: 0.1s;
+}
+.quick-bets button:active { background: #333; color: white; border-color: #555; }
+
+/* ГЛАВНАЯ КНОПКА */
+.action-btn-wrapper {
+    width: 100%;
+}
+
+.big-btn {
+    width: 100%; height: 60px;
+    border: none; border-radius: 16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center; justify-content: center;
+    transition: transform 0.1s, box-shadow 0.2s;
+    user-select: none;
+}
+.big-btn:active { transform: scale(0.98); }
+
+/* Контент кнопки */
+.btn-content {
+    display: flex; flex-direction: column; align-items: center; z-index: 2;
+}
+.btn-title {
+    font-family: var(--font-num);
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+.btn-subtitle {
+    font-size: 0.7rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+/* Состояния кнопки (меняются через JS классы) */
+
+/* 1. Сделать ставку (Зеленая/Синяя) */
+.btn-bet {
+    background: linear-gradient(135deg, #00b09b, #96c93d); /* Greenish */
+    box-shadow: 0 4px 15px rgba(0, 176, 155, 0.3);
+    color: #003319;
+}
+
+/* 2. Забрать выигрыш (Оранжевая/Золотая) */
+.btn-cashout {
+    background: linear-gradient(135deg, #f2994a, #f2c94c); /* Orange */
+    box-shadow: 0 0 20px rgba(242, 153, 74, 0.5);
+    color: #442200;
+    animation: pulseBtn 1s infinite;
+}
+
+/* 3. Загрузка/Ожидание (Серая) */
+.btn-loading {
+    background: #2a2a30;
+    color: #555;
+    cursor: wait;
+}
+
+/* 4. Отключена (после краша или вывода) */
+.btn-disabled {
+    background: #1a1a20;
+    border: 1px solid #333;
+    color: #444;
+    cursor: not-allowed;
+}
+
+@keyframes pulseBtn {
+    0% { box-shadow: 0 0 15px rgba(242, 153, 74, 0.4); }
+    50% { box-shadow: 0 0 25px rgba(242, 153, 74, 0.7); border: 1px solid #fff; }
+    100% { box-shadow: 0 0 15px rgba(242, 153, 74, 0.4); }
+}
+
+/* =========================================
+   5. TOAST NOTIFICATION
+   ========================================= */
+.toast-notification {
+    position: fixed;
+    top: 80px; left: 0; width: 100%;
+    display: flex; justify-content: center;
+    pointer-events: none; /* Пропускать клики */
+    z-index: 100;
+}
+
+.toast-content {
+    background: rgba(0, 255, 136, 0.95);
+    padding: 10px 25px;
+    border-radius: 50px;
+    display: flex; align-items: center; gap: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    color: #003319;
+    animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast-icon {
+    font-size: 1.5rem;
+}
+.toast-info {
+    display: flex; flex-direction: column;
+}
+.toast-title { font-size: 0.65rem; font-weight: 800; opacity: 0.8; letter-spacing: 1px; }
+.toast-val { font-family: var(--font-num); font-size: 1.2rem; font-weight: 900; }
+
+@keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
