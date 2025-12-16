@@ -1,0 +1,358 @@
+/* =========================================
+   1. BACKGROUND ANIMATIONS
+   ========================================= */
+
+/* Фон для Депозита (Матрица/Зеленый код) */
+.matrix-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-color: #050a05;
+    background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 136, .03) 25%, rgba(0, 255, 136, .03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 136, .03) 75%, rgba(0, 255, 136, .03) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 136, .03) 25%, rgba(0, 255, 136, .03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 136, .03) 75%, rgba(0, 255, 136, .03) 76%, transparent 77%, transparent);
+    background-size: 30px 30px;
+    animation: matrixMove 60s linear infinite;
+}
+
+@keyframes matrixMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 1000px; }
+}
+
+/* Фон для Вывода (Потоки данных/Синий) */
+.money-stream-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-color: #05080a;
+    background-image: 
+        repeating-linear-gradient(90deg, transparent 0, transparent 40px, rgba(0, 240, 255, 0.02) 40px, rgba(0, 240, 255, 0.02) 41px),
+        linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0, 100, 255, 0.05) 50%, rgba(0,0,0,0) 100%);
+    background-size: 100% 100%, 100% 200%;
+    animation: streamFlow 10s linear infinite;
+}
+
+@keyframes streamFlow {
+    0% { background-position: 0 0, 0 -100%; }
+    100% { background-position: 0 0, 0 100%; }
+}
+
+/* =========================================
+   2. BALANCE CARDS
+   ========================================= */
+
+/* Главная карточка в Wallet Hub */
+.total-balance-card {
+    position: relative;
+    background: linear-gradient(135deg, #1a2a3a, #0d1216);
+    border-radius: 24px;
+    padding: 25px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.card-glow {
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, transparent 60%);
+    animation: rotateGlow 10s linear infinite;
+    z-index: 0; pointer-events: none;
+}
+@keyframes rotateGlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.bal-label {
+    position: relative; z-index: 1;
+    font-size: 0.75rem; color: #88a; font-weight: 700; letter-spacing: 1px;
+    margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.bal-value {
+    position: relative; z-index: 1;
+    font-family: var(--font-num); font-size: 2.8rem; font-weight: 900;
+    color: white; text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.bal-value .curr { color: var(--accent-blue); font-size: 2rem; margin-left: 5px; }
+.bal-approx {
+    position: relative; z-index: 1;
+    font-size: 0.85rem; color: #556; font-weight: 600; margin-top: 5px;
+}
+
+/* Карточка в Deposit/Withdraw (меньше размером) */
+.balance-card, .balance-display-card {
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px; padding: 15px;
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 20px;
+}
+.balance-card .val-row, .balance-display-card .val-row {
+    font-family: var(--font-num); font-size: 1.8rem; font-weight: 700; color: white; margin-top: 2px;
+}
+.balance-card .lbl, .balance-display-card .lbl {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; color: #666;
+}
+
+/* =========================================
+   3. ACTION BUTTONS (Wallet Hub)
+   ========================================= */
+.quick-actions {
+    display: flex; gap: 15px; margin-bottom: 30px;
+}
+.qa-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px; padding: 15px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    cursor: pointer; transition: 0.2s;
+    color: white;
+}
+.qa-btn:active { background: rgba(255, 255, 255, 0.08); transform: scale(0.98); }
+
+.icon-box {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+.qa-btn.deposit .icon-box { background: rgba(0, 255, 136, 0.1); color: var(--accent-green); }
+.qa-btn.withdraw .icon-box { background: rgba(0, 240, 255, 0.1); color: var(--accent-blue); }
+.qa-btn span { font-size: 0.9rem; font-weight: 700; }
+
+/* =========================================
+   4. METHOD SELECTION (Grid)
+   ========================================= */
+.section-title {
+    font-size: 0.75rem; font-weight: 800; color: #666; margin-bottom: 10px; margin-left: 5px;
+}
+
+.methods-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px;
+}
+
+.method-card {
+    position: relative;
+    background: #111; border: 1px solid #2a2a2a;
+    border-radius: 14px; padding: 15px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; transition: all 0.2s ease;
+    overflow: hidden;
+}
+.method-card img { width: 28px; height: 28px; object-fit: contain; }
+.method-card .m-icon { font-size: 1.5rem; color: #888; }
+.method-card span { font-size: 0.8rem; font-weight: 600; color: #888; }
+
+/* Активное состояние метода */
+.method-card.active {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-white);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.deposit-body .method-card.active { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 136, 0.1); }
+.withdraw-body .method-card.active { border-color: var(--accent-blue); box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+
+.method-card.active span { color: white; }
+.method-card.active .m-icon { color: white !important; }
+
+/* Бейдж (Быстро/Sale) */
+.m-badge {
+    position: absolute; top: 0; right: 0;
+    background: var(--accent-green); color: black;
+    font-size: 0.55rem; font-weight: 800; padding: 2px 6px;
+    border-bottom-left-radius: 8px;
+    opacity: 0; transition: 0.2s;
+}
+.method-card[data-method="card"] .m-badge { opacity: 1; }
+
+/* Disabled */
+.method-card.disabled { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+
+/* =========================================
+   5. FORMS & INPUTS
+   ========================================= */
+.deposit-form, .withdraw-form {
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.input-group label {
+    display: block; font-size: 0.7rem; color: #888; font-weight: 700; margin-bottom: 6px;
+}
+
+.input-wrapper {
+    display: flex; align-items: center;
+    background: #0d0d10;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 0 15px;
+    height: 56px;
+    transition: border-color 0.2s;
+}
+.input-wrapper:focus-within { border-color: white; }
+.deposit-body .input-wrapper:focus-within { border-color: var(--accent-green); }
+.withdraw-body .input-wrapper:focus-within { border-color: var(--accent-blue); }
+
+.input-wrapper input {
+    flex-grow: 1; background: transparent; border: none; outline: none;
+    color: white; font-family: var(--font-num); font-size: 1.1rem; font-weight: 700;
+    width: 100%;
+}
+.input-wrapper input::placeholder { color: #444; }
+
+/* Валюта/Иконка в инпуте */
+.currency-tag { font-weight: 800; color: #666; font-size: 1.1rem; }
+.input-icon { color: #666; font-size: 1.1rem; padding: 10px; cursor: pointer; margin-right: -10px; }
+.input-icon:active { color: white; }
+
+/* Быстрые кнопки (+100) */
+.quick-amounts { display: flex; gap: 8px; flex-wrap: wrap; }
+.quick-amounts button {
+    flex: 1;
+    background: #1a1a20; border: 1px solid #333;
+    color: #888; border-radius: 10px;
+    padding: 10px 0; font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; min-width: 60px;
+}
+.quick-amounts button:active { background: #333; color: white; }
+
+/* Кнопка MAX */
+.max-btn {
+    background: rgba(255,255,255,0.1); border: none; color: white;
+    font-size: 0.7rem; font-weight: 700; padding: 6px 10px; border-radius: 6px;
+    cursor: pointer;
+}
+
+/* =========================================
+   6. SUMMARY & CONVERSION
+   ========================================= */
+.conversion-box, .summary-box {
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px; padding: 15px;
+    border: 1px dashed #333;
+    margin-top: 5px;
+}
+
+.conv-row, .summary-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.85rem; color: #888; margin-bottom: 6px;
+}
+.conv-row:last-child { margin-bottom: 0; }
+
+.conv-row.highlight, .summary-row.total {
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid #333;
+    color: white; font-weight: 700; font-size: 1rem;
+}
+.deposit-body .highlight span:last-child { color: var(--accent-green); font-family: var(--font-num); }
+.withdraw-body .total span:last-child { color: var(--accent-blue); font-family: var(--font-num); }
+
+.conversion-hint {
+    text-align: right; font-size: 0.75rem; color: #666; margin-top: 4px;
+}
+
+/* =========================================
+   7. HISTORY LIST
+   ========================================= */
+.history-section {
+    flex-grow: 1; display: flex; flex-direction: column; min-height: 200px;
+}
+.sec-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 15px;
+}
+.sec-header h3 { margin: 0; font-size: 0.8rem; color: #666; font-weight: 800; }
+.refresh-btn { background: none; border: none; color: #666; font-size: 1rem; padding: 5px; cursor: pointer; }
+.refresh-btn:active { color: white; transform: rotate(180deg); transition: 0.3s; }
+
+.history-list {
+    display: flex; flex-direction: column; gap: 10px;
+    padding-bottom: 20px;
+}
+
+.tx-item {
+    background: #111; border: 1px solid #222;
+    border-radius: 14px; padding: 12px 15px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.tx-left { display: flex; align-items: center; gap: 12px; }
+.tx-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.tx-item.in .tx-icon { background: rgba(0, 255, 136, 0.1); color: var(--accent-green); }
+.tx-item.out .tx-icon { background: rgba(0, 240, 255, 0.1); color: var(--accent-blue); }
+
+.tx-info { display: flex; flex-direction: column; }
+.tx-title { font-size: 0.85rem; font-weight: 700; color: #ddd; }
+.tx-date { font-size: 0.7rem; color: #666; }
+
+.tx-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+.tx-amount { font-family: var(--font-num); font-weight: 700; font-size: 0.9rem; color: white; }
+.tx-item.in .tx-amount { color: var(--accent-green); }
+
+.tx-status { font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-top: 2px; }
+.tx-status.success { background: rgba(0, 255, 136, 0.1); color: var(--accent-green); }
+.tx-status.pending { background: rgba(255, 215, 0, 0.1); color: var(--accent-gold); }
+.tx-status.error { background: rgba(255, 68, 68, 0.1); color: var(--accent-red); }
+
+/* Empty state */
+.empty-state {
+    text-align: center; color: #444; padding: 40px 0;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-state i { font-size: 2rem; }
+
+/* Loader */
+.loader-placeholder { display: flex; justify-content: center; padding: 20px; }
+.spinner {
+    width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--accent-blue); border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* =========================================
+   8. FOOTER BUTTONS
+   ========================================= */
+.deposit-footer, .withdraw-footer {
+    background: #0a0a0f;
+    border-top: 1px solid #222;
+    padding: 20px; z-index: 20;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+
+.pay-btn, .action-btn {
+    width: 100%; height: 55px; border: none; border-radius: 16px;
+    font-weight: 900; font-size: 1.1rem; letter-spacing: 1px;
+    cursor: pointer; transition: 0.2s;
+    font-family: var(--font-main);
+}
+.pay-btn {
+    background: linear-gradient(135deg, #00b359, var(--accent-green));
+    color: #003319;
+    box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
+}
+.action-btn {
+    background: linear-gradient(135deg, #0077ff, var(--accent-blue));
+    color: #001a33;
+    box-shadow: 0 5px 20px rgba(0, 240, 255, 0.2);
+}
+.pay-btn:active, .action-btn:active { transform: scale(0.98); }
+.action-btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
+
+.secure-label { font-size: 0.7rem; color: #444; display: flex; align-items: center; gap: 5px; }
+
+/* =========================================
+   9. LOADER MODAL
+   ========================================= */
+.loader-ring {
+    display: inline-block; width: 50px; height: 50px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-radius: 50%; border-top-color: var(--accent-green);
+    animation: spin 1s linear infinite; margin-bottom: 20px;
+}
+.status-card {
+    background: #1a1a20; padding: 30px; border-radius: 24px;
+    text-align: center; border: 1px solid #333; width: 80%;
+}
+.status-card h3, .status-card h2 { margin: 0 0 10px; font-family: var(--font-num); }
+.status-card p { font-size: 0.9rem; color: #888; margin: 0 0 20px; }
+
+.check-icon { font-size: 3rem; color: var(--accent-green); margin-bottom: 15px; animation: popIn 0.3s; }
+.close-btn {
+    background: #333; color: white; border: none; padding: 12px 30px;
+    border-radius: 12px; font-weight: 700; cursor: pointer;
+  }
