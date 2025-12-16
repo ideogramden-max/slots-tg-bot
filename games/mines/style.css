@@ -1,0 +1,358 @@
+/* =========================================
+   1. GAME CONTAINER & BACKGROUND
+   ========================================= */
+.mines-body {
+    background-color: #0c0c12;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Техно-фон (Сетка точек) */
+.tech-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: -2;
+    background-image: 
+        radial-gradient(#2a2a35 15%, transparent 16%),
+        radial-gradient(#2a2a35 15%, transparent 16%);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    opacity: 0.3;
+}
+
+/* =========================================
+   2. STAGE & STATS
+   ========================================= */
+.mines-stage {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    position: relative;
+    width: 100%;
+}
+
+/* Инфо-бар (Множитель / Профит) */
+.game-stats {
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    /* Анимация появления */
+    animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.game-stats.hidden { display: none; }
+
+.stat-box {
+    flex: 1;
+    background: #1a1a22;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.stat-box.highlight {
+    background: rgba(0, 255, 136, 0.05);
+    border-color: rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+}
+
+.s-label { font-size: 0.6rem; color: #777; font-weight: 700; letter-spacing: 1px; margin-bottom: 2px; }
+.s-val { font-family: var(--font-num); font-size: 1.1rem; font-weight: 700; color: white; }
+#next-profit { color: var(--accent-green); text-shadow: 0 0 5px rgba(0, 255, 136, 0.3); }
+
+/* =========================================
+   3. GRID (СЕТКА)
+   ========================================= */
+.grid-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 340px; /* Ограничиваем ширину на десктопе */
+    aspect-ratio: 1/1; /* Квадратная форма */
+}
+
+.mines-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+}
+
+/* ПЛИТКА */
+.tile {
+    background: #23232e;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    /* Эффект объемной кнопки */
+    box-shadow: 0 4px 0 #15151a; 
+    transition: transform 0.1s, background 0.2s, opacity 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Hover (только для десктопа) */
+@media (hover: hover) {
+    .tile:hover:not(.revealed):not(.disabled) {
+        background: #2a2a35;
+        transform: translateY(-1px);
+    }
+}
+
+/* Нажатие */
+.tile:active:not(.revealed):not(.disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #15151a;
+}
+
+/* Отключенная плитка (Game Over или анимация) */
+.tile.disabled { pointer-events: none; }
+
+/* Состояние: ОТКРЫТО */
+.tile.revealed {
+    transform: translateY(4px); /* Вдавленное состояние */
+    box-shadow: 0 0 0 transparent; /* Тень исчезает */
+    cursor: default;
+    animation: popTile 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* АЛМАЗ */
+.tile.revealed.gem {
+    background: #0f1e1b;
+    border: 1px solid var(--accent-green);
+    box-shadow: inset 0 0 15px rgba(0, 255, 136, 0.2);
+    color: var(--accent-green);
+}
+.tile.revealed.gem i {
+    filter: drop-shadow(0 0 5px var(--accent-green));
+}
+
+/* МИНА */
+.tile.revealed.bomb {
+    background: #2a1010;
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    z-index: 2;
+    animation: shake 0.4s ease-in-out;
+}
+.tile.revealed.bomb i {
+    filter: drop-shadow(0 0 8px #ff0000);
+}
+
+/* Полупрозрачность (для показа остальных мин в конце) */
+.tile.faded { opacity: 0.4; }
+
+/* ОВЕРЛЕЙ БЛОКИРОВКИ */
+.grid-overlay {
+    position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 5;
+    border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    opacity: 1;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+.grid-overlay.hidden { 
+    opacity: 0; 
+    visibility: hidden;
+    pointer-events: none; 
+}
+
+.grid-overlay i { font-size: 2.5rem; color: #666; margin-bottom: 5px; }
+.grid-overlay span { font-size: 0.9rem; font-weight: 700; color: #ccc; letter-spacing: 1px; }
+
+/* =========================================
+   4. CONTROLS (FOOTER)
+   ========================================= */
+.mines-controls {
+    background: #13131a;
+    border-top: 1px solid #333;
+    padding: 20px 15px 30px 15px; /* Учет низа экрана */
+    border-radius: 20px 20px 0 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease;
+}
+
+/* Зона настроек (Сворачиваемая) */
+.settings-area {
+    display: flex; flex-direction: column; gap: 15px;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+    max-height: 300px; /* Достаточно для контента */
+    opacity: 1;
+}
+.settings-area.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+}
+
+/* Селектор количества мин */
+.mines-selector { display: flex; flex-direction: column; gap: 6px; }
+.label-tiny { font-size: 0.6rem; color: #666; font-weight: 700; margin-left: 2px; }
+
+.mines-options {
+    display: flex; gap: 8px;
+}
+.m-opt {
+    flex: 1;
+    background: #222; 
+    border: 1px solid #333;
+    color: #888;
+    padding: 10px 0; 
+    border-radius: 10px;
+    font-weight: 700; 
+    font-family: var(--font-num);
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.9rem;
+}
+.m-opt:active { transform: scale(0.95); }
+
+.m-opt.active {
+    background: #333;
+    color: white;
+    border-color: white;
+    box-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+
+/* Кастомная кнопка мин */
+.m-opt-custom {
+    flex: 1.2;
+    background: #1a1a22; 
+    border: 1px dashed #555; 
+    color: #ccc;
+    border-radius: 10px; 
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.m-opt-custom span { font-weight: 700; font-family: var(--font-num); }
+
+/* Слайдер (Скрытый) */
+.mines-slider-box {
+    background: #1a1a22; padding: 15px 10px; border-radius: 12px;
+    border: 1px solid #333;
+    margin-top: 5px;
+    animation: fadeIn 0.3s;
+}
+.mines-slider-box.hidden { display: none; }
+
+input[type=range] {
+    width: 100%; cursor: pointer;
+    accent-color: var(--accent-blue);
+}
+
+/* Ввод ставки */
+.bet-input-row {
+    display: flex; gap: 10px; align-items: center;
+}
+.stepper-box {
+    flex: 1; display: flex; align-items: center;
+    background: #1a1a22; border: 1px solid #333;
+    border-radius: 12px; height: 50px;
+    padding: 0 5px;
+}
+.step-btn {
+    width: 44px; height: 100%; background: transparent;
+    border: none; color: #888; font-size: 1.1rem; cursor: pointer;
+    transition: color 0.2s;
+}
+.step-btn:active { color: white; background: #2a2a30; border-radius: 8px; }
+
+#bet-amount {
+    flex: 1; text-align: center;
+    font-family: var(--font-num); font-weight: 700; font-size: 1.1rem;
+    color: white;
+}
+
+.quick-bets { display: flex; gap: 6px; }
+.quick-bets button {
+    background: #222; border: 1px solid #333; color: #888;
+    padding: 0 12px; border-radius: 10px; 
+    font-size: 0.7rem; font-weight: 700;
+    height: 50px; cursor: pointer;
+    transition: 0.2s;
+}
+.quick-bets button:active { background: #333; color: white; border-color: #555; }
+
+/* ГЛАВНАЯ КНОПКА */
+.action-wrapper { width: 100%; }
+
+.main-action-btn {
+    width: 100%; height: 60px;
+    border: none; border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+    font-family: var(--font-main);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    position: relative; overflow: hidden;
+}
+.main-action-btn:active { transform: scale(0.98); }
+
+/* 1. Состояние: ИГРАТЬ */
+.main-action-btn:not(.cashout) {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    box-shadow: 0 5px 20px rgba(0, 123, 255, 0.3);
+}
+
+/* 2. Состояние: ЗАБРАТЬ (CASHOUT) */
+.main-action-btn.cashout {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #332200;
+    box-shadow: 0 0 25px rgba(255, 170, 0, 0.4);
+    animation: pulseBtn 1.5s infinite;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-text { font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; z-index: 2; }
+.btn-sub { font-size: 0.75rem; opacity: 0.9; font-weight: 600; margin-top: 2px; z-index: 2; }
+
+/* =========================================
+   5. ANIMATIONS
+   ========================================= */
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popTile { 0% { transform: scale(0.8); opacity: 0.5; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+@keyframes pulseBtn { 0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.4); } 50% { transform: scale(1.02); box-shadow: 0 0 25px rgba(255, 170, 0, 0.6); } 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.4); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* =========================================
+   6. MODALS OVERRIDES
+   ========================================= */
+.win-glow {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(0,255,136,0.25) 0%, transparent 70%);
+    z-index: -1;
+    animation: rotateGlow 5s linear infinite;
+}
+@keyframes rotateGlow { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+.win-icon { font-size: 3.5rem; color: var(--accent-green); margin-bottom: 10px; filter: drop-shadow(0 0 15px var(--accent-green)); }
+.loss-icon { font-size: 3.5rem; color: var(--accent-red); margin-bottom: 10px; filter: drop-shadow(0 0 15px var(--accent-red)); }
+
+.win-val { font-size: 2.2rem; font-weight: 900; color: var(--accent-green); margin: 10px 0; font-family: var(--font-num); }
+.claim-btn { width: 100%; background: var(--accent-green); color: black; border: none; padding: 14px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 1rem; box-shadow: 0 5px 15px rgba(0,255,136,0.2); }
+.retry-btn { width: 100%; background: #333; color: white; border: none; padding: 14px; border-radius: 14px; font-weight: 800; cursor: pointer; font-size: 1rem; }
