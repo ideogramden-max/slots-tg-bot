@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#05080a">
+    <title>FastMoney - Вывод средств</title>
+    
+    <!-- Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="../../style.css">       <!-- Глобальные -->
+    <link rel="stylesheet" href="style.css">             <!-- Общие стили кошелька -->
+    <link rel="stylesheet" href="withdraw.css">          <!-- Специфичные стили вывода -->
+    
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="withdraw-body">
+
+    <!-- ФОН: Потоки данных (отличается от депозита) -->
+    <div class="money-stream-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.history.back()">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="header-title">ВЫВОД</span>
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="withdraw-content">
+        
+        <!-- Карточка доступного баланса -->
+        <div class="balance-display-card">
+            <span class="lbl">ДОСТУПНО ДЛЯ ВЫВОДА</span>
+            <div class="val-row">
+                <span id="balance-val">Loading...</span>
+                <span class="currency-symbol">$</span>
+            </div>
+        </div>
+
+        <!-- Секция 1: Выбор метода -->
+        <div class="section-title">КУДА ВЫВОДИМ?</div>
+        <div class="methods-grid">
+            <!-- USDT -->
+            <button class="method-card active" onclick="selectMethod('usdt')" data-method="usdt">
+                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT">
+                <span>USDT (TRC20)</span>
+            </button>
+            
+            <!-- TON -->
+            <button class="method-card" onclick="selectMethod('ton')" data-method="ton">
+                <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" alt="TON">
+                <span>TON Wallet</span>
+            </button>
+            
+            <!-- Карта РФ -->
+            <button class="method-card" onclick="selectMethod('card')" data-method="card">
+                <i class="fa-solid fa-credit-card" style="color: #00f3ff;"></i>
+                <span>Карта РФ</span>
+            </button>
+            
+            <!-- Stars (Обычно вывод недоступен, но оставим заглушку для симметрии или обмена) -->
+            <button class="method-card disabled" style="opacity: 0.5; filter: grayscale(1);">
+                <i class="fa-solid fa-star"></i>
+                <span>TG Stars</span>
+            </button>
+        </div>
+
+        <!-- Секция 2: Форма ввода -->
+        <div class="withdraw-form">
+            
+            <!-- Поле суммы -->
+            <div class="input-group">
+                <label>Сумма вывода</label>
+                <div class="input-wrapper">
+                    <input type="number" id="amount-input" placeholder="0.00" inputmode="decimal">
+                    <button class="max-btn" onclick="setMaxAmount()">MAX</button>
+                </div>
+                <!-- Подсказка конвертации для карт -->
+                <div class="conversion-hint hidden" id="conversion-hint">
+                    ≈ <span id="conv-val">0</span> ₽
+                </div>
+            </div>
+
+            <!-- Поле реквизитов -->
+            <div class="input-group">
+                <label id="addr-label">Адрес кошелька (TRC20)</label>
+                <div class="input-wrapper">
+                    <input type="text" id="addr-input" placeholder="T..." autocomplete="off">
+                    <i class="fa-solid fa-paste input-icon" onclick="pasteFromClipboard()"></i>
+                </div>
+            </div>
+
+            <!-- Итоговая сводка -->
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Комиссия сети:</span>
+                    <span class="fee-val" id="fee-val">1.00 $</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Вы получите:</span>
+                    <span class="total-val" id="total-receive">0.00 $</span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <footer class="withdraw-footer">
+        <!-- Кнопка заблокирована по умолчанию -->
+        <button class="action-btn" id="withdraw-btn" onclick="processWithdraw()" disabled>
+            ВЫВЕСТИ СРЕДСТВА
+        </button>
+    </footer>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Статус заявки -->
+    <div id="modal-success" class="modal-overlay hidden">
+        <div class="status-card">
+            <!-- Лоадер -->
+            <div class="loader-ring"></div>
+            <!-- Иконка успеха (появится JS-ом) -->
+            <div class="check-icon hidden"><i class="fa-solid fa-check"></i></div>
+            
+            <h2 id="status-title">ОБРАБОТКА...</h2>
+            <p id="status-text">Создаем транзакцию в блокчейне.</p>
+            
+            <button class="close-btn hidden" id="finish-btn" onclick="window.location.href='../../index.html'">
+                В МЕНЮ
+            </button>
+        </div>
+    </div>
+
+    <!-- Инфо / Лимиты -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>ЛИМИТЫ И КОМИССИИ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p><b>USDT (TRC20):</b></p>
+                <ul>
+                    <li>Мин. вывод: 10 $</li>
+                    <li>Комиссия: 1 $ (Фикс)</li>
+                </ul>
+                <p><b>Карты РФ:</b></p>
+                <ul>
+                    <li>Мин. вывод: 500 ₽</li>
+                    <li>Комиссия: 3% + 50 ₽</li>
+                </ul>
+                <p><b>TON:</b></p>
+                <ul>
+                    <li>Мин. вывод: 0.5 TON</li>
+                    <li>Комиссия сети: ~0.05 TON</li>
+                </ul>
+                <hr style="border-color:#333; margin:10px 0;">
+                <p style="font-size:0.75rem; color:#888;">
+                    Срок зачисления зависит от загруженности сети (обычно 5-15 минут). Вывод на карты может занимать до 24 часов.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- СКРИПТЫ -->
+    <script src="../../config.js"></script>
+    <script src="../../core/utils.js"></script>
+    <script src="../../core/api.js"></script>
+    
+    <!-- Логика вывода -->
+    <script src="src/withdraw.js"></script>
+
+</body>
+</html>
