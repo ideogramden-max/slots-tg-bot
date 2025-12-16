@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#05080a">
+    <title>FastMoney - Кошелек</title>
+    
+    <!-- Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="../../style.css">       <!-- Глобальные -->
+    <link rel="stylesheet" href="style.css">             <!-- Стили кошелька -->
+    
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="wallet-body">
+
+    <!-- Фон: Цифровые потоки -->
+    <div class="money-stream-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='../../index.html'">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="header-title">КОШЕЛЕК</span>
+        <button class="icon-btn" onclick="openInfoModal()">
+            <i class="fa-solid fa-circle-info"></i>
+        </button>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="wallet-content">
+        
+        <!-- Карточка Баланса -->
+        <section class="total-balance-card">
+            <div class="card-glow"></div>
+            <div class="bal-label">
+                <i class="fa-solid fa-wallet"></i> ОБЩИЙ БАЛАНС
+            </div>
+            <div class="bal-value">
+                <span id="wallet-balance">Loading...</span>
+                <span class="curr">$</span>
+            </div>
+            <div class="bal-approx">
+                ≈ <span id="wallet-balance-rub">...</span> ₽
+            </div>
+        </section>
+
+        <!-- Кнопки Действий -->
+        <section class="quick-actions">
+            <button class="qa-btn deposit" onclick="window.location.href='deposit.html'">
+                <div class="icon-box"><i class="fa-solid fa-arrow-down"></i></div>
+                <span>Пополнить</span>
+            </button>
+            <button class="qa-btn withdraw" onclick="window.location.href='withdraw.html'">
+                <div class="icon-box"><i class="fa-solid fa-arrow-up"></i></div>
+                <span>Вывести</span>
+            </button>
+        </section>
+
+        <!-- История Транзакций -->
+        <section class="history-section">
+            <div class="sec-header">
+                <h3>ИСТОРИЯ ОПЕРАЦИЙ</h3>
+                <button class="refresh-btn" onclick="loadHistory()">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+
+            <div class="history-list" id="transaction-list">
+                <!-- Сюда JS загружает транзакции -->
+                <!-- Пример лоадера -->
+                <div class="loader-placeholder">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+            
+            <!-- Пустое состояние (скрыто по умолчанию) -->
+            <div id="empty-history" class="empty-state hidden">
+                <i class="fa-solid fa-receipt"></i>
+                <p>История операций пуста</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- МОДАЛКИ -->
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>БЕЗОПАСНОСТЬ</h3>
+                <button onclick="closeInfoModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>Все транзакции защищены протоколом SSL.</p>
+                <p>Депозиты через 1plat и Telegram Stars зачисляются мгновенно.</p>
+                <p>Вывод средств обрабатывается автоматически (до 15 минут) или вручную оператором (до 24 часов при крупных суммах).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- СКРИПТЫ -->
+    <script src="../../config.js"></script>
+    <script src="../../core/utils.js"></script>
+    <script src="../../core/api.js"></script>
+    
+    <!-- Логика кошелька -->
+    <script src="src/history.js"></script> <!-- Рендер списка -->
+    <script src="src/main.js"></script>    <!-- Точка входа -->
+
+</body>
+  </html>
