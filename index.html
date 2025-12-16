@@ -3,120 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FastMoney - Main Hub</title>
+    <meta name="theme-color" content="#09090b">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="description" content="FastMoney - Next Gen Telegram Casino">
     
-    <!-- Шрифты и Иконки -->
+    <title>FastMoney - Главное Меню</title>
+    
+    <!-- Подключение шрифтов (Montserrat + Orbitron) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Иконки FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Основной стиль -->
+    <!-- Основные стили -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Telegram SDK -->
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="hub-body">
 
-    <!-- Фон: Живой Canvas -->
+    <!-- =========================================
+         ФОНОВЫЕ ЭФФЕКТЫ
+         ========================================= -->
+    <!-- Живой Canvas фон (частицы) -->
     <canvas id="bg-canvas"></canvas>
+    <!-- Виньетка для затемнения краев -->
     <div class="vignette"></div>
 
-    <!-- Верхняя панель: Профиль и Валюта -->
+    <!-- =========================================
+         ВЕРХНЯЯ ПАНЕЛЬ (HEADER)
+         ========================================= -->
     <header class="top-bar">
-        <div class="user-info" onclick="window.location.href='profile.html'">
+        <!-- Блок профиля (слева) -->
+        <div class="user-info" onclick="window.location.href='profile/index.html'">
             <div class="avatar-frame">
+                <!-- Аватар заглушка, заменится JS-ом -->
                 <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="user-avatar" alt="User">
+                <!-- Индикатор уровня (опционально) -->
+                <div class="level-badge" id="user-level-badge">1</div>
             </div>
             <div class="user-text">
-                <span id="username">Loading...</span>
+                <span id="username">Загрузка...</span>
                 <span class="user-id">ID: <span id="userid">---</span></span>
             </div>
         </div>
         
-        <!-- Выбор валюты -->
-        <div class="currency-selector" id="currency-btn">
-            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="curr-icon" id="curr-icon">
+        <!-- Селектор валюты (справа) -->
+        <div class="currency-selector" id="currency-btn" onclick="toggleCurrencyDropdown()">
+            <!-- Текущая иконка -->
+            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="curr-icon" id="curr-icon" alt="USDT">
             <span id="curr-name">USDT</span>
             <i class="fa-solid fa-caret-down"></i>
             
-            <!-- Выпадающий список -->
+            <!-- Выпадающий список валют -->
             <div class="curr-dropdown hidden" id="curr-dropdown">
-                <div class="curr-item" onclick="changeCurrency('RUB')">
+                <div class="curr-item" onclick="changeCurrency('RUB'); event.stopPropagation();">
                     <span class="fi">₽</span> RUB
                 </div>
-                <div class="curr-item" onclick="changeCurrency('USDT')">
-                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png"> USDT
+                <div class="curr-item" onclick="changeCurrency('USDT'); event.stopPropagation();">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT"> USDT
                 </div>
-                <div class="curr-item" onclick="changeCurrency('STARS')">
+                <div class="curr-item" onclick="changeCurrency('STARS'); event.stopPropagation();">
                     <i class="fa-solid fa-star" style="color:#ffd700"></i> STARS
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Главный блок баланса -->
+    <!-- =========================================
+         ГЛАВНЫЙ БЛОК БАЛАНСА
+         ========================================= -->
     <section class="balance-hub">
+        
+        <!-- Переключатель Режимов (Real / Demo) -->
         <div class="balance-toggle">
             <button class="toggle-btn active" id="btn-real" onclick="setMode('real')">REAL</button>
             <button class="toggle-btn" id="btn-demo" onclick="setMode('demo')">DEMO</button>
         </div>
         
+        <!-- Отображение суммы -->
         <div class="balance-display">
             <span class="currency-symbol" id="main-curr-sym">$</span>
             <span class="amount odometer" id="balance-amount">0.00</span>
         </div>
 
+        <!-- Кнопки действий (Депозит / Вывод) -->
         <div class="wallet-actions">
-            <button class="action-btn deposit" onclick="window.location.href='deposit.html'">
+            <!-- Ведет в папку payments/ -->
+            <button class="action-btn deposit" onclick="window.location.href='payments/deposit.html'">
                 <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
                 <span>Пополнить</span>
             </button>
-            <button class="action-btn withdraw" onclick="window.location.href='withdraw.html'">
+            <button class="action-btn withdraw" onclick="window.location.href='payments/withdraw.html'">
                 <div class="icon-circle"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
                 <span>Вывести</span>
             </button>
         </div>
     </section>
 
-    <!-- Основная навигация -->
+    <!-- =========================================
+         ОСНОВНАЯ НАВИГАЦИЯ (МЕНЮ)
+         ========================================= -->
     <nav class="main-nav">
-        <!-- Огромная кнопка ИГРЫ -->
+        
+        <!-- Огромная кнопка ИГРАТЬ (Ведет к списку игр) -->
         <div class="nav-card big-play" onclick="navigateTo('gamelist.html')">
             <div class="card-bg"></div>
             <div class="content">
                 <h2>ИГРЫ</h2>
-                <p>15+ режимов</p>
+                <p>Slots, Crash, Mines...</p>
             </div>
             <div class="play-icon"><i class="fa-solid fa-gamepad"></i></div>
         </div>
 
+        <!-- Сетка дополнительных разделов -->
         <div class="nav-grid">
-            <div class="nav-card" onclick="window.location.href='profile.html'">
+            
+            <!-- Профиль -->
+            <div class="nav-card" onclick="window.location.href='profile/index.html'">
                 <i class="fa-solid fa-user-astronaut"></i>
                 <span>Профиль</span>
             </div>
-            <div class="nav-card" onclick="window.location.href='stat.html'">
+            
+            <!-- Статистика / Топ игроков -->
+            <div class="nav-card" onclick="window.location.href='fakeitogiandreal/index.html'">
                 <i class="fa-solid fa-chart-pie"></i>
                 <span>Статистика</span>
             </div>
+            
+            <!-- Реферальная система -->
             <div class="nav-card" onclick="window.location.href='ref.html'">
                 <i class="fa-solid fa-users"></i>
-                <span>Рефералы</span>
+                <span>Партнеры</span>
             </div>
-            <div class="nav-card support" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/fastmoneyhelp_bot')">
+            
+            <!-- Поддержка -->
+            <div class="nav-card support" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/support_bot')">
                 <i class="fa-solid fa-headset"></i>
                 <span>Support</span>
             </div>
         </div>
     </nav>
     
-    <!-- Нижний статус бар -->
+    <!-- =========================================
+         ПОДВАЛ (FOOTER)
+         ========================================= -->
     <footer class="system-status">
-        <span class="ping"><span class="dot"></span> Online: 14,203</span>
+        <span class="ping">
+            <span class="dot pulse"></span> Online: <span id="online-counter">...</span>
+        </span>
         <span class="version">v2.5.1 Stable</span>
     </footer>
 
+    <!-- =========================================
+         СКРИПТЫ
+         ========================================= -->
+    <!-- Конфигурация (адрес сервера) -->
+    <script src="config.js"></script>
+    
+    <!-- Вспомогательные функции (форматирование, звук) -->
+    <script src="core/utils.js"></script>
+    <script src="core/api.js"></script>
+    
+    <!-- Основная логика страницы -->
     <script src="script.js"></script>
+
+    <script>
+        // Небольшой инлайн скрипт для управления выпадающим списком валют,
+        // чтобы не перегружать основной script.js чисто визуальной логикой index.html
+        function toggleCurrencyDropdown() {
+            const dropdown = document.getElementById('curr-dropdown');
+            dropdown.classList.toggle('hidden');
+            
+            // Вибрация при открытии
+            window.Telegram.WebApp.HapticFeedback.selectionChanged();
+        }
+
+        // Закрыть дропдаун при клике в любое другое место
+        document.addEventListener('click', function(event) {
+            const selector = document.getElementById('currency-btn');
+            const dropdown = document.getElementById('curr-dropdown');
+            if (!selector.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
