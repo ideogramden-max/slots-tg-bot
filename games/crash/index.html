@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0b10">
+    <title>FastMoney - Crash</title>
+    
+    <!-- Глобальные шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;900&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- СТИЛИ -->
+    <!-- 1. Глобальные стили (общие для всего приложения) -->
+    <link rel="stylesheet" href="../../../style.css">
+    <!-- 2. Стили конкретно этой игры -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="crash-body">
+
+    <!-- =========================================
+         СЛОЙ 1: ФОН (Космос)
+         ========================================= -->
+    <div class="space-background">
+        <div class="stars"></div>
+        <div class="nebula"></div>
+    </div>
+    <div class="vignette"></div>
+
+    <!-- =========================================
+         СЛОЙ 2: ВЕРХНЯЯ ПАНЕЛЬ (HUD)
+         ========================================= -->
+    <header class="game-header">
+        <!-- Кнопка выхода в меню -->
+        <button class="back-btn" onclick="window.location.href='../../gamelist.html'">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        
+        <!-- Баланс (синхронизируется JS) -->
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <!-- Кнопка "Как играть" -->
+        <button class="icon-btn" onclick="UI.toggleInfo(true)">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- =========================================
+         СЛОЙ 3: ИСТОРИЯ МНОЖИТЕЛЕЙ
+         ========================================= -->
+    <div class="history-bar">
+        <div class="history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <!-- Сюда JS добавляет баблы с результатами -->
+        <div class="history-track" id="history-track">
+            <!-- Пример: <div class="badge x2">2.45x</div> -->
+        </div>
+    </div>
+
+    <!-- =========================================
+         СЛОЙ 4: ИГРОВАЯ СЦЕНА (CANVAS)
+         ========================================= -->
+    <main class="game-stage">
+        <div class="canvas-container" id="canvas-container">
+            <!-- График рисуется здесь -->
+            <canvas id="crash-canvas"></canvas>
+            
+            <!-- Оверлей с цифрами (Центр экрана) -->
+            <div class="center-display">
+                <!-- Статусные сообщения (Ожидание, Старт) -->
+                <div id="status-msg" class="status-text">ПОДКЛЮЧЕНИЕ...</div>
+                
+                <!-- Главный множитель (растет) -->
+                <div id="multiplier-display" class="multiplier-text hidden">1.00x</div>
+                
+                <!-- Сообщение о краше -->
+                <div id="crash-msg" class="crash-text hidden">CRASHED</div>
+            </div>
+
+            <!-- Ракета (HTML элемент, позиционируемый через JS поверх Canvas) -->
+            <div id="rocket" class="rocket-wrapper">
+                <i class="fa-solid fa-jet-fighter-up rocket-icon"></i>
+                <div class="rocket-trail"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- =========================================
+         СЛОЙ 5: ПАНЕЛЬ УПРАВЛЕНИЯ
+         ========================================= -->
+    <footer class="control-panel">
+        
+        <!-- Верхний ряд: Настройка ставки -->
+        <div class="bet-controls">
+            <div class="bet-input-box">
+                <label>Сумма ставки</label>
+                <div class="stepper">
+                    <button class="step-btn" id="btn-dec"><i class="fa-solid fa-minus"></i></button>
+                    <span id="bet-amount">100</span>
+                    <button class="step-btn" id="btn-inc"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+
+            <!-- Быстрые кнопки -->
+            <div class="quick-bets">
+                <button onclick="UI.setBet(100)">100</button>
+                <button onclick="UI.setBet(500)">500</button>
+                <button onclick="UI.setBet(1000)">1K</button>
+                <button onclick="UI.setBet('max')">MAX</button>
+            </div>
+        </div>
+
+        <!-- Нижний ряд: ГЛАВНАЯ КНОПКА -->
+        <div class="action-btn-wrapper">
+            <!-- У кнопки есть состояния: btn-bet, btn-cashout, btn-loading -->
+            <button id="main-btn" class="big-btn btn-loading" disabled>
+                <div class="btn-content">
+                    <span class="btn-title">ЗАГРУЗКА</span>
+                    <span class="btn-subtitle">Связь с сервером...</span>
+                </div>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- =========================================
+         СЛОЙ 6: МОДАЛКИ И УВЕДОМЛЕНИЯ
+         ========================================= -->
+
+    <!-- Тост победы (всплывает сверху) -->
+    <div id="toast-win" class="toast-notification hidden">
+        <div class="toast-content">
+            <div class="toast-icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="toast-info">
+                <span class="toast-title">ВЫ ЗАБРАЛИ!</span>
+                <span class="toast-val" id="toast-val-display">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка с правилами -->
+    <div id="modal-info" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>КАК ИГРАТЬ?</h3>
+                <button class="close-modal" onclick="UI.toggleInfo(false)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>1. Сделайте ставку до начала раунда.</p>
+                <p>2. Следите за полетом самолета и ростом коэффициента.</p>
+                <p>3. Нажмите <b>ЗАБРАТЬ</b> до того, как самолет улетит!</p>
+                <hr>
+                <p style="font-size: 0.8rem; color: #888;">
+                    <i class="fa-solid fa-shield-halved"></i> Provably Fair: Результат генерируется сервером заранее и не зависит от ваших ставок.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Звуки (автозагрузка через JS, здесь плейсхолдеры не нужны) -->
+
+    <!-- =========================================
+         СКРИПТЫ
+         ========================================= -->
+    
+    <!-- 1. Ядро приложения -->
+    <script src="../../../config.js"></script>
+    <script src="../../../core/utils.js"></script>
+    <script src="../../../core/api.js"></script>
+    
+    <!-- 2. Локальные конфиги игры -->
+    <script src="config.js"></script>
+    
+    <!-- 3. Модули игры (Порядок важен) -->
+    <script src="src/math.js"></script>     <!-- Математика полета -->
+    <script src="src/graphics.js"></script> <!-- Отрисовка Canvas -->
+    <script src="src/network.js"></script>  <!-- Связь с API -->
+    <script src="src/ui.js"></script>       <!-- Управление интерфейсом -->
+    
+    <!-- 4. Точка входа -->
+    <script src="src/main.js"></script>
+
+</body>
+  </html>
