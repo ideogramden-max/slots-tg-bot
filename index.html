@@ -1,30 +1,122 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <!-- ... твои мета теги и стили ... -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FastMoney - Main Hub</title>
+    
+    <!-- Шрифты и Иконки -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Основной стиль -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- CSS для плавности -->
-    <style>
-        #app-content { transition: opacity 0.2s ease-in-out; width: 100%; height: 100%; }
-    </style>
 </head>
 <body class="hub-body">
 
-    <!-- Фон (Остается всегда) -->
+    <!-- Фон: Живой Canvas -->
     <canvas id="bg-canvas"></canvas>
     <div class="vignette"></div>
 
-    <!-- ДИНАМИЧЕСКИЙ КОНТЕЙНЕР -->
-    <div id="app-content">
-        <!-- Сюда вставляем всё, что было в body раньше: Header, Section, Nav, Footer -->
-        <header class="top-bar"> ... </header>
-        <section class="balance-hub"> ... </section>
-        <nav class="main-nav"> ... </nav>
-        <footer class="system-status"> ... </footer>
-    </div>
+    <!-- Верхняя панель: Профиль и Валюта -->
+    <header class="top-bar">
+        <div class="user-info" onclick="window.location.href='profile.html'">
+            <div class="avatar-frame">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="user-avatar" alt="User">
+            </div>
+            <div class="user-text">
+                <span id="username">Loading...</span>
+                <span class="user-id">ID: <span id="userid">---</span></span>
+            </div>
+        </div>
+        
+        <!-- Выбор валюты -->
+        <div class="currency-selector" id="currency-btn">
+            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="curr-icon" id="curr-icon">
+            <span id="curr-name">USDT</span>
+            <i class="fa-solid fa-caret-down"></i>
+            
+            <!-- Выпадающий список -->
+            <div class="curr-dropdown hidden" id="curr-dropdown">
+                <div class="curr-item" onclick="changeCurrency('RUB')">
+                    <span class="fi">₽</span> RUB
+                </div>
+                <div class="curr-item" onclick="changeCurrency('USDT')">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png"> USDT
+                </div>
+                <div class="curr-item" onclick="changeCurrency('STARS')">
+                    <i class="fa-solid fa-star" style="color:#ffd700"></i> STARS
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <script src="spa.js"></script> <!-- Движок SPA -->
-    <script src="script.js"></script> <!-- Логика главной -->
+    <!-- Главный блок баланса -->
+    <section class="balance-hub">
+        <div class="balance-toggle">
+            <button class="toggle-btn active" id="btn-real" onclick="setMode('real')">REAL</button>
+            <button class="toggle-btn" id="btn-demo" onclick="setMode('demo')">DEMO</button>
+        </div>
+        
+        <div class="balance-display">
+            <span class="currency-symbol" id="main-curr-sym">$</span>
+            <span class="amount odometer" id="balance-amount">0.00</span>
+        </div>
+
+        <div class="wallet-actions">
+            <button class="action-btn deposit" onclick="window.location.href='deposit.html'">
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
+                <span>Пополнить</span>
+            </button>
+            <button class="action-btn withdraw" onclick="window.location.href='withdraw.html'">
+                <div class="icon-circle"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+                <span>Вывести</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Основная навигация -->
+    <nav class="main-nav">
+        <!-- Огромная кнопка ИГРЫ -->
+        <div class="nav-card big-play" onclick="navigateTo('gamelist.html')">
+            <div class="card-bg"></div>
+            <div class="content">
+                <h2>ИГРЫ</h2>
+                <p>15+ режимов</p>
+            </div>
+            <div class="play-icon"><i class="fa-solid fa-gamepad"></i></div>
+        </div>
+
+        <div class="nav-grid">
+            <div class="nav-card" onclick="window.location.href='profile.html'">
+                <i class="fa-solid fa-user-astronaut"></i>
+                <span>Профиль</span>
+            </div>
+            <div class="nav-card" onclick="window.location.href='stat.html'">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Статистика</span>
+            </div>
+            <div class="nav-card" onclick="window.location.href='ref.html'">
+                <i class="fa-solid fa-users"></i>
+                <span>Рефералы</span>
+            </div>
+            <div class="nav-card support" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/fastmoneyhelp_bot')">
+                <i class="fa-solid fa-headset"></i>
+                <span>Support</span>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Нижний статус бар -->
+    <footer class="system-status">
+        <span class="ping"><span class="dot"></span> Online: 14,203</span>
+        <span class="version">v2.5.1 Stable</span>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
