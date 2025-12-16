@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0c0c12">
+    <title>FastMoney - Mines</title>
+    
+    <!-- Глобальные шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- СТИЛИ -->
+    <link rel="stylesheet" href="../../style.css">       <!-- Глобальные -->
+    <link rel="stylesheet" href="style.css">             <!-- Локальные -->
+    
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="mines-body">
+
+    <!-- =========================================
+         СЛОЙ 1: ФОН
+         ========================================= -->
+    <div class="tech-bg"></div>
+    <div class="vignette"></div>
+
+    <!-- =========================================
+         СЛОЙ 2: ВЕРХНЯЯ ПАНЕЛЬ
+         ========================================= -->
+    <header class="game-header">
+        <button class="back-btn" onclick="window.location.href='../../gamelist.html'">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        
+        <div class="balance-container">
+            <span class="label">БАЛАНС</span>
+            <div class="balance-val">
+                <span id="balance-display">Loading...</span>
+                <span id="currency-display">$</span>
+            </div>
+        </div>
+
+        <button class="icon-btn" onclick="UI.toggleInfo(true)">
+            <i class="fa-solid fa-circle-question"></i>
+        </button>
+    </header>
+
+    <!-- =========================================
+         СЛОЙ 3: ИГРОВАЯ СЦЕНА
+         ========================================= -->
+    <main class="mines-stage">
+        
+        <!-- Инфо-бар (появляется во время игры) -->
+        <div class="game-stats hidden" id="game-stats-bar">
+            <div class="stat-box">
+                <span class="s-label">МНОЖИТЕЛЬ</span>
+                <span class="s-val" id="current-mult">1.00x</span>
+            </div>
+            <div class="stat-box highlight">
+                <span class="s-label">СЛЕДУЮЩИЙ ШАГ</span>
+                <span class="s-val" id="next-profit">+0.00 $</span>
+            </div>
+        </div>
+
+        <!-- Контейнер сетки -->
+        <div class="grid-wrapper">
+            <!-- Сетка 5x5 генерируется JS -->
+            <div class="mines-grid" id="mines-grid"></div>
+            
+            <!-- Оверлей блокировки (пока не нажали Старт) -->
+            <div class="grid-overlay" id="grid-overlay">
+                <i class="fa-solid fa-lock"></i>
+                <span>Сделайте ставку</span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- =========================================
+         СЛОЙ 4: ПАНЕЛЬ УПРАВЛЕНИЯ
+         ========================================= -->
+    <footer class="mines-controls">
+        
+        <!-- Блок настроек (Скрывается при старте игры) -->
+        <div class="settings-area" id="settings-area">
+            
+            <!-- Выбор количества мин -->
+            <div class="mines-selector">
+                <span class="label-tiny">КОЛИЧЕСТВО МИН</span>
+                <div class="mines-options">
+                    <button class="m-opt active" onclick="UI.setMinesCount(1)">1</button>
+                    <button class="m-opt" onclick="UI.setMinesCount(3)">3</button>
+                    <button class="m-opt" onclick="UI.setMinesCount(5)">5</button>
+                    <button class="m-opt" onclick="UI.setMinesCount(10)">10</button>
+                    <div class="custom-mines">
+                        <button class="m-opt-custom" id="custom-mines-btn" onclick="UI.toggleCustomMines()">
+                            <span id="mines-count-display">24</span> 💣
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Слайдер (скрыт по умолчанию) -->
+                <div class="mines-slider-box hidden" id="mines-slider-box">
+                    <input type="range" min="1" max="24" value="3" id="mines-range" oninput="UI.onSliderChange(this.value)">
+                </div>
+            </div>
+
+            <!-- Ввод ставки -->
+            <div class="bet-input-row">
+                <div class="stepper-box">
+                    <button id="btn-dec" class="step-btn"><i class="fa-solid fa-minus"></i></button>
+                    <span id="bet-amount">100</span>
+                    <button id="btn-inc" class="step-btn"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div class="quick-bets">
+                    <button onclick="UI.setBet(100)">100</button>
+                    <button onclick="UI.setBet(500)">500</button>
+                    <button onclick="UI.setBet('max')">MAX</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Главная кнопка действия -->
+        <div class="action-wrapper">
+            <!-- Состояния: Играть / Забрать / Загрузка -->
+            <button id="main-btn" class="main-action-btn">
+                <span class="btn-text">ИГРАТЬ</span>
+                <span class="btn-sub" id="btn-sub-text">Начать раунд</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- =========================================
+         СЛОЙ 5: МОДАЛКИ
+         ========================================= -->
+
+    <!-- Победа (Финальный Cashout) -->
+    <div id="modal-win" class="modal-overlay hidden">
+        <div class="win-card">
+            <div class="win-glow"></div>
+            <div class="win-icon"><i class="fa-regular fa-gem"></i></div>
+            <h2>ПОБЕДА!</h2>
+            <div class="win-val">
+                <span id="win-amount">0</span>
+                <span id="win-curr">$</span>
+            </div>
+            <button class="claim-btn" onclick="UI.closeWinModal()">ОТЛИЧНО</button>
+        </div>
+    </div>
+
+    <!-- Поражение (Взрыв) -->
+    <div id="modal-loss" class="modal-overlay hidden">
+        <div class="loss-card">
+            <div class="loss-icon"><i class="fa-solid fa-bomb"></i></div>
+            <h2>ВЗРЫВ!</h2>
+            <p>Вы наткнулись на мину.</p>
+            <button class="retry-btn" onclick="UI.closeLossModal()">ЕЩЕ РАЗ</button>
+        </div>
+    </div>
+
+    <!-- Инфо -->
+    <div id="modal-info" class="modal-overlay hidden">
+        <div class="info-card">
+            <div class="card-header">
+                <h3>КАК ИГРАТЬ?</h3>
+                <button onclick="UI.toggleInfo(false)"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body">
+                <p>1. Выберите количество мин и сделайте ставку.</p>
+                <p>2. Нажимайте на плитки, чтобы искать <span class="text-green">Алмазы</span>.</p>
+                <p>3. Чем больше алмазов открыто, тем больше выигрыш.</p>
+                <p>4. Нажмите <b>ЗАБРАТЬ</b> в любой момент, чтобы сохранить деньги.</p>
+                <p>5. Если попадете на <span class="text-red">Мину</span> — ставка сгорит.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         СКРИПТЫ
+         ========================================= -->
+    
+    <!-- 1. Ядро -->
+    <script src="../../config.js"></script>
+    <script src="../../core/utils.js"></script>
+    <script src="../../core/api.js"></script>
+    <script src="../../core/audio.js"></script>
+
+    <!-- 2. Локальные конфиги -->
+    <script src="config.js"></script>
+
+    <!-- 3. Модули игры -->
+    <script src="src/network.js"></script> <!-- Связь с API -->
+    <script src="src/grid.js"></script>    <!-- Генерация сетки -->
+    <script src="src/ui.js"></script>      <!-- Интерфейс -->
+    <script src="src/main.js"></script>    <!-- Игровой цикл -->
+
+</body>
+  </html>
